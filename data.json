@@ -19,7 +19,30 @@
     ],
     "results": [],
     "dachcs": "https://user.dachcs.de/team/boboboot",
-    "histoire": []
+    "histoire": [
+      {
+        "season": "3",
+        "placement": "3",
+        "wins": "3",
+        "losses": "3",
+        "players": [
+          {
+            "name": "3",
+            "kills": "3",
+            "assists": "3",
+            "deaths": "3",
+            "hltv": "3"
+          },
+          {
+            "name": "3",
+            "kills": "3",
+            "assists": "3",
+            "deaths": "3",
+            "hltv": "3"
+          }
+        ]
+      }
+    ]
   },
   "rage": {
     "coach": "Skywalker",
