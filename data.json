@@ -1,0 +1,26 @@
+{
+  "boot": {
+    "coach": "Skywalker",
+    "players": [
+      {
+        "name": "Camo",
+        "role": "Support",
+        "info": "5",
+        "type": "main"
+      },
+      {
+        "name": "Null",
+        "role": "Rifler",
+        "info": "t",
+        "type": "standin"
+      }
+    ],
+    "results": []
+  },
+  "rage": {
+    "coach": "",
+    "players": [],
+    "results": []
+  },
+  "news": []
+}
