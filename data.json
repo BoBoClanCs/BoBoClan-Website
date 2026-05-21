@@ -13,6 +13,12 @@
         "role": "Rifler",
         "info": "t",
         "type": "standin"
+      },
+      {
+        "name": "alice",
+        "role": "frt",
+        "info": "d",
+        "type": "main"
       }
     ],
     "results": []
