@@ -319,6 +319,19 @@
       <div class="token-status" id="token-status"></div>
     </div>
 
+    <!-- DACHCS LINKS -->
+    <div class="admin-section">
+      <div class="admin-section-title">&#128279; <span>DachCS</span> – Links</div>
+      <div class="coach-row">
+        <label>BoBoBoot</label>
+        <input type="text" id="boot-dachcs" placeholder="https://www.dachcs.de/teams/..." oninput="state.boot.dachcs=this.value;updateDachcsLinks()">
+      </div>
+      <div class="coach-row">
+        <label>BoBoRage</label>
+        <input type="text" id="rage-dachcs" placeholder="https://www.dachcs.de/teams/..." oninput="state.rage.dachcs=this.value;updateDachcsLinks()">
+      </div>
+    </div>
+
     <!-- BOBOBOOT ROSTER -->
     <div class="admin-section">
       <div class="admin-section-title">&#128100; <span>BoBoBoot</span> – Kader</div>
@@ -326,7 +339,7 @@
         <label>Coach</label>
         <input type="text" id="boot-coach" placeholder="Name des Coaches (leer lassen falls keiner)">
       </div>
-      <div class="col-headers"><span>Name</span><span>Rolle</span><span>Info (optional)</span><span>Typ</span><span></span></div>
+      <div class="col-headers"><span>Name</span><span>Rolle</span><span>Steam-URL</span><span>Typ</span><span></span></div>
       <div id="boot-players"></div>
       <button class="add-row-btn" onclick="addPlayer('boot')">+ Spieler hinzuf&uuml;gen</button>
     </div>
@@ -338,7 +351,7 @@
         <label>Coach</label>
         <input type="text" id="rage-coach" placeholder="Name des Coaches (leer lassen falls keiner)">
       </div>
-      <div class="col-headers"><span>Name</span><span>Rolle</span><span>Info (optional)</span><span>Typ</span><span></span></div>
+      <div class="col-headers"><span>Name</span><span>Rolle</span><span>Steam-URL</span><span>Typ</span><span></span></div>
       <div id="rage-players"></div>
       <button class="add-row-btn" onclick="addPlayer('rage')">+ Spieler hinzuf&uuml;gen</button>
     </div>
@@ -412,7 +425,7 @@
           <div class="team-meta-name">BoBoBoot</div>
           <div class="team-meta-coach" id="boot-coach-display">Coach: <span style="color:#555">&#8211;</span></div>
         </div>
-        <a href="https://www.dachcs.de" target="_blank" rel="noopener" class="dacha-link">&#x2197; DachCS</a>
+        <a href="https://www.dachcs.de" target="_blank" rel="noopener" class="dacha-link dacha-link-boot">&#x2197; DachCS</a>
       </div>
       <div class="roster-section">
         <div class="roster-label">Stammkader</div>
@@ -429,7 +442,7 @@
           <div class="team-meta-name">BoBoRage</div>
           <div class="team-meta-coach" id="rage-coach-display">Coach: <span style="color:#555">&#8211;</span></div>
         </div>
-        <a href="https://www.dachcs.de" target="_blank" rel="noopener" class="dacha-link">&#x2197; DachCS</a>
+        <a href="https://www.dachcs.de" target="_blank" rel="noopener" class="dacha-link dacha-link-rage">&#x2197; DachCS</a>
       </div>
       <div class="roster-section">
         <div class="roster-label">Stammkader</div>
@@ -499,8 +512,8 @@ const GH_BRANCH = 'main';
 
 // ── State ─────────────────────────────────────────────────
 let state = {
-  boot: { coach:'', players:[], results:[] },
-  rage: { coach:'', players:[], results:[] },
+  boot: { coach:'', players:[], results:[], dachcs:'' },
+  rage: { coach:'', players:[], results:[], dachcs:'' },
   news: []
 };
 
@@ -593,9 +606,17 @@ function newsRowHTML(i, n) {
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── Form loading ──────────────────────────────────────────
+function updateDachcsLinks() {
+  ['boot','rage'].forEach(t => {
+    const url = state[t].dachcs || 'https://www.dachcs.de';
+    document.querySelectorAll('.dacha-link-'+t).forEach(el => el.href = url);
+  });
+}
+
 function loadAdminForms() {
   ['boot','rage'].forEach(t => {
     document.getElementById(t+'-coach').value = state[t].coach || '';
+    document.getElementById(t+'-dachcs').value = state[t].dachcs || '';
     const pc = document.getElementById(t+'-players');
     pc.innerHTML = state[t].players.map((p,i) => playerRowHTML(t,i,p)).join('');
     const rc = document.getElementById(t+'-results-edit');
@@ -615,7 +636,7 @@ document.getElementById('boot-coach').addEventListener('input', () => { state.bo
 document.getElementById('rage-coach').addEventListener('input', () => { state.rage.coach = document.getElementById('rage-coach').value; renderPublic(); });
 
 function addPlayer(t) {
-  state[t].players.push({name:'',role:'',info:'',type:'main'});
+  state[t].players.push({name:'',role:'',steam:'',type:'main'});
   const pc = document.getElementById(t+'-players');
   const i = state[t].players.length-1;
   pc.insertAdjacentHTML('beforeend', playerRowHTML(t,i,state[t].players[i]));
@@ -785,6 +806,7 @@ async function loadFromGitHub() {
   } catch(e) {
     // Datei existiert noch nicht – kein Problem
   }
+  updateDachcsLinks();
   renderPublic();
 }
 
