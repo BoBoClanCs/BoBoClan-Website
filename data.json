@@ -6,17 +6,43 @@
         "name": "Camo",
         "role": "Support",
         "info": "",
-        "type": "main"
+        "type": "main",
+        "steam": "https://steamcommunity.com/id/Nullkisir/"
       },
       {
         "name": "Null",
         "role": "Rifler",
         "info": "",
-        "type": "standin"
+        "type": "standin",
+        "steam": "https://steamcommunity.com/id/Nullkisir/"
       }
     ],
     "results": [],
-    "dachcs": "https://user.dachcs.de/team/boboboot"
+    "dachcs": "https://user.dachcs.de/team/boboboot",
+    "histoire": [
+      {
+        "season": "Saison 1",
+        "placement": "5",
+        "wins": "5",
+        "losses": "5",
+        "players": [
+          {
+            "name": "test",
+            "kills": "2",
+            "assists": "2",
+            "deaths": "2",
+            "hltv": "2"
+          },
+          {
+            "name": "2",
+            "kills": "2",
+            "assists": "2",
+            "deaths": "2",
+            "hltv": "2"
+          }
+        ]
+      }
+    ]
   },
   "rage": {
     "coach": "Skywalker",
@@ -29,7 +55,8 @@
       }
     ],
     "results": [],
-    "dachcs": "https://user.dachcs.de/team/boborage"
+    "dachcs": "https://user.dachcs.de/team/boborage",
+    "histoire": []
   },
   "news": []
 }
