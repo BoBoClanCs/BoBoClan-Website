@@ -5,13 +5,13 @@
       {
         "name": "Camo",
         "role": "Support",
-        "info": "5",
+        "info": "",
         "type": "main"
       },
       {
         "name": "Null",
         "role": "Rifler",
-        "info": "t",
+        "info": "",
         "type": "standin"
       }
     ],
