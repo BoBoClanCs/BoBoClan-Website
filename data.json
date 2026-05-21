@@ -15,12 +15,21 @@
         "type": "standin"
       }
     ],
-    "results": []
+    "results": [],
+    "dachcs": "https://user.dachcs.de/team/boboboot"
   },
   "rage": {
-    "coach": "",
-    "players": [],
-    "results": []
+    "coach": "Skywalker",
+    "players": [
+      {
+        "name": "test",
+        "role": "test",
+        "steam": "",
+        "type": "main"
+      }
+    ],
+    "results": [],
+    "dachcs": "https://user.dachcs.de/team/boborage"
   },
   "news": []
 }
