@@ -80,15 +80,8 @@
     ]
   },
   "rage": {
-    "coach": "Skywalker",
-    "players": [
-      {
-        "name": "test",
-        "role": "test",
-        "steam": "",
-        "type": "main"
-      }
-    ],
+    "coach": "",
+    "players": [],
     "results": [],
     "dachcs": "https://user.dachcs.de/team/boborage",
     "histoire": []
