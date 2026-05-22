@@ -772,6 +772,12 @@ function showAdminPage(id) {
   const page = document.getElementById(id);
   if (page) page.classList.add('active');
   document.querySelectorAll(`.admin-nav-item[data-page="${id}"]`).forEach(b => b.classList.add('active'));
+  // Re-render dynamic pages on switch
+  if (id === 'page-histoire') renderHistoireAdminPage();
+  if (id === 'page-news') {
+    document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
+    document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+  }
 }
 function toggleCard(head) {
   const body = head.nextElementSibling;
@@ -1302,32 +1308,42 @@ async function saveAll() {
   const btn = document.getElementById('save-btn');
   const btnText = document.getElementById('save-btn-text');
   btn.disabled = true; btnText.textContent = 'Wird gespeichert...'; setStatus('','');
+
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+  const apiUrl = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+  const headers = { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+
   try {
+    // Step 1: Always fetch current SHA fresh
     let sha = null;
-    try {
-      const shaRes = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`, {
-        headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' }
-      });
-      if (shaRes.ok) {
-        const d = await shaRes.json();
-        sha = d.sha || null;
-      }
-      // 404 = file doesn't exist yet, that's fine – sha stays null
-    } catch(e) { sha = null; }
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-    // Build body – only include sha if file already exists
-    const putBody = { message:'Update clan data', content, branch:GH_BRANCH };
+    const shaRes = await fetch(apiUrl + '?ref=' + GH_BRANCH + '&_=' + Date.now(), { headers });
+    if (shaRes.ok) {
+      const d = await shaRes.json();
+      sha = d.sha || null;
+    } else if (shaRes.status !== 404) {
+      // Not a 404 = real error (e.g. auth failure)
+      const err = await shaRes.json();
+      setStatus('Fehler beim SHA-Abruf: ' + (err.message || shaRes.status), true);
+      btn.disabled = false; btnText.textContent = '💾 Speichern & Veröffentlichen';
+      return;
+    }
+    // 404 = file doesn't exist yet → sha stays null → GitHub creates it
+
+    // Step 2: PUT file
+    const putBody = { message: 'Update clan data via admin panel', content, branch: GH_BRANCH };
     if (sha) putBody.sha = sha;
 
-    const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
-      method:'PUT',
-      headers:{ Authorization:'token '+token, Accept:'application/vnd.github.v3+json', 'Content-Type':'application/json' },
-      body: JSON.stringify(putBody)
-    });
-    if (res.ok) setStatus('✓ Gespeichert!', false);
-    else { const err=await res.json(); setStatus('Fehler: '+(err.message||res.status), true); }
-  } catch(e) { setStatus('Netzwerkfehler: '+e.message, true); }
-  btn.disabled=false; btnText.textContent='💾 Speichern & Veröffentlichen';
+    const res = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+    if (res.ok) {
+      setStatus('✓ Gespeichert!', false);
+    } else {
+      const err = await res.json();
+      setStatus('Fehler: ' + (err.message || res.status), true);
+    }
+  } catch(e) {
+    setStatus('Netzwerkfehler: ' + e.message, true);
+  }
+  btn.disabled = false; btnText.textContent = '💾 Speichern & Veröffentlichen';
 }
 function setStatus(msg, isErr) {
   const el = document.getElementById('save-status');
