@@ -412,6 +412,45 @@
   }
   .del-season-btn:hover { border-color: var(--red); color: var(--red-light); }
 
+
+  /* ===================== SPIELER ===================== */
+  .spieler-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:1.2rem; }
+  .spieler-card {
+    background:var(--dark3); border:1px solid #2a2a2a; padding:1.25rem 1rem; text-align:center;
+    cursor:pointer; transition:border-color 0.2s,transform 0.2s;
+    clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  }
+  .spieler-card:hover { border-color:var(--red); transform:translateY(-3px); }
+  .spieler-avatar {
+    width:70px; height:70px; border-radius:50%; background:var(--dark4); border:2px solid var(--red);
+    margin:0 auto 0.9rem; display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-size:1.5rem; font-weight:700; color:var(--cream);
+    overflow:hidden;
+  }
+  .spieler-name { font-family:'Oswald',sans-serif; font-size:1rem; font-weight:600; color:var(--cream); letter-spacing:1px; }
+  .spieler-teams { font-size:0.75rem; color:#666; margin-top:4px; }
+
+  /* Detail view */
+  .spieler-detail-header { display:flex; align-items:center; gap:2rem; flex-wrap:wrap; background:var(--dark3); border:1px solid #2a2a2a; border-left:3px solid var(--red); padding:1.5rem; margin-bottom:2rem; }
+  .spieler-detail-avatar { width:90px; height:90px; border-radius:50%; background:var(--dark4); border:2px solid var(--red); display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:2rem; font-weight:700; color:var(--cream); overflow:hidden; flex-shrink:0; }
+  .spieler-detail-name { font-family:'Oswald',sans-serif; font-size:1.8rem; font-weight:700; color:var(--cream); letter-spacing:2px; }
+  .spieler-detail-teams { font-size:0.85rem; color:#777; margin-top:4px; }
+
+  .alltime-box { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:1rem; margin-bottom:2rem; }
+  .alltime-stat { background:var(--dark3); border:1px solid #2a2a2a; padding:1rem; text-align:center; }
+  .alltime-stat-val { font-family:'Oswald',sans-serif; font-size:1.8rem; font-weight:700; color:var(--red-light); }
+  .alltime-stat-lbl { font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; color:#555; margin-top:4px; }
+
+  .season-history-list { display:flex; flex-direction:column; gap:1rem; }
+  .season-history-item { background:var(--dark3); border:1px solid #2a2a2a; padding:1.25rem 1.5rem; }
+  .season-history-head { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+  .season-history-team { font-family:'Oswald',sans-serif; font-size:0.85rem; font-weight:700; color:var(--red-light); letter-spacing:2px; text-transform:uppercase; }
+  .season-history-name { font-family:'Oswald',sans-serif; font-size:1rem; font-weight:600; color:var(--cream); }
+  .season-history-stats { display:flex; gap:1.5rem; flex-wrap:wrap; }
+  .season-stat { text-align:center; }
+  .season-stat-val { font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:700; color:var(--cream); }
+  .season-stat-lbl { font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:#555; }
+
   @media(max-width:768px) {
     .nav-links { display:none; }
     .admin-nav-btn { display:block !important; }
@@ -545,6 +584,7 @@
     <li><a href="#news">News</a></li>
     <li><a href="#kontakt">Kontakt</a></li>
     <li><a href="#" id="nav-historie-link" onclick="toggleHistorie(event)">Historie</a></li>
+    <li><a href="#" id="nav-spieler-link" onclick="toggleSpieler(event)">Spieler</a></li>
     </ul>
   <button class="admin-nav-btn" id="admin-toggle-btn" onclick="openAdmin()">&#9881; Admin</button>
 </nav>
@@ -588,6 +628,20 @@
   </div>
 </section>
 
+<!-- SPIELER SECTION -->
+<section id="section-spieler" style="display:none; background:var(--dark); padding:80px 2rem;">
+  <div class="container">
+    <h2 class="section-title">Unsere <span>Spieler</span></h2>
+    <div class="section-line"></div>
+    <div id="spieler-list"></div>
+    <!-- Player detail overlay -->
+    <div id="spieler-detail" style="display:none; margin-top:2rem;">
+      <button onclick="closeSpielerDetail()" style="font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid #333;color:#888;padding:8px 18px;cursor:pointer;margin-bottom:2rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red-light)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'">&#8592; Alle Spieler</button>
+      <div id="spieler-detail-content"></div>
+    </div>
+  </div>
+</section>
+
 <!-- KONTAKT -->
 <section class="contact" id="kontakt">
   <div class="container">
@@ -625,6 +679,7 @@
   <div class="foot-links">
     <a href="#home">Start</a><a href="#teams">Teams</a><a href="#ergebnisse">Ergebnisse</a>
     <a href="#news">News</a><a href="#" onclick="toggleHistorie(event)">Historie</a>
+    <a href="#" onclick="toggleSpieler(event)">Spieler</a>
     <a href="#kontakt">Kontakt</a>
     <a href="https://www.dachcs.de" target="_blank" rel="noopener">DachCS &#x2197;</a>
   </div>
@@ -1017,17 +1072,7 @@ function renderResultsList(t) {
   }).join('');
 }
 
-function memberCardHTML(p, isStandin) {
-  const uid = 'av' + Math.random().toString(36).slice(2,9);
-  const borderColor = isStandin ? '#3a3a3a' : 'var(--red)';
-  const card = `<div class="member-card ${isStandin?'standin':''}">
-    <div class="member-avatar" id="${uid}" style="border-color:${borderColor}">${initials(p.name)}</div>
-    <div class="member-name">${esc(p.name||'?')}</div>
-    ${p.role ? '<div class="member-role">'+esc(p.role)+'</div>' : ''}
-  </div>`;
-  if (p.steam) setTimeout(() => loadSteamAvatar(uid, p.steam, borderColor), 50);
-  return card;
-}
+
 function loadSteamAvatar(uid, steamUrl, borderColor) {
   const el = document.getElementById(uid); if (!el) return;
   const clean = steamUrl.replace(/\/+$/, '');
@@ -1279,6 +1324,197 @@ function setStatus(msg, isErr) {
   const el = document.getElementById('save-status');
   el.textContent = msg;
   el.className = 'save-status' + (isErr ? ' err' : (msg ? ' ok' : ''));
+}
+
+
+// ── SPIELER ────────────────────────────────────────────────
+// Derived from state.histoire – no manual editing needed
+
+function getSpielerList() {
+  // Build unique player list from all histoire seasons
+  const players = {}; // key: lowercase name
+  state.histoire.forEach(team => {
+    (team.seasons || []).forEach(season => {
+      (season.players || []).forEach(p => {
+        if (!p.name || !p.name.trim()) return;
+        const key = p.name.trim().toLowerCase();
+        if (!players[key]) {
+          players[key] = { name: p.name.trim(), steam: p.steam || '', seasons: [] };
+        }
+        players[key].seasons.push({
+          teamId: team.id, teamName: team.name,
+          season: season.season, coach: season.coach || '',
+          games: p.games || '', kills: p.kills || '',
+          assists: p.assists || '', deaths: p.deaths || '',
+          hltv: p.hltv || ''
+        });
+      });
+    });
+  });
+  return Object.values(players).sort((a,b) => a.name.localeCompare(b.name));
+}
+
+function calcAllTime(seasons) {
+  let kills=0, assists=0, deaths=0, games=0, hltvVals=[], hltvCount=0;
+  seasons.forEach(s => {
+    kills   += parseInt(s.kills)   || 0;
+    assists += parseInt(s.assists) || 0;
+    deaths  += parseInt(s.deaths)  || 0;
+    games   += parseInt(s.games)   || 0;
+    const h = parseFloat(s.hltv);
+    if (!isNaN(h)) { hltvVals.push(h); hltvCount++; }
+  });
+  const kd = deaths > 0 ? (kills/deaths).toFixed(2) : kills > 0 ? kills.toFixed(2) : '-';
+  const hltv = hltvCount > 0 ? (hltvVals.reduce((a,b)=>a+b,0)/hltvCount).toFixed(2) : '-';
+  return { kills, assists, deaths, games, kd, hltv };
+}
+
+function toggleSpieler(e) {
+  if(e) e.preventDefault();
+  const sec = document.getElementById('section-spieler');
+  const link = document.getElementById('nav-spieler-link');
+  const isOpen = sec.getAttribute('data-open') === '1';
+  if (isOpen) {
+    sec.style.display = 'none';
+    sec.setAttribute('data-open','0');
+    if(link) link.style.borderBottom = '';
+  } else {
+    sec.style.display = 'block';
+    sec.setAttribute('data-open','1');
+    renderSpielerList();
+    setTimeout(() => sec.scrollIntoView({behavior:'smooth'}), 50);
+    if(link) link.style.borderBottom = '2px solid var(--red)';
+  }
+}
+
+function renderSpielerList() {
+  const players = getSpielerList();
+  const listEl = document.getElementById('spieler-list');
+  const detailEl = document.getElementById('spieler-detail');
+  detailEl.style.display = 'none';
+  listEl.style.display = '';
+
+  if (players.length === 0) {
+    listEl.innerHTML = '<div class="empty">Noch keine Spieler in der Historie eingetragen</div>';
+    return;
+  }
+
+  listEl.innerHTML = '<div class="spieler-grid">' + players.map(p => {
+    const allTime = calcAllTime(p.seasons);
+    const uid = 'sp-av-' + p.name.replace(/\s+/g,'').toLowerCase();
+    const teamNames = [...new Set(p.seasons.map(s => s.teamName))].join(' · ');
+    const card = `<div class="spieler-card" onclick="showSpielerDetail('${esc(p.name.replace(/'/g,"\'"))}')">
+      <div class="spieler-avatar" id="${uid}">${initials(p.name)}</div>
+      <div class="spieler-name">${esc(p.name)}</div>
+      <div class="spieler-teams">${esc(teamNames)}</div>
+    </div>`;
+    if (p.steam) setTimeout(() => loadSteamAvatar(uid, p.steam, 'var(--red)'), 100);
+    return card;
+  }).join('') + '</div>';
+}
+
+function showSpielerDetail(name) {
+  const players = getSpielerList();
+  const p = players.find(pl => pl.name === name);
+  if (!p) return;
+
+  document.getElementById('spieler-list').style.display = 'none';
+  const detailEl = document.getElementById('spieler-detail');
+  detailEl.style.display = 'block';
+
+  const allTime = calcAllTime(p.seasons);
+  const uid = 'detail-av-' + Math.random().toString(36).slice(2,7);
+  const teamNames = [...new Set(p.seasons.map(s => s.teamName))].join(' · ');
+
+  const kdColor = (v) => {
+    const n = parseFloat(v);
+    if(isNaN(n)) return 'var(--cream)';
+    return n>=1.2?'#2ecc71':n>=0.9?'#f39c12':'var(--red-light)';
+  };
+  const hltvColor = (v) => {
+    const n = parseFloat(v);
+    if(isNaN(n)) return 'var(--cream)';
+    return n>=1.15?'#2ecc71':n>=0.95?'#f39c12':'var(--red-light)';
+  };
+
+  let html = `
+    <div class="spieler-detail-header">
+      <div class="spieler-detail-avatar" id="${uid}">${initials(p.name)}</div>
+      <div>
+        <div class="spieler-detail-name">${esc(p.name)}</div>
+        <div class="spieler-detail-teams">${esc(teamNames)}</div>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#9733; All Time Stats</h3>
+    <div class="alltime-box">
+      ${allTime.games ? `<div class="alltime-stat"><div class="alltime-stat-val">${allTime.games}</div><div class="alltime-stat-lbl">Spiele</div></div>` : ''}
+      <div class="alltime-stat"><div class="alltime-stat-val">${allTime.kills}</div><div class="alltime-stat-lbl">Kills</div></div>
+      <div class="alltime-stat"><div class="alltime-stat-val">${allTime.assists}</div><div class="alltime-stat-lbl">Assists</div></div>
+      <div class="alltime-stat"><div class="alltime-stat-val">${allTime.deaths}</div><div class="alltime-stat-lbl">Tode</div></div>
+      <div class="alltime-stat"><div class="alltime-stat-val" style="color:${kdColor(allTime.kd)}">${allTime.kd}</div><div class="alltime-stat-lbl">K/D</div></div>
+      <div class="alltime-stat"><div class="alltime-stat-val" style="color:${hltvColor(allTime.hltv)}">${allTime.hltv}</div><div class="alltime-stat-lbl">HLTV &#216;</div></div>
+    </div>
+
+    <h3 style="font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#128218; Saisonhistorie</h3>
+    <div class="season-history-list">
+      ${p.seasons.map(s => {
+        const kd = calcKD(s.kills, s.deaths);
+        return `<div class="season-history-item">
+          <div class="season-history-head">
+            <span class="season-history-team">${esc(s.teamName)}</span>
+            <span class="season-history-name">${esc(s.season||'Unbekannte Saison')}</span>
+            ${s.coach ? `<span style="font-size:0.8rem;color:#666">Coach: <span style="color:var(--red-light)">${esc(s.coach)}</span></span>` : ''}
+          </div>
+          <div class="season-history-stats">
+            ${s.games ? `<div class="season-stat"><div class="season-stat-val">${esc(s.games)}</div><div class="season-stat-lbl">Spiele</div></div>` : ''}
+            <div class="season-stat"><div class="season-stat-val">${esc(s.kills||'-')}</div><div class="season-stat-lbl">Kills</div></div>
+            <div class="season-stat"><div class="season-stat-val">${esc(s.assists||'-')}</div><div class="season-stat-lbl">Assists</div></div>
+            <div class="season-stat"><div class="season-stat-val">${esc(s.deaths||'-')}</div><div class="season-stat-lbl">Tode</div></div>
+            <div class="season-stat"><div class="season-stat-val" style="color:${kdColor(kd)}">${kd}</div><div class="season-stat-lbl">K/D</div></div>
+            ${s.hltv ? `<div class="season-stat"><div class="season-stat-val" style="color:${hltvColor(s.hltv)}">${esc(s.hltv)}</div><div class="season-stat-lbl">HLTV</div></div>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  document.getElementById('spieler-detail-content').innerHTML = html;
+  if (p.steam) setTimeout(() => loadSteamAvatar(uid, p.steam, 'var(--red)'), 100);
+}
+
+function closeSpielerDetail() {
+  document.getElementById('spieler-detail').style.display = 'none';
+  document.getElementById('spieler-list').style.display = '';
+}
+
+// Also render member cards clickable linking to spieler detail
+function memberCardHTML(p, isStandin) {
+  const uid = 'av' + Math.random().toString(36).slice(2,9);
+  const borderColor = isStandin ? '#3a3a3a' : 'var(--red)';
+  // Check if player has histoire entry
+  const players = getSpielerList();
+  const hasProfile = players.some(pl => pl.name.toLowerCase() === (p.name||'').toLowerCase());
+  const clickAttr = hasProfile ? `onclick="openSpielerFromCard('${esc((p.name||'').replace(/'/g,"\'"))}'); event.stopPropagation();" style="cursor:pointer"` : '';
+  const card = `<div class="member-card ${isStandin?'standin':''}" ${clickAttr}>
+    <div class="member-avatar" id="${uid}" style="border-color:${borderColor}">${initials(p.name)}</div>
+    <div class="member-name">${esc(p.name||'?')}</div>
+    ${p.role ? '<div class="member-role">'+esc(p.role)+'</div>' : ''}
+    ${hasProfile ? '<div style="font-size:0.7rem;color:var(--red-light);margin-top:4px;letter-spacing:1px">PROFIL ›</div>' : ''}
+  </div>`;
+  if (p.steam) setTimeout(() => loadSteamAvatar(uid, p.steam, borderColor), 50);
+  return card;
+}
+
+function openSpielerFromCard(name) {
+  // Open spieler section and show detail
+  const sec = document.getElementById('section-spieler');
+  const link = document.getElementById('nav-spieler-link');
+  sec.style.display = 'block';
+  sec.setAttribute('data-open','1');
+  if(link) link.style.borderBottom = '2px solid var(--red)';
+  renderSpielerList();
+  showSpielerDetail(name);
+  setTimeout(() => sec.scrollIntoView({behavior:'smooth'}), 50);
 }
 
 // ── Load from GitHub ───────────────────────────────────────
