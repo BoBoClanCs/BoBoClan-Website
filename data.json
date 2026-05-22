@@ -1,90 +1,41 @@
 {
-  "boot": {
-    "coach": "Skywalker",
-    "players": [
-      {
-        "name": "Camo",
-        "role": "Support",
-        "info": "",
-        "type": "main",
-        "steam": "https://steamcommunity.com/id/Nullkisir/"
-      },
-      {
-        "name": "Null",
-        "role": "Rifler",
-        "info": "",
-        "type": "standin",
-        "steam": "https://steamcommunity.com/id/Nullkisir/"
-      }
-    ],
-    "results": [],
-    "dachcs": "https://user.dachcs.de/team/boboboot",
-    "histoire": [
-      {
-        "season": "DACH CS Masters Saison 2 Spielklasse 6",
-        "placement": "7",
-        "wins": "0",
-        "losses": "6",
-        "players": [
-          {
-            "name": "Meow",
-            "kills": "212",
-            "assists": "",
-            "deaths": "204",
-            "hltv": ""
-          },
-          {
-            "name": "Dedrod",
-            "kills": "158",
-            "assists": "",
-            "deaths": "169",
-            "hltv": ""
-          },
-          {
-            "name": "Namefall",
-            "kills": "126",
-            "assists": "",
-            "deaths": "163",
-            "hltv": ""
-          },
-          {
-            "name": "Nullkisir",
-            "kills": "149",
-            "assists": "",
-            "deaths": "195",
-            "hltv": ""
-          },
-          {
-            "name": "Camo",
-            "kills": "128",
-            "assists": "",
-            "deaths": "207",
-            "hltv": ""
-          },
-          {
-            "name": "Tof Tof",
-            "kills": "53",
-            "assists": "",
-            "deaths": "79",
-            "hltv": ""
-          }
-        ]
-      },
-      {
-        "season": "dsfadf",
-        "placement": "fvfvv",
-        "wins": "",
-        "losses": "",
-        "players": []
-      }
-    ]
-  },
-  "rage": {
-    "coach": "",
-    "players": [],
-    "results": [],
-    "dachcs": "https://user.dachcs.de/team/boborage",
-    "histoire": []
-  },
+  "teams": [
+    {
+      "id": "boot",
+      "name": "BoBoBoot",
+      "coach": "",
+      "dachcs": "",
+      "players": [],
+      "results": []
+    },
+    {
+      "id": "rage",
+      "name": "BoBoRage",
+      "coach": "",
+      "dachcs": "",
+      "players": [],
+      "results": []
+    }
+  ],
+  "histoire": [
+    {
+      "id": "boot",
+      "name": "BoBoBoot",
+      "seasons": [
+        {
+          "season": "",
+          "placement": "",
+          "wins": "",
+          "losses": "",
+          "players": []
+        }
+      ]
+    },
+    {
+      "id": "rage",
+      "name": "BoBoRage",
+      "seasons": []
+    }
+  ],
   "news": []
 }
