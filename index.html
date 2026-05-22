@@ -149,7 +149,7 @@
 
   .empty { text-align:center; padding:2.5rem; color:#444; font-size:0.85rem; letter-spacing:2px; text-transform:uppercase; }
 
-  /* ===================== ADMIN ===================== */
+    /* ===================== ADMIN ===================== */
   #admin-login-overlay {
     display:none; position:fixed; inset:0; z-index:999;
     background:rgba(0,0,0,0.92); backdrop-filter:blur(6px);
@@ -164,56 +164,83 @@
   .login-box p { color:#555; font-size:0.85rem; margin-bottom:1.5rem; }
   .login-box input {
     width:100%; background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream);
-    padding:12px 16px; font-family:'Rajdhani',sans-serif; font-size:1rem; margin-bottom:1rem; outline:none;
-    transition:border-color 0.2s;
+    padding:12px 16px; font-family:'Rajdhani',sans-serif; font-size:1rem; margin-bottom:1rem; outline:none; transition:border-color 0.2s;
   }
   .login-box input:focus { border-color:var(--red); }
   .login-box .login-err { color:var(--red-light); font-size:0.85rem; margin-bottom:0.75rem; display:none; }
   .login-box .login-err.show { display:block; }
   .btn-admin {
     width:100%; font-family:'Oswald',sans-serif; font-size:0.95rem; font-weight:600; letter-spacing:3px;
-    text-transform:uppercase; color:var(--cream); background:var(--red); border:none; padding:12px;
-    cursor:pointer; transition:background 0.2s;
+    text-transform:uppercase; color:var(--cream); background:var(--red); border:none; padding:12px; cursor:pointer; transition:background 0.2s;
   }
   .btn-admin:hover { background:var(--red-light); }
   .btn-cancel { background:transparent; border:1px solid #333; color:#555; margin-top:0.75rem; }
   .btn-cancel:hover { background:#1a1a1a; color:#888; }
 
-  /* ADMIN PANEL */
+  /* ADMIN PANEL – new layout */
   #admin-panel {
     display:none; position:fixed; inset:0; z-index:998;
-    background:var(--dark); overflow-y:auto;
-    padding:80px 0 3rem;
+    background:var(--dark); overflow:hidden; padding-top:64px;
+    flex-direction:column;
   }
-  #admin-panel.show { display:block; }
-  .admin-header {
+  #admin-panel.show { display:flex; }
+
+  .admin-topbar {
     background:var(--dark2); border-bottom:1px solid var(--red);
-    padding:1rem 2rem; display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:64px; z-index:10;
+    padding:0.75rem 1.5rem; display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0;
   }
-  .admin-header h1 { font-family:'Oswald',sans-serif; color:var(--cream); letter-spacing:3px; font-size:1.2rem; }
-  .admin-header h1 span { color:var(--red-light); }
+  .admin-topbar-title { font-family:'Oswald',sans-serif; color:var(--cream); letter-spacing:3px; font-size:1.1rem; }
+  .admin-topbar-title span { color:var(--red-light); }
+  .admin-topbar-right { display:flex; align-items:center; gap:1rem; }
+  .save-status { font-size:0.8rem; letter-spacing:1px; }
+  .save-status.ok { color:#2ecc71; }
+  .save-status.err { color:var(--red-light); }
   .admin-save-btn {
-    font-family:'Oswald',sans-serif; font-size:0.85rem; font-weight:600; letter-spacing:2px;
+    font-family:'Oswald',sans-serif; font-size:0.8rem; font-weight:600; letter-spacing:2px;
     text-transform:uppercase; background:var(--red); color:var(--cream); border:none;
-    padding:10px 28px; cursor:pointer; transition:background 0.2s; display:flex; align-items:center; gap:8px;
+    padding:9px 22px; cursor:pointer; transition:background 0.2s;
   }
   .admin-save-btn:hover { background:var(--red-light); }
   .admin-save-btn:disabled { background:#333; color:#666; cursor:not-allowed; }
-  .save-status { font-size:0.8rem; color:#2ecc71; letter-spacing:1px; }
-  .save-status.err { color:var(--red-light); }
-
-  .admin-body { max-width:1000px; margin:0 auto; padding:2rem; }
-  .admin-section { margin-bottom:3rem; }
-  .admin-section-title {
-    font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:700; letter-spacing:3px;
-    text-transform:uppercase; color:var(--cream); margin-bottom:1rem; padding-bottom:0.5rem;
-    border-bottom:1px solid #2a2a2a; display:flex; align-items:center; gap:1rem;
+  .admin-close-btn {
+    font-family:'Oswald',sans-serif; font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;
+    background:transparent; border:1px solid #333; color:#888; padding:9px 18px; cursor:pointer; transition:all 0.2s;
   }
-  .admin-section-title span { color:var(--red-light); }
+  .admin-close-btn:hover { border-color:var(--red); color:var(--red-light); }
 
-  /* TOKEN INPUT */
-  .token-box { background:var(--dark3); border:1px solid #2a2a2a; padding:1.25rem; margin-bottom:2rem; }
+  /* SIDEBAR + CONTENT */
+  .admin-layout { display:flex; flex:1; overflow:hidden; }
+  .admin-sidebar {
+    width:220px; flex-shrink:0; background:var(--dark2); border-right:1px solid #1f1f1f;
+    overflow-y:auto; padding:1rem 0;
+  }
+  .admin-sidebar-group { margin-bottom:0.25rem; }
+  .admin-sidebar-label {
+    font-family:'Oswald',sans-serif; font-size:0.65rem; letter-spacing:3px; text-transform:uppercase;
+    color:#444; padding:0.75rem 1.25rem 0.4rem; display:block;
+  }
+  .admin-nav-item {
+    display:block; width:100%; text-align:left;
+    font-family:'Oswald',sans-serif; font-size:0.85rem; font-weight:600; letter-spacing:1px; text-transform:uppercase;
+    padding:0.6rem 1.25rem; background:transparent; border:none; color:#666; cursor:pointer;
+    transition:all 0.15s; border-left:3px solid transparent;
+  }
+  .admin-nav-item:hover { color:var(--cream); background:rgba(139,26,26,0.08); }
+  .admin-nav-item.active { color:var(--cream); border-left-color:var(--red); background:rgba(139,26,26,0.12); }
+  .admin-nav-item .nav-badge {
+    display:inline-block; font-size:0.65rem; background:var(--red); color:#fff;
+    border-radius:10px; padding:1px 6px; margin-left:6px; font-weight:700; letter-spacing:0;
+  }
+
+  .admin-content { flex:1; overflow-y:auto; padding:2rem; }
+
+  /* ADMIN SECTIONS (pages) */
+  .admin-page { display:none; }
+  .admin-page.active { display:block; }
+
+  /* Token box */
+  .token-box { background:var(--dark3); border:1px solid #2a2a2a; padding:1.25rem; margin-bottom:1.5rem; }
   .token-box p { font-size:0.85rem; color:#666; margin-bottom:0.75rem; line-height:1.6; }
   .token-box a { color:var(--red-light); }
   .token-row { display:flex; gap:0.75rem; }
@@ -225,51 +252,75 @@
   .token-status.ok { color:#2ecc71; }
   .token-status.err { color:var(--red-light); }
 
-  /* COACH ROW */
-  .coach-row { display:flex; align-items:center; gap:1rem; margin-bottom:1.25rem; background:var(--dark3); border:1px solid #2a2a2a; padding:0.75rem 1rem; }
-  .coach-row label { font-family:'Oswald',sans-serif; font-size:0.8rem; letter-spacing:2px; color:#888; text-transform:uppercase; min-width:60px; }
-  .coach-row input { flex:1; background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream); padding:8px 12px; font-family:'Rajdhani',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s; }
-  .coach-row input:focus { border-color:var(--red); }
+  /* Collapsible card */
+  .admin-card { background:var(--dark3); border:1px solid #2a2a2a; margin-bottom:1rem; }
+  .admin-card-head {
+    display:flex; align-items:center; gap:1rem; padding:0.9rem 1.25rem;
+    cursor:pointer; transition:background 0.15s; user-select:none;
+  }
+  .admin-card-head:hover { background:rgba(139,26,26,0.07); }
+  .admin-card-title { font-family:'Oswald',sans-serif; font-size:1rem; font-weight:700; color:var(--cream); letter-spacing:2px; flex:1; }
+  .admin-card-subtitle { font-size:0.8rem; color:#555; }
+  .admin-card-arrow { color:#555; font-size:0.8rem; transition:transform 0.2s; flex-shrink:0; }
+  .admin-card-arrow.open { transform:rotate(180deg); }
+  .admin-card-body { display:none; padding:1.25rem; border-top:1px solid #222; }
+  .admin-card-body.open { display:block; }
 
-  /* PLAYER ROWS */
-  .player-row {
-    display:grid; grid-template-columns:1fr 1fr 1fr 120px auto; gap:0.5rem;
-    align-items:center; margin-bottom:0.5rem;
+  /* Team management */
+  .team-mgmt-list { display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem; }
+  .team-mgmt-item {
+    display:flex; align-items:center; gap:1rem; background:var(--dark4);
+    border:1px solid #2a2a2a; padding:0.75rem 1rem;
   }
-  .player-row input, .player-row select {
-    background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream);
-    padding:8px 12px; font-family:'Rajdhani',sans-serif; font-size:0.95rem; outline:none;
-    transition:border-color 0.2s; width:100%;
-  }
-  .player-row input:focus, .player-row select:focus { border-color:var(--red); }
-  .player-row select option { background:var(--dark4); }
-  .del-btn { background:transparent; border:1px solid #2a2a2a; color:#555; padding:8px 12px; cursor:pointer; transition:all 0.2s; font-size:1rem; }
+  .team-mgmt-item input { flex:1; background:var(--dark); border:1px solid #2a2a2a; color:var(--cream); padding:7px 12px; font-family:'Rajdhani',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s; }
+  .team-mgmt-item input:focus { border-color:var(--red); }
+  .team-mgmt-item .team-id-badge { font-family:'Oswald',sans-serif; font-size:0.7rem; letter-spacing:2px; color:#555; text-transform:uppercase; min-width:60px; }
+
+  /* Form fields */
+  .field-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; }
+  .field-row label { font-family:'Oswald',sans-serif; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; color:#666; min-width:80px; flex-shrink:0; }
+  .field-row input { flex:1; background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream); padding:8px 12px; font-family:'Rajdhani',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s; }
+  .field-row input:focus { border-color:var(--red); }
+
+  /* Table editor */
+  .tbl-editor { width:100%; }
+  .tbl-editor-head { display:grid; gap:0.4rem; margin-bottom:0.4rem; }
+  .tbl-editor-head span { font-family:'Oswald',sans-serif; font-size:0.65rem; letter-spacing:2px; color:#444; text-transform:uppercase; }
+  .tbl-row { display:grid; gap:0.4rem; margin-bottom:0.4rem; align-items:center; }
+  .tbl-row input, .tbl-row select { background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream); padding:7px 10px; font-family:'Rajdhani',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s; width:100%; }
+  .tbl-row input:focus, .tbl-row select:focus { border-color:var(--red); }
+  .tbl-row select option { background:var(--dark4); }
+  .tbl-add-btn { font-family:'Oswald',sans-serif; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; background:transparent; border:1px dashed #2a2a2a; color:#555; padding:8px; cursor:pointer; transition:all 0.2s; width:100%; text-align:center; margin-top:0.25rem; }
+  .tbl-add-btn:hover { border-color:var(--red); color:var(--red-light); }
+  .del-btn { background:transparent; border:1px solid #2a2a2a; color:#555; padding:7px 10px; cursor:pointer; transition:all 0.2s; font-size:0.85rem; flex-shrink:0; }
   .del-btn:hover { border-color:var(--red); color:var(--red-light); }
-  .add-row-btn {
-    font-family:'Oswald',sans-serif; font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;
-    background:transparent; border:1px dashed #2a2a2a; color:#555; padding:10px 20px;
-    cursor:pointer; transition:all 0.2s; margin-top:0.5rem;
-  }
-  .add-row-btn:hover { border-color:var(--red); color:var(--red-light); }
-  .col-headers { display:grid; grid-template-columns:1fr 1fr 1fr 120px auto; gap:0.5rem; margin-bottom:0.4rem; }
-  .col-headers span { font-family:'Oswald',sans-serif; font-size:0.7rem; letter-spacing:2px; color:#444; text-transform:uppercase; padding:0 4px; }
 
-  /* RESULT ROWS */
-  .result-edit-row { display:grid; grid-template-columns:1fr 70px 70px 1fr 100px auto; gap:0.5rem; align-items:center; margin-bottom:0.5rem; }
-  .result-edit-row input, .result-edit-row select { background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream); padding:8px 12px; font-family:'Rajdhani',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s; width:100%; }
-  .result-edit-row input:focus, .result-edit-row select:focus { border-color:var(--red); }
-  .result-edit-row select option { background:var(--dark4); }
-  .result-col-headers { display:grid; grid-template-columns:1fr 70px 70px 1fr 100px auto; gap:0.5rem; margin-bottom:0.4rem; }
+  /* Section header with add btn */
+  .section-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+  .section-toolbar h3 { font-family:'Oswald',sans-serif; font-size:0.85rem; letter-spacing:3px; text-transform:uppercase; color:#888; }
+  .mini-btn { font-family:'Oswald',sans-serif; font-size:0.7rem; letter-spacing:2px; text-transform:uppercase; background:transparent; border:1px solid #2a2a2a; color:#666; padding:5px 14px; cursor:pointer; transition:all 0.2s; }
+  .mini-btn:hover { border-color:var(--red); color:var(--red-light); }
+  .mini-btn.danger:hover { border-color:#c0392b; color:#c0392b; }
 
-  /* NEWS ROWS */
-  .news-edit-row { display:grid; grid-template-columns:120px 1fr 2fr auto; gap:0.5rem; align-items:center; margin-bottom:0.5rem; }
-  .news-edit-row input, .news-edit-row textarea { background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream); padding:8px 12px; font-family:'Rajdhani',sans-serif; font-size:0.95rem; outline:none; transition:border-color 0.2s; width:100%; }
-  .news-edit-row input:focus, .news-edit-row textarea:focus { border-color:var(--red); }
-  .news-edit-row textarea { resize:vertical; min-height:60px; }
-  .news-col-headers { display:grid; grid-template-columns:120px 1fr 2fr auto; gap:0.5rem; margin-bottom:0.4rem; }
+  /* Season admin */
+  .season-admin-card { background:var(--dark4); border:1px solid #2a2a2a; margin-bottom:0.75rem; }
+  .season-admin-head { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; cursor:pointer; }
+  .season-admin-head:hover { background:rgba(255,255,255,0.02); }
+  .season-admin-head input { flex:1; background:var(--dark); border:1px solid #2a2a2a; color:var(--cream); padding:6px 10px; font-family:'Rajdhani',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s; }
+  .season-admin-head input:focus { border-color:var(--red); }
+  .season-admin-body { display:none; padding:1rem; border-top:1px solid #222; }
+  .season-admin-body.open { display:block; }
 
+  /* grid layouts for rows */
+  .grid-player { grid-template-columns: 1fr 1fr 2fr 110px 32px; }
+  .grid-result  { grid-template-columns: 1.5fr 60px 60px 1fr 110px 32px; }
+  .grid-news    { grid-template-columns: 110px 1fr 2fr 32px; }
+  .grid-hist-player { grid-template-columns: 1fr 70px 70px 70px 70px 32px; }
 
-  /* ===================== HISTORIE ===================== */
+  .news-textarea { background:var(--dark4); border:1px solid #2a2a2a; color:var(--cream); padding:7px 10px; font-family:'Rajdhani',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s; width:100%; resize:vertical; min-height:52px; }
+  .news-textarea:focus { border-color:var(--red); }
+
+/* ===================== HISTORIE ===================== */
   #historie-page {
     display: none; position: fixed; inset: 0; z-index: 200;
     background: var(--dark); overflow-y: auto; padding-top: 64px;
@@ -395,105 +446,98 @@
 
 <!-- ADMIN PANEL -->
 <div id="admin-panel">
-  <div class="admin-header">
-    <h1>ADMIN <span>PANEL</span></h1>
-    <div style="display:flex;align-items:center;gap:1.5rem;">
+  <!-- TOP BAR -->
+  <div class="admin-topbar">
+    <div class="admin-topbar-title">&#9881; ADMIN <span>PANEL</span></div>
+    <div class="admin-topbar-right">
       <span class="save-status" id="save-status"></span>
       <button class="admin-save-btn" id="save-btn" onclick="saveAll()">
         <span id="save-btn-text">&#128190; Speichern &amp; Ver&ouml;ffentlichen</span>
       </button>
-      <button class="admin-save-btn" style="background:transparent;border:1px solid #333;color:#888;" onclick="closeAdmin()">&#10005; Schlie&szlig;en</button>
+      <button class="admin-close-btn" onclick="closeAdmin()">&#10005; Schlie&szlig;en</button>
     </div>
   </div>
 
-  <div class="admin-body">
-
-    <!-- GITHUB TOKEN -->
-    <div class="token-box">
-      <p>&#128274; <strong style="color:var(--cream)">GitHub Token</strong> – wird nur in deinem Browser gespeichert, nie hochgeladen. Ben&ouml;tigt f&uuml;r das Speichern auf GitHub.<br>
-      Erstellen unter: <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> → Tokens (classic) → repo-Berechtigung</p>
-      <div class="token-row">
-        <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-        <button onclick="saveToken()">Token speichern</button>
+  <!-- SIDEBAR + CONTENT -->
+  <div class="admin-layout">
+    <!-- SIDEBAR -->
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-group">
+        <span class="admin-sidebar-label">Einstellungen</span>
+        <button class="admin-nav-item active" onclick="showAdminPage('page-settings')">&#128274; GitHub Token</button>
       </div>
-      <div class="token-status" id="token-status"></div>
-    </div>
-
-    <!-- DACHCS LINKS -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#128279; <span>DachCS</span> – Links</div>
-      <div class="coach-row">
-        <label>BoBoBoot</label>
-        <input type="text" id="boot-dachcs" placeholder="https://www.dachcs.de/teams/..." oninput="state.boot.dachcs=this.value;updateDachcsLinks()">
+      <div class="admin-sidebar-group">
+        <span class="admin-sidebar-label">Teams</span>
+        <button class="admin-nav-item" onclick="showAdminPage('page-teams')">&#9881; Team-Verwaltung</button>
       </div>
-      <div class="coach-row">
-        <label>BoBoRage</label>
-        <input type="text" id="rage-dachcs" placeholder="https://www.dachcs.de/teams/..." oninput="state.rage.dachcs=this.value;updateDachcsLinks()">
+      <div class="admin-sidebar-group" id="sidebar-team-links">
+        <!-- dynamic team nav items inserted here -->
+      </div>
+      <div class="admin-sidebar-group">
+        <span class="admin-sidebar-label">Sonstiges</span>
+        <button class="admin-nav-item" onclick="showAdminPage('page-news')">&#128240; News</button>
+        <button class="admin-nav-item" onclick="showAdminPage('page-histoire')">&#128218; Historie</button>
       </div>
     </div>
 
-    <!-- BOBOBOOT ROSTER -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#128100; <span>BoBoBoot</span> – Kader</div>
-      <div class="coach-row">
-        <label>Coach</label>
-        <input type="text" id="boot-coach" placeholder="Name des Coaches (leer lassen falls keiner)">
+    <!-- CONTENT -->
+    <div class="admin-content">
+
+      <!-- PAGE: SETTINGS -->
+      <div class="admin-page active" id="page-settings">
+        <div class="token-box">
+          <p>&#128274; <strong style="color:var(--cream)">GitHub Token</strong> – wird nur lokal in deinem Browser gespeichert, nie hochgeladen.<br>
+          Erstellen: <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> → Tokens (classic) → repo</p>
+          <div class="token-row">
+            <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            <button onclick="saveToken()">Speichern</button>
+          </div>
+          <div class="token-status" id="token-status"></div>
+        </div>
       </div>
-      <div class="col-headers"><span>Name</span><span>Rolle</span><span>Steam-URL</span><span>Typ</span><span></span></div>
-      <div id="boot-players"></div>
-      <button class="add-row-btn" onclick="addPlayer('boot')">+ Spieler hinzuf&uuml;gen</button>
-    </div>
 
-    <!-- BOBORAGE ROSTER -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#128100; <span>BoBoRage</span> – Kader</div>
-      <div class="coach-row">
-        <label>Coach</label>
-        <input type="text" id="rage-coach" placeholder="Name des Coaches (leer lassen falls keiner)">
+      <!-- PAGE: TEAMS MANAGEMENT -->
+      <div class="admin-page" id="page-teams">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">Teams verwalten</div>
+            <div class="admin-card-subtitle" id="teams-count-label"></div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;line-height:1.6">Hier kannst du Teams anlegen und l&ouml;schen. Das &auml;ndert auch die Navigation und alle anderen Bereiche.</p>
+            <div class="team-mgmt-list" id="team-mgmt-list"></div>
+            <button class="tbl-add-btn" onclick="addTeam()">+ Neues Team anlegen</button>
+          </div>
+        </div>
       </div>
-      <div class="col-headers"><span>Name</span><span>Rolle</span><span>Steam-URL</span><span>Typ</span><span></span></div>
-      <div id="rage-players"></div>
-      <button class="add-row-btn" onclick="addPlayer('rage')">+ Spieler hinzuf&uuml;gen</button>
-    </div>
 
-    <!-- BOOT RESULTS -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#127942; <span>BoBoBoot</span> – Ergebnisse</div>
-      <div class="result-col-headers"><span>Gegner</span><span>Score BoBo</span><span>Score Gegner</span><span>Map</span><span>Ergebnis</span><span></span></div>
-      <div id="boot-results-edit"></div>
-      <button class="add-row-btn" onclick="addResult('boot')">+ Ergebnis hinzuf&uuml;gen</button>
-    </div>
+      <!-- PAGE: per-team (injected dynamically) -->
+      <div id="team-pages-container"></div>
 
-    <!-- RAGE RESULTS -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#127942; <span>BoBoRage</span> – Ergebnisse</div>
-      <div class="result-col-headers"><span>Gegner</span><span>Score BoBo</span><span>Score Gegner</span><span>Map</span><span>Ergebnis</span><span></span></div>
-      <div id="rage-results-edit"></div>
-      <button class="add-row-btn" onclick="addResult('rage')">+ Ergebnis hinzuf&uuml;gen</button>
-    </div>
+      <!-- PAGE: NEWS -->
+      <div class="admin-page" id="page-news">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">News</div>
+            <div class="admin-card-subtitle" id="news-count-lbl"></div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <div class="tbl-editor-head tbl-row grid-news"><span>Datum</span><span>Titel</span><span>Text</span><span></span></div>
+            <div id="news-edit"></div>
+            <button class="tbl-add-btn" onclick="addNews()">+ News hinzuf&uuml;gen</button>
+          </div>
+        </div>
+      </div>
 
-    <!-- NEWS -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#128240; <span>News</span></div>
-      <div class="news-col-headers"><span>Datum</span><span>Titel</span><span>Text</span><span></span></div>
-      <div id="news-edit"></div>
-      <button class="add-row-btn" onclick="addNews()">+ News hinzuf&uuml;gen</button>
-    </div>
+      <!-- PAGE: HISTOIRE -->
+      <div class="admin-page" id="page-histoire">
+        <div id="histoire-admin-content"></div>
+      </div>
 
-
-    <!-- HISTORIE -->
-    <div class="admin-section">
-      <div class="admin-section-title">&#128218; <span>BoBoBoot</span> – Historie</div>
-      <div id="hist-boot-admin"></div>
-      <button class="add-season-btn" onclick="addSeason('boot')">+ Saison hinzuf&uuml;gen</button>
-    </div>
-    <div class="admin-section">
-      <div class="admin-section-title">&#128218; <span>BoBoRage</span> – Historie</div>
-      <div id="hist-rage-admin"></div>
-      <button class="add-season-btn" onclick="addSeason('rage')">+ Saison hinzuf&uuml;gen</button>
-    </div>
-
-  </div>
+    </div><!-- /admin-content -->
+  </div><!-- /admin-layout -->
 </div>
 
 <!-- NAV -->
@@ -518,9 +562,7 @@
   <h1 class="hero-title">Bo<span>Bo</span> Clan</h1>
   <p class="hero-subtitle">Counter-Strike 2 &middot; Deutschland</p>
   <div class="hero-divider"></div>
-  <div class="hero-teams">
-    <button class="hero-team-btn" onclick="scrollToTeam('boot')">BoBo<span style="color:var(--red-light)">Boot</span></button>
-    <button class="hero-team-btn" onclick="scrollToTeam('rage')">BoBo<span style="color:var(--red-light)">Rage</span></button>
+  <div class="hero-teams" id="nav-team-links">
   </div>
 </section>
 
@@ -529,61 +571,21 @@
   <div class="container">
     <h2 class="section-title">Unsere <span>Teams</span></h2>
     <div class="section-line"></div>
-    <div class="team-tabs">
-      <button class="tab-btn active" id="tab-boot" onclick="switchTeam('boot')">BoBoBoot</button>
-      <button class="tab-btn" id="tab-rage" onclick="switchTeam('rage')">BoBoRage</button>
-    </div>
-    <div class="team-panel active" id="panel-boot">
-      <div class="team-meta">
-        <div>
-          <div class="team-meta-name">BoBoBoot</div>
-          <div class="team-meta-coach" id="boot-coach-display">Coach: <span style="color:#555">&#8211;</span></div>
-        </div>
-        <a href="https://www.dachcs.de" target="_blank" rel="noopener" class="dacha-link dacha-link-boot">&#x2197; DachCS</a>
-      </div>
-      <div class="roster-section">
-        <div class="roster-label">Stammkader</div>
-        <div class="team-grid" id="boot-roster-display"></div>
-      </div>
-      <div id="boot-standin-wrap" style="display:none;">
-        <div class="roster-label">Stand-ins</div>
-        <div class="team-grid" id="boot-standin-display"></div>
-      </div>
-    </div>
-    <div class="team-panel" id="panel-rage">
-      <div class="team-meta">
-        <div>
-          <div class="team-meta-name">BoBoRage</div>
-          <div class="team-meta-coach" id="rage-coach-display">Coach: <span style="color:#555">&#8211;</span></div>
-        </div>
-        <a href="https://www.dachcs.de" target="_blank" rel="noopener" class="dacha-link dacha-link-rage">&#x2197; DachCS</a>
-      </div>
-      <div class="roster-section">
-        <div class="roster-label">Stammkader</div>
-        <div class="team-grid" id="rage-roster-display"></div>
-      </div>
-      <div id="rage-standin-wrap" style="display:none;">
-        <div class="roster-label">Stand-ins</div>
-        <div class="team-grid" id="rage-standin-display"></div>
-      </div>
-    </div>
+    <div class="team-tabs" id="teams-tabs"></div>
+    <div id="teams-panels"></div>
   </div>
 </section>
+
 
 <!-- ERGEBNISSE -->
 <section class="results" id="ergebnisse">
   <div class="container">
     <h2 class="section-title">Letzte <span>Ergebnisse</span></h2>
     <div class="section-line"></div>
-    <div class="team-tabs">
-      <button class="tab-btn active" id="rtab-boot" onclick="switchResults('boot')">BoBoBoot</button>
-      <button class="tab-btn" id="rtab-rage" onclick="switchResults('rage')">BoBoRage</button>
-    </div>
-    <div class="team-panel active" id="rpanel-boot"><div class="results-list" id="boot-results-display"></div></div>
-    <div class="team-panel" id="rpanel-rage"><div class="results-list" id="rage-results-display"></div></div>
+    <div class="team-tabs" id="results-tabs"></div>
+    <div id="results-panels"></div>
   </div>
 </section>
-
 <!-- NEWS -->
 <section class="news" id="news">
   <div class="container">
@@ -612,17 +614,9 @@
     <button class="hist-close" onclick="hideHistorie()">&#10005; Schlie&szlig;en</button>
   </div>
   <div class="hist-body">
-    <div class="hist-tabs">
-      <button class="hist-tab active" id="htab-boot" onclick="switchHist('boot')">BoBoBoot</button>
-      <button class="hist-tab" id="htab-rage" onclick="switchHist('rage')">BoBoRage</button>
-    </div>
-    <div class="hist-panel active" id="hpanel-boot">
-      <div id="hist-boot-display"></div>
-    </div>
-    <div class="hist-panel" id="hpanel-rage">
-      <div id="hist-rage-display"></div>
-    </div>
-  </div>
+    <div class="hist-tabs" id="hist-tabs"></div>
+    <div id="hist-panels"></div>
+  </div></div>
 </div>
 
 <footer>
@@ -637,33 +631,41 @@
 </footer>
 
 <script>
-// ── Passwort ──────────────────────────────────────────────
+// ── Config ─────────────────────────────────────────────────
 const ADMIN_PW = 'unserPasswortIst124';
-
-// ── GitHub Config ─────────────────────────────────────────
 const GH_USER = 'BoBoClanCs';
 const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 
-// ── State ─────────────────────────────────────────────────
+// ── State ──────────────────────────────────────────────────
+// state.teams = [ { id, name, coach, dachcs, players:[], results:[], histoire:[] } ]
+// state.news  = [ { date, title, text } ]
 let state = {
-  boot: { coach:'', players:[], results:[], dachcs:'', histoire:[] },
-  rage: { coach:'', players:[], results:[], dachcs:'', histoire:[] },
+  teams: [
+    { id:'boot', name:'BoBoBoot', coach:'', dachcs:'', players:[], results:[], histoire:[] },
+    { id:'rage', name:'BoBoRage', coach:'', dachcs:'', players:[], results:[], histoire:[] }
+  ],
   news: []
 };
 
-// ── Token ─────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function initials(n) { return (n||'?').split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function teamById(id) { return state.teams.find(t => t.id === id); }
+function genId() { return 'team_' + Math.random().toString(36).slice(2,7); }
+
+// ── Token ──────────────────────────────────────────────────
 function getToken() { return localStorage.getItem('bobo_gh_token') || ''; }
 function saveToken() {
   const t = document.getElementById('gh-token-input').value.trim();
-  if (!t) return;
+  if (!t || t.startsWith('•')) return;
   localStorage.setItem('bobo_gh_token', t);
   document.getElementById('token-status').className = 'token-status ok';
   document.getElementById('token-status').textContent = '✓ Token gespeichert';
 }
 
-// ── Login ─────────────────────────────────────────────────
+// ── Login ──────────────────────────────────────────────────
 function openAdmin() {
   document.getElementById('admin-login-overlay').classList.add('show');
   setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
@@ -674,10 +676,8 @@ function closeLogin() {
   document.getElementById('login-err').classList.remove('show');
 }
 function checkLogin() {
-  const pw = document.getElementById('admin-pw-input').value;
-  if (pw === ADMIN_PW) {
-    closeLogin();
-    openAdminPanel();
+  if (document.getElementById('admin-pw-input').value === ADMIN_PW) {
+    closeLogin(); openAdminPanel();
   } else {
     document.getElementById('login-err').classList.add('show');
     document.getElementById('admin-pw-input').value = '';
@@ -692,424 +692,541 @@ function openAdminPanel() {
     document.getElementById('token-status').className = 'token-status ok';
     document.getElementById('token-status').textContent = '✓ Token vorhanden';
   }
-  loadAdminForms();
-  loadHistoireAdmin();
+  rebuildAdminSidebar();
+  rebuildTeamPages();
+  refreshAllAdminForms();
+  showAdminPage('page-settings');
 }
 function closeAdmin() {
   document.getElementById('admin-panel').classList.remove('show');
   document.getElementById('admin-toggle-btn').classList.remove('active');
 }
 
-// ── Helpers ───────────────────────────────────────────────
-function initials(n) { return (n||'?').split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+// ── Admin navigation ───────────────────────────────────────
+function showAdminPage(id) {
+  document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-item').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById(id);
+  if (page) page.classList.add('active');
+  document.querySelectorAll(`.admin-nav-item[data-page="${id}"]`).forEach(b => b.classList.add('active'));
+}
+function toggleCard(head) {
+  const body = head.nextElementSibling;
+  const arrow = head.querySelector('.admin-card-arrow');
+  body.classList.toggle('open');
+  if (arrow) arrow.classList.toggle('open');
+}
 
-function playerRowHTML(teamId, i, p) {
-  return `<div class="player-row" id="${teamId}-pr-${i}">
-    <input type="text" placeholder="Spielername" value="${esc(p.name||'')}" oninput="updatePlayer('${teamId}',${i},'name',this.value)">
-    <input type="text" placeholder="Rolle" value="${esc(p.role||'')}" oninput="updatePlayer('${teamId}',${i},'role',this.value)">
-    <input type="text" placeholder="https://steamcommunity.com/id/..." value="${esc(p.steam||'')}" oninput="updatePlayer('${teamId}',${i},'steam',this.value)">
-    <select onchange="updatePlayer('${teamId}',${i},'type',this.value)">
-      <option value="main"${(p.type||'main')==='main'?' selected':''}>Stammspieler</option>
-      <option value="standin"${p.type==='standin'?' selected':''}>Stand-in</option>
-    </select>
-    <button class="del-btn" onclick="delPlayer('${teamId}',${i})">&#10005;</button>
+// ── Sidebar rebuild ────────────────────────────────────────
+function rebuildAdminSidebar() {
+  const container = document.getElementById('sidebar-team-links');
+  container.innerHTML = '<span class="admin-sidebar-label">Kader & Ergebnisse</span>' +
+    state.teams.map(t =>
+      `<button class="admin-nav-item" data-page="page-team-${t.id}" onclick="showAdminPage('page-team-${t.id}')">${esc(t.name)}</button>`
+    ).join('');
+  // count labels
+  document.getElementById('teams-count-label').textContent = state.teams.length + ' Teams';
+  document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+}
+
+// ── Team management page ───────────────────────────────────
+function renderTeamMgmtList() {
+  document.getElementById('team-mgmt-list').innerHTML = state.teams.map((t,i) => `
+    <div class="team-mgmt-item">
+      <span class="team-id-badge">#${i+1}</span>
+      <input type="text" value="${esc(t.name)}" placeholder="Teamname" oninput="renameTeam('${t.id}',this.value)">
+      <button class="del-btn" onclick="deleteTeam('${t.id}')" title="Team löschen">&#128465;</button>
+    </div>`).join('');
+}
+function addTeam() {
+  const id = genId();
+  state.teams.push({ id, name:'Neues Team', coach:'', dachcs:'', players:[], results:[], histoire:[] });
+  renderTeamMgmtList();
+  rebuildAdminSidebar();
+  rebuildTeamPages();
+  renderPublic();
+}
+function renameTeam(id, name) {
+  const t = teamById(id); if (!t) return;
+  t.name = name;
+  rebuildAdminSidebar();
+  renderPublic();
+}
+function deleteTeam(id) {
+  if (!confirm('Team wirklich löschen? Alle Daten dieses Teams gehen verloren.')) return;
+  state.teams = state.teams.filter(t => t.id !== id);
+  renderTeamMgmtList();
+  rebuildAdminSidebar();
+  rebuildTeamPages();
+  renderPublic();
+}
+
+// ── Per-team admin pages ───────────────────────────────────
+function rebuildTeamPages() {
+  const container = document.getElementById('team-pages-container');
+  container.innerHTML = state.teams.map(t => teamPageHTML(t)).join('');
+  renderTeamMgmtList();
+  // re-attach coach/dachcs listeners
+  state.teams.forEach(t => {
+    const ci = document.getElementById('coach-'+t.id);
+    const di = document.getElementById('dachcs-'+t.id);
+    if (ci) ci.addEventListener('input', () => { t.coach = ci.value; renderPublic(); });
+    if (di) di.addEventListener('input', () => { t.dachcs = di.value; updateDachcsLinks(); });
+  });
+}
+
+function teamPageHTML(t) {
+  return `<div class="admin-page" id="page-team-${t.id}">
+
+    <!-- Info card -->
+    <div class="admin-card">
+      <div class="admin-card-head" onclick="toggleCard(this)">
+        <div class="admin-card-title">${esc(t.name)} – Info</div>
+        <div class="admin-card-arrow open">&#9660;</div>
+      </div>
+      <div class="admin-card-body open">
+        <div class="field-row">
+          <label>Coach</label>
+          <input type="text" id="coach-${t.id}" value="${esc(t.coach)}" placeholder="Name des Coaches">
+        </div>
+        <div class="field-row">
+          <label>DachCS URL</label>
+          <input type="text" id="dachcs-${t.id}" value="${esc(t.dachcs)}" placeholder="https://www.dachcs.de/teams/...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Players card -->
+    <div class="admin-card">
+      <div class="admin-card-head" onclick="toggleCard(this)">
+        <div class="admin-card-title">Kader</div>
+        <div class="admin-card-subtitle">${t.players.length} Spieler</div>
+        <div class="admin-card-arrow">&#9660;</div>
+      </div>
+      <div class="admin-card-body">
+        <div class="tbl-editor-head tbl-row grid-player"><span>Name</span><span>Rolle</span><span>Steam-URL</span><span>Typ</span><span></span></div>
+        <div id="players-${t.id}">${t.players.map((p,i) => playerRowHTML(t.id,i,p)).join('')}</div>
+        <button class="tbl-add-btn" onclick="addPlayer('${t.id}')">+ Spieler hinzufügen</button>
+      </div>
+    </div>
+
+    <!-- Results card -->
+    <div class="admin-card">
+      <div class="admin-card-head" onclick="toggleCard(this)">
+        <div class="admin-card-title">Ergebnisse</div>
+        <div class="admin-card-subtitle">${t.results.length} Einträge</div>
+        <div class="admin-card-arrow">&#9660;</div>
+      </div>
+      <div class="admin-card-body">
+        <div class="tbl-editor-head tbl-row grid-result"><span>Gegner</span><span>Wir</span><span>Sie</span><span>Map</span><span>Ergebnis</span><span></span></div>
+        <div id="results-${t.id}">${t.results.map((r,i) => resultRowHTML(t.id,i,r)).join('')}</div>
+        <button class="tbl-add-btn" onclick="addResult('${t.id}')">+ Ergebnis hinzufügen</button>
+      </div>
+    </div>
+
   </div>`;
 }
 
-function resultRowHTML(teamId, i, r) {
-  return `<div class="result-edit-row" id="${teamId}-rr-${i}">
-    <input type="text" placeholder="Gegner" value="${esc(r.opp||'')}" oninput="updateResult('${teamId}',${i},'opp',this.value)">
-    <input type="number" placeholder="16" value="${esc(r.s1||'')}" oninput="updateResult('${teamId}',${i},'s1',this.value)">
-    <input type="number" placeholder="8"  value="${esc(r.s2||'')}" oninput="updateResult('${teamId}',${i},'s2',this.value)">
-    <input type="text" placeholder="Map (z.B. Mirage)" value="${esc(r.map||'')}" oninput="updateResult('${teamId}',${i},'map',this.value)">
-    <select onchange="updateResult('${teamId}',${i},'res',this.value)">
+// ── Row templates ──────────────────────────────────────────
+function playerRowHTML(tid, i, p) {
+  return `<div class="tbl-row grid-player">
+    <input type="text" placeholder="Spielername" value="${esc(p.name)}" oninput="updatePlayer('${tid}',${i},'name',this.value)">
+    <input type="text" placeholder="Rolle" value="${esc(p.role)}" oninput="updatePlayer('${tid}',${i},'role',this.value)">
+    <input type="text" placeholder="https://steamcommunity.com/id/..." value="${esc(p.steam||'')}" oninput="updatePlayer('${tid}',${i},'steam',this.value)">
+    <select onchange="updatePlayer('${tid}',${i},'type',this.value)">
+      <option value="main"${(p.type||'main')==='main'?' selected':''}>Stammspieler</option>
+      <option value="standin"${p.type==='standin'?' selected':''}>Stand-in</option>
+    </select>
+    <button class="del-btn" onclick="delPlayer('${tid}',${i})">&#10005;</button>
+  </div>`;
+}
+function resultRowHTML(tid, i, r) {
+  return `<div class="tbl-row grid-result">
+    <input type="text" placeholder="Gegner" value="${esc(r.opp)}" oninput="updateResult('${tid}',${i},'opp',this.value)">
+    <input type="number" placeholder="16" value="${esc(r.s1)}" oninput="updateResult('${tid}',${i},'s1',this.value)">
+    <input type="number" placeholder="8"  value="${esc(r.s2)}" oninput="updateResult('${tid}',${i},'s2',this.value)">
+    <input type="text" placeholder="Mirage" value="${esc(r.map)}" oninput="updateResult('${tid}',${i},'map',this.value)">
+    <select onchange="updateResult('${tid}',${i},'res',this.value)">
       <option value="win"${r.res==='win'?' selected':''}>Sieg</option>
       <option value="loss"${r.res==='loss'?' selected':''}>Niederlage</option>
       <option value="draw"${(r.res||'draw')==='draw'?' selected':''}>Unentschieden</option>
     </select>
-    <button class="del-btn" onclick="delResult('${teamId}',${i})">&#10005;</button>
+    <button class="del-btn" onclick="delResult('${tid}',${i})">&#10005;</button>
   </div>`;
 }
-
 function newsRowHTML(i, n) {
-  return `<div class="news-edit-row" id="news-nr-${i}">
-    <input type="text" placeholder="Mai 2025" value="${esc(n.date||'')}" oninput="updateNews(${i},'date',this.value)">
-    <input type="text" placeholder="Titel" value="${esc(n.title||'')}" oninput="updateNews(${i},'title',this.value)">
-    <textarea placeholder="Text..." oninput="updateNews(${i},'text',this.value)">${esc(n.text||'')}</textarea>
+  return `<div class="tbl-row grid-news">
+    <input type="text" placeholder="Mai 2025" value="${esc(n.date)}" oninput="updateNews(${i},'date',this.value)">
+    <input type="text" placeholder="Titel" value="${esc(n.title)}" oninput="updateNews(${i},'title',this.value)">
+    <textarea class="news-textarea" placeholder="Text..." oninput="updateNews(${i},'text',this.value)">${esc(n.text)}</textarea>
     <button class="del-btn" onclick="delNews(${i})">&#10005;</button>
   </div>`;
 }
 
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── Form loading ──────────────────────────────────────────
-function updateDachcsLinks() {
-  ['boot','rage'].forEach(t => {
-    const url = state[t].dachcs || 'https://www.dachcs.de';
-    document.querySelectorAll('.dacha-link-'+t).forEach(el => el.href = url);
-  });
-}
-
-function loadAdminForms() {
-  ['boot','rage'].forEach(t => {
-    document.getElementById(t+'-coach').value = state[t].coach || '';
-    document.getElementById(t+'-dachcs').value = state[t].dachcs || '';
-    const pc = document.getElementById(t+'-players');
-    pc.innerHTML = state[t].players.map((p,i) => playerRowHTML(t,i,p)).join('');
-    const rc = document.getElementById(t+'-results-edit');
-    rc.innerHTML = state[t].results.map((r,i) => resultRowHTML(t,i,r)).join('');
-  });
-  document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
-}
-
-// ── State update helpers ──────────────────────────────────
-function updatePlayer(t,i,k,v) { state[t].players[i][k]=v; renderPublic(); }
-function updateResult(t,i,k,v) { state[t].results[i][k]=v; renderPublic(); }
+// ── State updaters ─────────────────────────────────────────
+function updatePlayer(tid,i,k,v) { const t=teamById(tid); if(t){t.players[i][k]=v; renderPublic();} }
+function updateResult(tid,i,k,v) { const t=teamById(tid); if(t){t.results[i][k]=v; renderPublic();} }
 function updateNews(i,k,v) { state.news[i][k]=v; renderPublic(); }
-function updateCoach(t) { state[t].coach = document.getElementById(t+'-coach').value; renderPublic(); }
 
-// Attach coach inputs live
-document.getElementById('boot-coach').addEventListener('input', () => { state.boot.coach = document.getElementById('boot-coach').value; renderPublic(); });
-document.getElementById('rage-coach').addEventListener('input', () => { state.rage.coach = document.getElementById('rage-coach').value; renderPublic(); });
-
-function addPlayer(t) {
-  state[t].players.push({name:'',role:'',steam:'',type:'main'});
-  const pc = document.getElementById(t+'-players');
-  const i = state[t].players.length-1;
-  pc.insertAdjacentHTML('beforeend', playerRowHTML(t,i,state[t].players[i]));
+function addPlayer(tid) {
+  const t = teamById(tid); if(!t) return;
+  t.players.push({name:'',role:'',steam:'',type:'main'});
+  document.getElementById('players-'+tid).innerHTML = t.players.map((p,i) => playerRowHTML(tid,i,p)).join('');
+  updateCardSubtitle(tid, 'players');
 }
-function delPlayer(t,i) {
-  state[t].players.splice(i,1);
-  const pc = document.getElementById(t+'-players');
-  pc.innerHTML = state[t].players.map((p,j) => playerRowHTML(t,j,p)).join('');
+function delPlayer(tid,i) {
+  const t = teamById(tid); if(!t) return;
+  t.players.splice(i,1);
+  document.getElementById('players-'+tid).innerHTML = t.players.map((p,j) => playerRowHTML(tid,j,p)).join('');
+  updateCardSubtitle(tid, 'players');
   renderPublic();
 }
-function addResult(t) {
-  state[t].results.push({opp:'',s1:'',s2:'',map:'',res:'win'});
-  const rc = document.getElementById(t+'-results-edit');
-  const i = state[t].results.length-1;
-  rc.insertAdjacentHTML('beforeend', resultRowHTML(t,i,state[t].results[i]));
+function addResult(tid) {
+  const t = teamById(tid); if(!t) return;
+  t.results.push({opp:'',s1:'',s2:'',map:'',res:'win'});
+  document.getElementById('results-'+tid).innerHTML = t.results.map((r,i) => resultRowHTML(tid,i,r)).join('');
+  updateCardSubtitle(tid, 'results');
 }
-function delResult(t,i) {
-  state[t].results.splice(i,1);
-  const rc = document.getElementById(t+'-results-edit');
-  rc.innerHTML = state[t].results.map((r,j) => resultRowHTML(t,j,r)).join('');
+function delResult(tid,i) {
+  const t = teamById(tid); if(!t) return;
+  t.results.splice(i,1);
+  document.getElementById('results-'+tid).innerHTML = t.results.map((r,j) => resultRowHTML(tid,j,r)).join('');
+  updateCardSubtitle(tid, 'results');
   renderPublic();
 }
 function addNews() {
   state.news.push({date:'',title:'',text:''});
-  const nc = document.getElementById('news-edit');
   const i = state.news.length-1;
-  nc.insertAdjacentHTML('beforeend', newsRowHTML(i,state.news[i]));
+  document.getElementById('news-edit').insertAdjacentHTML('beforeend', newsRowHTML(i, state.news[i]));
+  document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
 }
 function delNews(i) {
   state.news.splice(i,1);
   document.getElementById('news-edit').innerHTML = state.news.map((n,j) => newsRowHTML(j,n)).join('');
+  document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
   renderPublic();
 }
+function updateCardSubtitle(tid, type) {
+  const t = teamById(tid); if(!t) return;
+  const count = type === 'players' ? t.players.length + ' Spieler' : t.results.length + ' Einträge';
+  // find the card subtitle in the team page
+  const page = document.getElementById('page-team-'+tid);
+  if (!page) return;
+  const cards = page.querySelectorAll('.admin-card');
+  const idx = type === 'players' ? 1 : 2;
+  if (cards[idx]) { const sub = cards[idx].querySelector('.admin-card-subtitle'); if(sub) sub.textContent = count; }
+}
 
-// ── Render public view ─────────────────────────────────────
-function renderPublic() {
-  ['boot','rage'].forEach(t => {
-    const coach = state[t].coach;
-    const coachEl = document.getElementById(t+'-coach-display');
-    coachEl.innerHTML = coach
-      ? 'Coach: <span>' + esc(coach) + '</span>'
-      : 'Coach: <span style="color:#555">&#8211;</span>';
+function refreshAllAdminForms() {
+  document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
+  document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+  renderHistoireAdminPage();
+}
 
-    const main = state[t].players.filter(p => (p.type||'main') !== 'standin');
-    const standins = state[t].players.filter(p => p.type === 'standin');
-
-    const rEl = document.getElementById(t+'-roster-display');
-    rEl.innerHTML = main.length === 0
-      ? '<div class="empty">Noch keine Spieler eingetragen</div>'
-      : main.map(p => memberCardHTML(p, false)).join('');
-
-    const swEl = document.getElementById(t+'-standin-wrap');
-    const sEl = document.getElementById(t+'-standin-display');
-    if (standins.length > 0) {
-      sEl.innerHTML = standins.map(p => memberCardHTML(p, true)).join('');
-      swEl.style.display = 'block';
-    } else {
-      swEl.style.display = 'none';
-    }
-
-    const resEl = document.getElementById(t+'-results-display');
-    resEl.innerHTML = state[t].results.length === 0
-      ? '<div class="empty">Noch keine Ergebnisse eingetragen</div>'
-      : state[t].results.map(r => resultCardHTML(r)).join('');
+// ── Public render ──────────────────────────────────────────
+function updateDachcsLinks() {
+  state.teams.forEach(t => {
+    const url = t.dachcs || 'https://www.dachcs.de';
+    document.querySelectorAll('.dacha-link-'+t.id).forEach(el => el.href = url);
   });
+}
 
+function renderPublic() {
+  // Render team tabs + panels dynamically
+  const tabsEl = document.getElementById('teams-tabs');
+  const panelsEl = document.getElementById('teams-panels');
+  const rtabsEl = document.getElementById('results-tabs');
+  const rpanelsEl = document.getElementById('results-panels');
+
+  tabsEl.innerHTML = state.teams.map((t,i) =>
+    `<button class="tab-btn${i===0?' active':''}" id="tab-${t.id}" onclick="switchTeam('${t.id}')">${esc(t.name)}</button>`
+  ).join('');
+  rtabsEl.innerHTML = state.teams.map((t,i) =>
+    `<button class="tab-btn${i===0?' active':''}" id="rtab-${t.id}" onclick="switchResults('${t.id}')">${esc(t.name)}</button>`
+  ).join('');
+
+  panelsEl.innerHTML = state.teams.map((t,i) => `
+    <div class="team-panel${i===0?' active':''}" id="panel-${t.id}">
+      <div class="team-meta">
+        <div>
+          <div class="team-meta-name">${esc(t.name)}</div>
+          <div class="team-meta-coach" id="coach-display-${t.id}">${t.coach ? 'Coach: <span>'+esc(t.coach)+'</span>' : 'Coach: <span style="color:#555">&#8211;</span>'}</div>
+        </div>
+        <a href="${esc(t.dachcs||'https://www.dachcs.de')}" target="_blank" rel="noopener" class="dacha-link dacha-link-${t.id}">&#x2197; DachCS</a>
+      </div>
+      <div class="roster-section">
+        <div class="roster-label">Stammkader</div>
+        <div class="team-grid">${renderRoster(t, false)}</div>
+      </div>
+      ${renderStandins(t)}
+    </div>`).join('');
+
+  rpanelsEl.innerHTML = state.teams.map((t,i) => `
+    <div class="team-panel${i===0?' active':''}" id="rpanel-${t.id}">
+      <div class="results-list">${renderResultsList(t)}</div>
+    </div>`).join('');
+
+  // Nav team links
+  const navTeamLinks = document.getElementById('nav-team-links');
+  if (navTeamLinks) {
+    navTeamLinks.innerHTML = state.teams.map((t,i) =>
+      `<button class="hero-team-btn" onclick="scrollToTeam('${t.id}')">${esc(t.name)}</button>`
+    ).join('');
+  }
+
+  // News
   const newsEl = document.getElementById('news-display');
   newsEl.innerHTML = state.news.length === 0
     ? '<div class="empty" style="grid-column:1/-1">Noch keine News eingetragen</div>'
     : state.news.map(n => `<div class="news-card"><div class="news-date">${esc(n.date)}</div><div class="news-title">${esc(n.title)}</div><div class="news-text">${esc(n.text)}</div></div>`).join('');
+
+  updateDachcsLinks();
+}
+
+function renderRoster(t, standin) {
+  const players = t.players.filter(p => (p.type||'main') === (standin ? 'standin' : 'main'));
+  if (players.length === 0 && !standin) return '<div class="empty">Noch keine Spieler eingetragen</div>';
+  return players.map(p => memberCardHTML(p, standin)).join('');
+}
+function renderStandins(t) {
+  const standins = t.players.filter(p => p.type === 'standin');
+  if (standins.length === 0) return '';
+  return `<div class="roster-section"><div class="roster-label">Stand-ins</div><div class="team-grid">${standins.map(p => memberCardHTML(p, true)).join('')}</div></div>`;
+}
+function renderResultsList(t) {
+  if (t.results.length === 0) return '<div class="empty">Noch keine Ergebnisse eingetragen</div>';
+  const m = {win:'badge-win',loss:'badge-loss',draw:'badge-draw'};
+  const l = {win:'Sieg',loss:'Niederlage',draw:'Unentschieden'};
+  return t.results.map(r => {
+    const res = r.res||'draw';
+    return `<div class="result-row ${res}">
+      <div><div class="r-name">${esc(t.name)}</div></div>
+      <div class="score-box">
+        <div class="score">${esc(r.s1)} &ndash; ${esc(r.s2)}</div>
+        ${r.map ? '<div class="result-meta">'+esc(r.map)+'</div>' : ''}
+        <span class="badge ${m[res]||'badge-draw'}">${l[res]||res}</span>
+      </div>
+      <div><div class="r-name right">${esc(r.opp||'?')}</div></div>
+    </div>`;
+  }).join('');
 }
 
 function memberCardHTML(p, isStandin) {
-  return `<div class="member-card ${isStandin?'standin':''}">
-    <div class="member-avatar">${initials(p.name)}</div>
+  const uid = 'av' + Math.random().toString(36).slice(2,9);
+  const borderColor = isStandin ? '#3a3a3a' : 'var(--red)';
+  const card = `<div class="member-card ${isStandin?'standin':''}">
+    <div class="member-avatar" id="${uid}" style="border-color:${borderColor}">${initials(p.name)}</div>
     <div class="member-name">${esc(p.name||'?')}</div>
     ${p.role ? '<div class="member-role">'+esc(p.role)+'</div>' : ''}
-    ${p.info ? '<div class="member-info">'+esc(p.info)+'</div>' : ''}
   </div>`;
+  if (p.steam) setTimeout(() => loadSteamAvatar(uid, p.steam, borderColor), 50);
+  return card;
+}
+function loadSteamAvatar(uid, steamUrl, borderColor) {
+  const el = document.getElementById(uid); if (!el) return;
+  const clean = steamUrl.replace(/\/+$/, '');
+  const parts = clean.split('/').filter(Boolean);
+  const last = parts[parts.length-1], type = parts[parts.length-2];
+  const xmlUrl = (type === 'profiles' && /^\d{15,}$/.test(last))
+    ? `https://steamcommunity.com/profiles/${last}?xml=1`
+    : `https://steamcommunity.com/id/${last}?xml=1`;
+  fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl))
+    .then(r => r.json()).then(data => {
+      const xml = data.contents || '';
+      const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) ||
+                xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
+      if (m && m[1] && m[1].startsWith('http')) {
+        el.innerHTML = ''; el.style.cssText += ';background:none;overflow:hidden;padding:0;';
+        const img = document.createElement('img');
+        img.src = m[1].trim();
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+        img.onerror = () => { el.style.background = 'var(--dark4)'; };
+        el.appendChild(img);
+      }
+    }).catch(()=>{});
 }
 
-function resultCardHTML(r) {
-  const m = {win:'badge-win',loss:'badge-loss',draw:'badge-draw'};
-  const l = {win:'Sieg',loss:'Niederlage',draw:'Unentschieden'};
-  const res = r.res || 'draw';
-  return `<div class="result-row ${res}">
-    <div><div class="r-name">BoBo Clan</div></div>
-    <div class="score-box">
-      <div class="score">${esc(r.s1)} &ndash; ${esc(r.s2)}</div>
-      ${r.map ? '<div class="result-meta">'+esc(r.map)+'</div>' : ''}
-      <span class="badge ${m[res]||'badge-draw'}">${l[res]||res}</span>
+// ── Histoire ───────────────────────────────────────────────
+function renderHistoire() {
+  const tabsEl = document.getElementById('hist-tabs');
+  const panelsEl = document.getElementById('hist-panels');
+  tabsEl.innerHTML = state.teams.map((t,i) =>
+    `<button class="hist-tab${i===0?' active':''}" id="htab-${t.id}" onclick="switchHist('${t.id}')">${esc(t.name)}</button>`
+  ).join('');
+  panelsEl.innerHTML = state.teams.map((t,i) => {
+    const seasons = t.histoire || [];
+    const content = seasons.length === 0
+      ? '<div class="empty">Noch keine Saisonen eingetragen</div>'
+      : [...seasons].reverse().map(s => {
+          const pHTML = (s.players||[]).length === 0
+            ? '<div class="empty" style="padding:1rem">Keine Spieler</div>'
+            : `<table class="stats-table"><thead><tr><th>Spieler</th><th class="num">Kills</th><th class="num">Assists</th><th class="num">Tode</th><th class="num">HLTV</th></tr></thead><tbody>
+              ${(s.players||[]).map(p=>`<tr><td>${esc(p.name)}</td><td class="num">${esc(p.kills||'-')}</td><td class="num">${esc(p.assists||'-')}</td><td class="num">${esc(p.deaths||'-')}</td><td class="num hltv-rating ${hltvClass(p.hltv)}">${esc(p.hltv||'-')}</td></tr>`).join('')}
+              </tbody></table>`;
+          return `<div class="season-card">
+            <div class="season-head" onclick="toggleSeason(this)">
+              <div class="season-name">${esc(s.season||'Unbekannte Saison')}</div>
+              ${s.placement?`<div class="season-placement">${esc(s.placement)}</div>`:''}
+              ${(s.wins||s.losses)?`<div class="season-record">W/L: <span>${esc(s.wins||'0')}</span>/<span>${esc(s.losses||'0')}</span></div>`:''}
+              <div class="season-toggle">&#9660;</div>
+            </div>
+            <div class="season-body">${pHTML}</div>
+          </div>`;
+        }).join('');
+    return `<div class="hist-panel${i===0?' active':''}" id="hpanel-${t.id}">${content}</div>`;
+  }).join('');
+}
+function hltvClass(v) { const n=parseFloat(v); if(isNaN(n))return''; return n>=1.15?'hltv-good':n>=0.95?'hltv-avg':'hltv-bad'; }
+function toggleSeason(head) {
+  head.nextElementSibling.classList.toggle('open');
+  head.querySelector('.season-toggle').classList.toggle('open');
+}
+function switchHist(id) {
+  document.querySelectorAll('.hist-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.hist-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('htab-'+id).classList.add('active');
+  document.getElementById('hpanel-'+id).classList.add('active');
+}
+function showHistorie(e) {
+  if(e) e.preventDefault();
+  document.getElementById('historie-page').classList.add('show');
+  renderHistoire();
+}
+function hideHistorie() { document.getElementById('historie-page').classList.remove('show'); }
+
+// ── Histoire Admin ─────────────────────────────────────────
+function renderHistoireAdminPage() {
+  const el = document.getElementById('histoire-admin-content');
+  el.innerHTML = state.teams.map(t => `
+    <div class="admin-card">
+      <div class="admin-card-head" onclick="toggleCard(this)">
+        <div class="admin-card-title">${esc(t.name)} – Historie</div>
+        <div class="admin-card-subtitle">${(t.histoire||[]).length} Saisonen</div>
+        <div class="admin-card-arrow">&#9660;</div>
+      </div>
+      <div class="admin-card-body">
+        <div id="hist-admin-${t.id}">${(t.histoire||[]).map((s,i) => histSeasonHTML(t.id,i,s)).join('')}</div>
+        <button class="tbl-add-btn" onclick="addSeason('${t.id}')">+ Saison hinzufügen</button>
+      </div>
+    </div>`).join('');
+}
+function histSeasonHTML(tid, i, s) {
+  const players = (s.players||[]).map((p,pi) => histPlayerHTML(tid,i,pi,p)).join('');
+  return `<div class="season-admin-card">
+    <div class="season-admin-head" onclick="this.nextElementSibling.classList.toggle('open')">
+      <input type="text" placeholder="Saison (z.B. Saison 1 – Frühjahr 2025)" value="${esc(s.season||'')}" oninput="updateSeason('${tid}',${i},'season',this.value)" onclick="event.stopPropagation()">
+      <input type="text" placeholder="Platzierung" value="${esc(s.placement||'')}" oninput="updateSeason('${tid}',${i},'placement',this.value)" onclick="event.stopPropagation()" style="width:160px">
+      <input type="number" placeholder="Siege" value="${esc(s.wins||'')}" oninput="updateSeason('${tid}',${i},'wins',this.value)" onclick="event.stopPropagation()" style="width:70px">
+      <input type="number" placeholder="NL" value="${esc(s.losses||'')}" oninput="updateSeason('${tid}',${i},'losses',this.value)" onclick="event.stopPropagation()" style="width:70px">
+      <button class="del-btn" onclick="delSeason('${tid}',${i})">&#128465; Saison</button>
     </div>
-    <div><div class="r-name right">${esc(r.opp||'?')}</div></div>
+    <div class="season-admin-body">
+      <div class="tbl-editor-head tbl-row grid-hist-player" style="margin-top:0.5rem"><span>Name</span><span>Kills</span><span>Assists</span><span>Tode</span><span>HLTV</span><span></span></div>
+      <div id="hist-players-${tid}-${i}">${players}</div>
+      <button class="tbl-add-btn" onclick="addHistPlayer('${tid}',${i})">+ Spieler hinzufügen</button>
+    </div>
   </div>`;
+}
+function histPlayerHTML(tid,si,pi,p) {
+  return `<div class="tbl-row grid-hist-player">
+    <input type="text" placeholder="Name" value="${esc(p.name||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'name',this.value)">
+    <input type="number" placeholder="0" value="${esc(p.kills||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'kills',this.value)">
+    <input type="number" placeholder="0" value="${esc(p.assists||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'assists',this.value)">
+    <input type="number" placeholder="0" value="${esc(p.deaths||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'deaths',this.value)">
+    <input type="text" placeholder="1.05" value="${esc(p.hltv||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'hltv',this.value)">
+    <button class="del-btn" onclick="delHistPlayer('${tid}',${si},${pi})">&#10005;</button>
+  </div>`;
+}
+function addSeason(tid) {
+  const t = teamById(tid); if(!t) return;
+  if(!t.histoire) t.histoire=[];
+  t.histoire.push({season:'',placement:'',wins:'',losses:'',players:[]});
+  renderHistoireAdminPage();
+}
+function delSeason(tid,i) {
+  const t = teamById(tid); if(!t) return;
+  t.histoire.splice(i,1); renderHistoireAdminPage();
+}
+function updateSeason(tid,i,k,v) { const t=teamById(tid); if(t&&t.histoire[i]) t.histoire[i][k]=v; }
+function addHistPlayer(tid,si) {
+  const t = teamById(tid); if(!t) return;
+  t.histoire[si].players.push({name:'',kills:'',assists:'',deaths:'',hltv:''});
+  const pi = t.histoire[si].players.length-1;
+  document.getElementById('hist-players-'+tid+'-'+si).insertAdjacentHTML('beforeend', histPlayerHTML(tid,si,pi,t.histoire[si].players[pi]));
+}
+function updateHistPlayer(tid,si,pi,k,v) { const t=teamById(tid); if(t&&t.histoire[si]) t.histoire[si].players[pi][k]=v; }
+function delHistPlayer(tid,si,pi) {
+  const t = teamById(tid); if(!t) return;
+  t.histoire[si].players.splice(pi,1);
+  document.getElementById('hist-players-'+tid+'-'+si).innerHTML = t.histoire[si].players.map((p,i) => histPlayerHTML(tid,si,i,p)).join('');
 }
 
 // ── GitHub Save ────────────────────────────────────────────
 async function saveAll() {
   const token = getToken();
-  if (!token) {
-    setStatus('⚠ Kein GitHub Token gespeichert!', true);
-    return;
-  }
+  if (!token) { setStatus('⚠ Kein Token gespeichert!', true); return; }
   const btn = document.getElementById('save-btn');
   const btnText = document.getElementById('save-btn-text');
-  btn.disabled = true;
-  btnText.textContent = 'Wird gespeichert...';
-  setStatus('', false);
-
+  btn.disabled = true; btnText.textContent = 'Wird gespeichert...'; setStatus('','');
   try {
-    // Get current SHA of file (needed for update)
-    const shaRes = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}`, {
-      headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json' }
-    });
-
     let sha = null;
-    if (shaRes.ok) {
-      const shaData = await shaRes.json();
-      sha = shaData.sha;
-    }
-
+    try {
+      const shaRes = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`, {
+        headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' }
+      });
+      if (shaRes.ok) { const d = await shaRes.json(); sha = d.sha; }
+    } catch(e) {}
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-    const body = {
-      message: 'Update clan data',
-      content,
-      branch: GH_BRANCH,
-      ...(sha ? {sha} : {})
-    };
-
     const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
-      method: 'PUT',
-      headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      method:'PUT',
+      headers:{ Authorization:'token '+token, Accept:'application/vnd.github.v3+json', 'Content-Type':'application/json' },
+      body: JSON.stringify({ message:'Update clan data', content, branch:GH_BRANCH, ...(sha?{sha}:{}) })
     });
-
-    if (res.ok) {
-      setStatus('✓ Gespeichert!', false);
-    } else {
-      const err = await res.json();
-      setStatus('Fehler: ' + (err.message || res.status), true);
-    }
-  } catch(e) {
-    setStatus('Netzwerkfehler: ' + e.message, true);
-  }
-
-  btn.disabled = false;
-  btnText.textContent = '💾 Speichern & Veröffentlichen';
+    if (res.ok) setStatus('✓ Gespeichert!', false);
+    else { const err=await res.json(); setStatus('Fehler: '+(err.message||res.status), true); }
+  } catch(e) { setStatus('Netzwerkfehler: '+e.message, true); }
+  btn.disabled=false; btnText.textContent='💾 Speichern & Veröffentlichen';
 }
-
 function setStatus(msg, isErr) {
   const el = document.getElementById('save-status');
   el.textContent = msg;
-  el.className = 'save-status' + (isErr ? ' err' : '');
+  el.className = 'save-status' + (isErr ? ' err' : (msg ? ' ok' : ''));
 }
 
-
-// ── HISTORIE ──────────────────────────────────────────────
-// state.boot.histoire = [ { season, placement, wins, losses, players: [{name,kills,assists,deaths,hltv}] } ]
-// state.rage.histoire = [ ... ]
-
-function showHistorie(e) {
-  if (e) e.preventDefault();
-  document.getElementById('historie-page').classList.add('show');
-  renderHistoire();
-}
-function hideHistorie() {
-  document.getElementById('historie-page').classList.remove('show');
-}
-function switchHist(t) {
-  document.querySelectorAll('.hist-tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.hist-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('htab-'+t).classList.add('active');
-  document.getElementById('hpanel-'+t).classList.add('active');
-}
-
-function hltvClass(v) {
-  const n = parseFloat(v);
-  if (isNaN(n)) return '';
-  if (n >= 1.15) return 'hltv-good';
-  if (n >= 0.95) return 'hltv-avg';
-  return 'hltv-bad';
-}
-
-function renderHistoire() {
-  ['boot','rage'].forEach(t => {
-    const seasons = (state[t].histoire || []);
-    const el = document.getElementById('hist-'+t+'-display');
-    if (seasons.length === 0) {
-      el.innerHTML = '<div class="empty">Noch keine Saisonen eingetragen</div>';
-      return;
-    }
-    el.innerHTML = [...seasons].reverse().map((s, ri) => {
-      const i = seasons.length - 1 - ri;
-      const playersHTML = (s.players || []).length === 0 ? '<div class="empty" style="padding:1rem">Keine Spieler eingetragen</div>' :
-        `<table class="stats-table">
-          <thead><tr>
-            <th>Spieler</th>
-            <th class="num">Kills</th>
-            <th class="num">Assists</th>
-            <th class="num">Tode</th>
-            <th class="num">HLTV</th>
-          </tr></thead>
-          <tbody>
-            ${(s.players||[]).map(p => `<tr>
-              <td>${esc(p.name||'')}</td>
-              <td class="num">${esc(p.kills||'-')}</td>
-              <td class="num">${esc(p.assists||'-')}</td>
-              <td class="num">${esc(p.deaths||'-')}</td>
-              <td class="num hltv-rating ${hltvClass(p.hltv)}">${esc(p.hltv||'-')}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>`;
-      return `<div class="season-card">
-        <div class="season-head" onclick="toggleSeason(this)">
-          <div class="season-name">${esc(s.season||'Unbekannte Saison')}</div>
-          ${s.placement ? `<div class="season-placement">${esc(s.placement)}</div>` : ''}
-          ${(s.wins||s.losses) ? `<div class="season-record">W/L: <span>${esc(s.wins||'0')}</span> / <span>${esc(s.losses||'0')}</span></div>` : ''}
-          <div class="season-toggle">&#9660;</div>
-        </div>
-        <div class="season-body">
-          ${playersHTML}
-        </div>
-      </div>`;
-    }).join('');
-  });
-}
-
-function toggleSeason(head) {
-  const body = head.nextElementSibling;
-  const arrow = head.querySelector('.season-toggle');
-  body.classList.toggle('open');
-  arrow.classList.toggle('open');
-}
-
-// ── HISTORIE ADMIN ────────────────────────────────────────
-function loadHistoireAdmin() {
-  ['boot','rage'].forEach(t => {
-    if (!state[t].histoire) state[t].histoire = [];
-    renderHistAdminPanel(t);
-  });
-}
-
-function renderHistAdminPanel(t) {
-  const el = document.getElementById('hist-'+t+'-admin');
-  const seasons = state[t].histoire || [];
-  el.innerHTML = seasons.map((s,i) => histSeasonAdminHTML(t,i,s)).join('');
-}
-
-function histSeasonAdminHTML(t, i, s) {
-  const playersHTML = (s.players||[]).map((p,pi) => histPlayerRowHTML(t,i,pi,p)).join('');
-  return `<div class="hist-admin-season" id="hist-${t}-s-${i}">
-    <div class="hist-admin-season-head">
-      <input class="wide" type="text" placeholder="Saison (z.B. Saison 3 – Herbst 2025)" value="${esc(s.season||'')}" oninput="updateSeason('${t}',${i},'season',this.value)">
-      <input type="text" placeholder="Platzierung (z.B. 3. Platz)" value="${esc(s.placement||'')}" oninput="updateSeason('${t}',${i},'placement',this.value)" style="width:180px">
-      <input type="number" placeholder="Siege" value="${esc(s.wins||'')}" oninput="updateSeason('${t}',${i},'wins',this.value)" style="width:80px">
-      <input type="number" placeholder="Niederlagen" value="${esc(s.losses||'')}" oninput="updateSeason('${t}',${i},'losses',this.value)" style="width:80px">
-      <button class="del-season-btn" onclick="delSeason('${t}',${i})">&#10005; Saison l&ouml;schen</button>
-    </div>
-    <div class="hist-col-heads"><span>Spielername</span><span>Kills</span><span>Assists</span><span>Tode</span><span>HLTV</span><span></span></div>
-    <div id="hist-${t}-players-${i}">${playersHTML}</div>
-    <button class="add-row-btn" onclick="addHistPlayer('${t}',${i})" style="width:100%;text-align:center">+ Spieler hinzuf&uuml;gen</button>
-  </div>`;
-}
-
-function histPlayerRowHTML(t, si, pi, p) {
-  return `<div class="hist-player-row" id="hist-${t}-p-${si}-${pi}">
-    <input type="text" placeholder="Name" value="${esc(p.name||'')}" oninput="updateHistPlayer('${t}',${si},${pi},'name',this.value)">
-    <input type="number" placeholder="0" value="${esc(p.kills||'')}" oninput="updateHistPlayer('${t}',${si},${pi},'kills',this.value)">
-    <input type="number" placeholder="0" value="${esc(p.assists||'')}" oninput="updateHistPlayer('${t}',${si},${pi},'assists',this.value)">
-    <input type="number" placeholder="0" value="${esc(p.deaths||'')}" oninput="updateHistPlayer('${t}',${si},${pi},'deaths',this.value)">
-    <input type="text" placeholder="1.05" value="${esc(p.hltv||'')}" oninput="updateHistPlayer('${t}',${si},${pi},'hltv',this.value)">
-    <button class="del-btn" onclick="delHistPlayer('${t}',${si},${pi})">&#10005;</button>
-  </div>`;
-}
-
-function addSeason(t) {
-  if (!state[t].histoire) state[t].histoire = [];
-  state[t].histoire.push({season:'',placement:'',wins:'',losses:'',players:[]});
-  renderHistAdminPanel(t);
-}
-function delSeason(t,i) {
-  state[t].histoire.splice(i,1);
-  renderHistAdminPanel(t);
-}
-function updateSeason(t,i,k,v) {
-  state[t].histoire[i][k] = v;
-}
-function addHistPlayer(t,si) {
-  if (!state[t].histoire[si].players) state[t].histoire[si].players = [];
-  state[t].histoire[si].players.push({name:'',kills:'',assists:'',deaths:'',hltv:''});
-  const el = document.getElementById('hist-'+t+'-players-'+si);
-  const pi = state[t].histoire[si].players.length - 1;
-  el.insertAdjacentHTML('beforeend', histPlayerRowHTML(t,si,pi,state[t].histoire[si].players[pi]));
-}
-function updateHistPlayer(t,si,pi,k,v) {
-  state[t].histoire[si].players[pi][k] = v;
-}
-function delHistPlayer(t,si,pi) {
-  state[t].histoire[si].players.splice(pi,1);
-  const el = document.getElementById('hist-'+t+'-players-'+si);
-  el.innerHTML = state[t].histoire[si].players.map((p,i) => histPlayerRowHTML(t,si,i,p)).join('');
-}
-
-// ── Load from GitHub on page load ──────────────────────────
+// ── Load from GitHub ───────────────────────────────────────
 async function loadFromGitHub() {
   try {
-    const res = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}`);
+    const res = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`);
     if (res.ok) {
       const data = await res.json();
-      // Merge into state safely
-      if (data.boot) { state.boot = Object.assign({coach:'',players:[],results:[]}, data.boot); }
-      if (data.rage) { state.rage = Object.assign({coach:'',players:[],results:[]}, data.rage); }
-      if (data.news) { state.news = data.news; }
+      if (data.teams && Array.isArray(data.teams)) {
+        state.teams = data.teams.map(t => Object.assign({id:'',name:'',coach:'',dachcs:'',players:[],results:[],histoire:[]}, t));
+      }
+      if (data.news) state.news = data.news;
     }
-  } catch(e) {
-    // Datei existiert noch nicht – kein Problem
-  }
-  updateDachcsLinks();
+  } catch(e) {}
   renderPublic();
 }
 
-// ── UI Switching ───────────────────────────────────────────
-function switchTeam(name) {
-  document.querySelectorAll('#teams .team-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('#teams .tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
-  document.getElementById('tab-'+name).classList.add('active');
+// ── Public UI switching ────────────────────────────────────
+function switchTeam(id) {
+  document.querySelectorAll('#teams .team-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#teams .tab-btn').forEach(b=>b.classList.remove('active'));
+  const panel = document.getElementById('panel-'+id);
+  const tab = document.getElementById('tab-'+id);
+  if(panel) panel.classList.add('active');
+  if(tab) tab.classList.add('active');
 }
-function switchResults(name) {
-  document.querySelectorAll('#ergebnisse .team-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('#ergebnisse .tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('rpanel-'+name).classList.add('active');
-  document.getElementById('rtab-'+name).classList.add('active');
+function switchResults(id) {
+  document.querySelectorAll('#ergebnisse .team-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#ergebnisse .tab-btn').forEach(b=>b.classList.remove('active'));
+  const panel = document.getElementById('rpanel-'+id);
+  const tab = document.getElementById('rtab-'+id);
+  if(panel) panel.classList.add('active');
+  if(tab) tab.classList.add('active');
 }
-function scrollToTeam(name) {
-  switchTeam(name);
+function scrollToTeam(id) {
+  switchTeam(id);
   document.getElementById('teams').scrollIntoView({behavior:'smooth'});
 }
 
