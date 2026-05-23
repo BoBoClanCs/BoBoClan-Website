@@ -143,6 +143,79 @@
             }
           ],
           "coach": "Skywalker"
+        },
+        {
+          "season": "DACH CS Masters Saison 4 Spielklasse 6",
+          "placement": "6 von 9",
+          "wins": "3",
+          "losses": "5",
+          "players": [
+            {
+              "name": "Skywalker",
+              "games": "7",
+              "kills": "340",
+              "assists": "",
+              "deaths": "206",
+              "hltv": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "8",
+              "kills": "270",
+              "assists": "",
+              "deaths": "252",
+              "hltv": ""
+            },
+            {
+              "name": "Meow",
+              "games": "7",
+              "kills": "207",
+              "assists": "",
+              "deaths": "253",
+              "hltv": ""
+            },
+            {
+              "name": "Camo",
+              "games": "7",
+              "kills": "188",
+              "assists": "",
+              "deaths": "239",
+              "hltv": ""
+            },
+            {
+              "name": "Potato",
+              "games": "7",
+              "kills": "92",
+              "assists": "",
+              "deaths": "248",
+              "hltv": ""
+            },
+            {
+              "name": "Gamer",
+              "games": "2",
+              "kills": "84",
+              "assists": "",
+              "deaths": "98",
+              "hltv": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "1",
+              "kills": "63",
+              "assists": "",
+              "deaths": "50",
+              "hltv": ""
+            },
+            {
+              "name": "Kahinar",
+              "games": "1",
+              "kills": "52",
+              "assists": "",
+              "deaths": "45",
+              "hltv": ""
+            }
+          ],
+          "coach": "Skywalker"
         }
       ]
     },
