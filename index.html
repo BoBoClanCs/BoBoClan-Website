@@ -316,8 +316,8 @@
 
   /* Season admin */
   .season-admin-card { background:var(--dark4); border:1px solid #2a2a2a; margin-bottom:0.75rem; }
-  .season-admin-head { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; cursor:pointer; }
-  .season-admin-head:hover { background:rgba(255,255,255,0.02); }
+  .season-admin-head { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; cursor:pointer; background:var(--dark); border-bottom:1px solid #2a2a2a; user-select:none; }
+  .season-admin-head:hover { background:rgba(139,26,26,0.1); }
   .season-admin-head input { flex:1; background:var(--dark); border:1px solid #2a2a2a; color:var(--cream); padding:6px 10px; font-family:'Rajdhani',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s; }
   .season-admin-head input:focus { border-color:var(--red); }
   .season-admin-body { display:none; padding:1rem; border-top:1px solid #222; }
@@ -1205,9 +1205,9 @@ function renderHistoireAdminPage() {
       <div class="admin-card-head" onclick="toggleCard(this)">
         <div class="admin-card-title">${esc(t.name)}</div>
         <div class="admin-card-subtitle">${(t.seasons||[]).length} Saisonen</div>
-        <div class="admin-card-arrow">&#9660;</div>
+        <div class="admin-card-arrow open">&#9660;</div>
       </div>
-      <div class="admin-card-body">
+      <div class="admin-card-body open">
         <div id="hist-admin-${t.id}">${(t.seasons||[]).map((s,i) => histSeasonHTML(t.id,i,s)).join('')}</div>
         <button class="tbl-add-btn" onclick="addSeason('${t.id}')">+ Saison hinzufügen</button>
       </div>
@@ -1234,20 +1234,26 @@ function deleteHistTeam(id) {
 }
 function histSeasonHTML(tid, i, s) {
   const players = (s.players||[]).map((p,pi) => histPlayerHTML(tid,i,pi,p)).join('');
+  const seasonLabel = s.season || 'Neue Saison';
   return `<div class="season-admin-card">
-    <div class="season-admin-head" onclick="this.nextElementSibling.classList.toggle('open')">
-      <input type="text" placeholder="Saison (z.B. Saison 1 – Frühjahr 2025)" value="${esc(s.season||'')}" oninput="updateSeason('${tid}',${i},'season',this.value)" onclick="event.stopPropagation()">
-      <input type="text" placeholder="Platzierung" value="${esc(s.placement||'')}" oninput="updateSeason('${tid}',${i},'placement',this.value)" onclick="event.stopPropagation()" style="width:150px">
-      <input type="number" placeholder="Siege" value="${esc(s.wins||'')}" oninput="updateSeason('${tid}',${i},'wins',this.value)" onclick="event.stopPropagation()" style="width:65px">
-      <input type="number" placeholder="NL" value="${esc(s.losses||'')}" oninput="updateSeason('${tid}',${i},'losses',this.value)" onclick="event.stopPropagation()" style="width:65px">
-      <button class="del-btn" onclick="delSeason('${tid}',${i});event.stopPropagation()">&#128465; Saison</button>
+    <div class="season-admin-head" onclick="toggleSeasonAdmin(this)">
+      <span style="font-family:'Oswald',sans-serif;font-size:0.85rem;color:var(--cream);min-width:120px;pointer-events:none">${esc(seasonLabel)}</span>
+      <span style="flex:1;pointer-events:none"></span>
+      <span style="font-size:0.7rem;color:#555;letter-spacing:1px;pointer-events:none">▲ EINKLAPPEN</span>
+      <button class="del-btn" onclick="delSeason('${tid}',${i});event.stopPropagation()" style="margin-left:0.5rem">&#128465;</button>
     </div>
-    <div class="season-admin-body">
+    <div class="season-admin-body open">
+      <div style="display:grid;grid-template-columns:1fr 150px 65px 65px;gap:0.5rem;margin-bottom:1rem;">
+        <input type="text" placeholder="Saison (z.B. Saison 1 – Frühjahr 2025)" value="${esc(s.season||'')}" oninput="updateSeason('${tid}',${i},'season',this.value);updateSeasonLabel(this)">
+        <input type="text" placeholder="Platzierung" value="${esc(s.placement||'')}" oninput="updateSeason('${tid}',${i},'placement',this.value)">
+        <input type="number" placeholder="Siege" value="${esc(s.wins||'')}" oninput="updateSeason('${tid}',${i},'wins',this.value)">
+        <input type="number" placeholder="NL" value="${esc(s.losses||'')}" oninput="updateSeason('${tid}',${i},'losses',this.value)">
+      </div>
       <div class="field-row" style="margin-bottom:1rem">
         <label>Coach</label>
         <input type="text" placeholder="Name des Coaches" value="${esc(s.coach||'')}" oninput="updateSeason('${tid}',${i},'coach',this.value)">
       </div>
-      <div class="tbl-editor-head tbl-row grid-hist-player" style="margin-top:0.5rem"><span>Name</span><span>Spiele</span><span>Kills</span><span>Assists</span><span>Tode</span><span>K/D</span><span>HLTV</span><span></span></div>
+      <div class="tbl-editor-head tbl-row grid-hist-player"><span>Name</span><span>Spiele</span><span>Kills</span><span>Assists</span><span>Tode</span><span>K/D</span><span>HLTV</span><span></span></div>
       <div id="hist-players-${tid}-${i}">${players}</div>
       <button class="tbl-add-btn" onclick="addHistPlayer('${tid}',${i})">+ Spieler hinzufügen</button>
     </div>
@@ -1302,6 +1308,21 @@ function delHistPlayer(tid,si,pi) {
 }
 
 // ── GitHub Save ────────────────────────────────────────────
+
+function toggleSeasonAdmin(head) {
+  const body = head.nextElementSibling;
+  const lbl = head.querySelector('span:last-of-type');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open');
+  if (lbl) lbl.textContent = isOpen ? '▼ AUFKLAPPEN' : '▲ EINKLAPPEN';
+}
+function updateSeasonLabel(input) {
+  const head = input.closest('.season-admin-body').previousElementSibling;
+  if (head) {
+    const span = head.querySelector('span');
+    if (span) span.textContent = input.value || 'Neue Saison';
+  }
+}
 async function saveAll() {
   const token = getToken();
   if (!token) { setStatus('⚠ Kein Token gespeichert!', true); return; }
