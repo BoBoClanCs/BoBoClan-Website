@@ -222,6 +222,63 @@
             }
           ],
           "coach": "Skywalker"
+        },
+        {
+          "season": "DACH CS Masters Saison 4 Open 2",
+          "placement": "4 von 8",
+          "wins": "4",
+          "losses": "3",
+          "players": [
+            {
+              "name": "Fishy",
+              "games": "7",
+              "kills": "311",
+              "assists": "",
+              "deaths": "246",
+              "hltv": ""
+            },
+            {
+              "name": "Ibox",
+              "games": "7",
+              "kills": "294",
+              "assists": "",
+              "deaths": "245",
+              "hltv": ""
+            },
+            {
+              "name": "Symphonie",
+              "games": "7",
+              "kills": "302",
+              "assists": "",
+              "deaths": "262",
+              "hltv": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "6",
+              "kills": "184",
+              "assists": "",
+              "deaths": "207",
+              "hltv": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "7",
+              "kills": "175",
+              "assists": "",
+              "deaths": "264",
+              "hltv": ""
+            },
+            {
+              "name": "Vorea Kayne",
+              "games": "1",
+              "kills": "22",
+              "assists": "",
+              "deaths": "36",
+              "hltv": ""
+            }
+          ],
+          "coach": "Skywalker"
         }
       ]
     }
