@@ -452,6 +452,25 @@
   .season-stat-val { font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:700; color:var(--cream); }
   .season-stat-lbl { font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; color:#555; }
 
+
+  /* Spieler top stats banner */
+  .top-stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:0; }
+  .top-stat-card {
+    background:var(--dark3); border:1px solid #2a2a2a; padding:1.25rem 1rem; text-align:center;
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+    transition:border-color 0.2s;
+  }
+  .top-stat-card:hover { border-color:var(--red); }
+  .top-stat-label { font-family:'Oswald',sans-serif; font-size:0.7rem; letter-spacing:3px; text-transform:uppercase; color:var(--red-light); margin-bottom:0.75rem; }
+  .top-stat-avatar {
+    width:52px; height:52px; border-radius:50%; background:var(--dark4); border:2px solid var(--red);
+    margin:0 auto 0.5rem; display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-size:1.1rem; font-weight:700; color:var(--cream); overflow:hidden;
+  }
+  .top-stat-name { font-family:'Oswald',sans-serif; font-size:0.95rem; font-weight:600; color:var(--cream); margin-bottom:0.3rem; }
+  .top-stat-value { font-family:'Oswald',sans-serif; font-size:1.8rem; font-weight:700; color:var(--red-light); }
+  @media(max-width:600px) { .top-stats-grid { grid-template-columns:repeat(2,1fr); } }
+
   @media(max-width:768px) {
     .nav-links { display:none; }
     .admin-nav-btn { display:block !important; }
@@ -648,6 +667,8 @@
   <div class="container">
     <h2 class="section-title">Unsere <span>Spieler</span></h2>
     <div class="section-line"></div>
+    <div id="spieler-top-stats" style="display:none; margin-bottom:2.5rem;"></div>
+    <div id="spieler-search-wrap" style="margin-bottom:1.5rem;display:none;"><input id="spieler-search" type="text" placeholder="Spieler suchen..." oninput="filterSpieler(this.value)" style="width:100%;max-width:400px;background:var(--dark3);border:1px solid #2a2a2a;border-bottom:2px solid var(--red);color:var(--cream);padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;"></div>
     <div id="spieler-list"></div>
     <div id="spieler-detail" style="display:none; margin-top:0;">
       <button onclick="closeSpielerDetail()" style="font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid #333;color:#888;padding:8px 18px;cursor:pointer;margin-bottom:2rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red-light)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'">&#8592; Alle Spieler</button>
@@ -660,6 +681,7 @@
   <div class="container">
     <h2 class="section-title">Clan <span>Historie</span></h2>
     <div class="section-line"></div>
+    <input id="histoire-search" type="text" placeholder="Saison oder Team suchen..." oninput="filterHistoire(this.value)" style="display:block;width:100%;max-width:400px;margin:0 auto 1.5rem;background:var(--dark3);border:1px solid #2a2a2a;border-bottom:2px solid var(--red);color:var(--cream);padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;">
     <div class="hist-tabs" id="hist-tabs"></div>
     <div id="hist-panels"></div>
   </div>
@@ -1128,6 +1150,7 @@ function renderHistoire() {
             : `<table class="stats-table"><thead><tr><th>Spieler</th><th class="num">Spiele</th><th class="num">Kills</th><th class="num">Assists</th><th class="num">Tode</th><th class="num">K/D</th><th class="num">HLTV</th></tr></thead><tbody>
               ${(s.players||[]).map(p=>{const kd=calcKD(p.kills,p.deaths); return `<tr><td>${esc(p.name)}</td><td class="num">${esc(p.games||'-')}</td><td class="num">${esc(p.kills||'-')}</td><td class="num">${esc(p.assists||'-')}</td><td class="num">${esc(p.deaths||'-')}</td><td class="num" style="color:${parseFloat(kd)>=1?'#2ecc71':parseFloat(kd)<0.8?'var(--red-light)':'#f39c12'}">${kd}</td><td class="num hltv-rating ${hltvClass(p.hltv)}">${esc(p.hltv||'-')}</td></tr>`;}).join('')}
               </tbody></table>`;
+          const ytBtn = s.youtube ? `<a href="${esc(s.youtube)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-family:'Oswald',sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff4444;border:1px solid #ff4444;padding:4px 12px;transition:all 0.2s;margin-bottom:1rem;" onmouseover="this.style.background='#ff4444';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#ff4444'"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg> Playlist</a>` : '';
           return `<div class="season-card">
             <div class="season-head" onclick="toggleSeason(this)">
               <div class="season-name">${esc(s.season||'Unbekannte Saison')}</div>
@@ -1135,7 +1158,7 @@ function renderHistoire() {
               ${(s.wins||s.losses)?`<div class="season-record">W/L: <span>${esc(s.wins||'0')}</span>/<span>${esc(s.losses||'0')}</span></div>`:''}
               <div class="season-toggle">&#9660;</div>
             </div>
-            <div class="season-body">${coachLine}${pHTML}</div>
+            <div class="season-body">${ytBtn}${coachLine}${pHTML}</div>
           </div>`;
         }).join('');
     return `<div class="hist-panel${i===0?' active':''}" id="hpanel-${t.id}">${content}</div>`;
@@ -1250,9 +1273,15 @@ function histSeasonHTML(tid, i, s) {
         <input type="number" placeholder="Siege" value="${esc(s.wins||'')}" oninput="updateSeason('${tid}',${i},'wins',this.value)">
         <input type="number" placeholder="NL" value="${esc(s.losses||'')}" oninput="updateSeason('${tid}',${i},'losses',this.value)">
       </div>
-      <div class="field-row" style="margin-bottom:1rem">
-        <label>Coach</label>
-        <input type="text" placeholder="Name des Coaches" value="${esc(s.coach||'')}" oninput="updateSeason('${tid}',${i},'coach',this.value)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;">
+        <div class="field-row" style="margin-bottom:0">
+          <label>Coach</label>
+          <input type="text" placeholder="Name des Coaches" value="${esc(s.coach||'')}" oninput="updateSeason('${tid}',${i},'coach',this.value)">
+        </div>
+        <div class="field-row" style="margin-bottom:0">
+          <label style="white-space:nowrap">&#9654; YouTube</label>
+          <input type="text" placeholder="https://youtube.com/playlist?list=..." value="${esc(s.youtube||'')}" oninput="updateSeason('${tid}',${i},'youtube',this.value)">
+        </div>
       </div>
       <div class="tbl-editor-head tbl-row grid-hist-player"><span>Name</span><span>Spiele</span><span>Kills</span><span>Assists</span><span>Tode</span><span>K/D</span><span>HLTV</span><span></span></div>
       <div id="hist-players-${tid}-${i}">${players}</div>
@@ -1378,8 +1407,7 @@ function setStatus(msg, isErr) {
 // Derived from state.histoire – no manual editing needed
 
 function getSpielerList() {
-  // Build unique player list from all histoire seasons
-  const players = {}; // key: lowercase name
+  const players = {};
   state.histoire.forEach(team => {
     (team.seasons || []).forEach(season => {
       (season.players || []).forEach(p => {
@@ -1388,6 +1416,8 @@ function getSpielerList() {
         if (!players[key]) {
           players[key] = { name: p.name.trim(), steam: p.steam || '', seasons: [] };
         }
+        // Update steam if this entry has one
+        if (p.steam) players[key].steam = p.steam;
         players[key].seasons.push({
           teamId: team.id, teamName: team.name,
           season: season.season, coach: season.coach || '',
@@ -1396,6 +1426,16 @@ function getSpielerList() {
           hltv: p.hltv || ''
         });
       });
+    });
+  });
+  // Also check current rosters for steam URLs
+  state.teams.forEach(team => {
+    (team.players || []).forEach(p => {
+      if (!p.name || !p.steam) return;
+      const key = p.name.trim().toLowerCase();
+      if (players[key] && !players[key].steam) {
+        players[key].steam = p.steam;
+      }
     });
   });
   return Object.values(players).sort((a,b) => a.name.localeCompare(b.name));
@@ -1422,17 +1462,50 @@ function renderSpielerList() {
   const players = getSpielerList();
   const listEl = document.getElementById('spieler-list');
   const detailEl = document.getElementById('spieler-detail');
+  const topEl = document.getElementById('spieler-top-stats');
   detailEl.style.display = 'none';
   listEl.style.display = '';
 
   if (players.length === 0) {
     listEl.innerHTML = '<div class="empty">Noch keine Spieler in der Historie eingetragen</div>';
+    topEl.style.display = 'none';
+  const swEl2 = document.getElementById('spieler-search-wrap'); if(swEl2) swEl2.style.display='none';
     return;
   }
 
+  // Build top stats
+  const withStats = players.map(p => ({ ...p, at: calcAllTime(p.seasons) }));
+  const topGames  = withStats.reduce((a,b) => (parseInt(b.at.games)||0) > (parseInt(a.at.games)||0) ? b : a);
+  const topKills  = withStats.reduce((a,b) => (b.at.kills||0) > (a.at.kills||0) ? b : a);
+  const topAssists= withStats.reduce((a,b) => (b.at.assists||0) > (a.at.assists||0) ? b : a);
+  const topDeaths = withStats.reduce((a,b) => (b.at.deaths||0) > (a.at.deaths||0) ? b : a);
+
+  const topCards = [
+    { label:'Meiste Spiele',   player:topGames,   val:topGames.at.games||0   },
+    { label:'Meiste Kills',    player:topKills,   val:topKills.at.kills||0   },
+    { label:'Meiste Assists',  player:topAssists, val:topAssists.at.assists||0},
+    { label:'Meiste Tode',     player:topDeaths,  val:topDeaths.at.deaths||0 },
+  ];
+
+  topEl.style.display = 'block';
+  const swEl = document.getElementById('spieler-search-wrap');
+  if(swEl) swEl.style.display = 'block';
+  topEl.innerHTML = '<div class="top-stats-grid">' + topCards.map(({label, player, val}) => {
+    const uid = 'tsp-' + label.replace(/\s+/g,'') + '-' + Math.random().toString(36).slice(2,6);
+    const card = `<div class="top-stat-card" onclick="showSpielerDetail('${esc(player.name.replace(/'/g,"\'"))}')">
+      <div class="top-stat-label">${esc(label)}</div>
+      <div class="top-stat-avatar" id="${uid}">${initials(player.name)}</div>
+      <div class="top-stat-name">${esc(player.name)}</div>
+      <div class="top-stat-value">${val}</div>
+    </div>`;
+    if (player.steam) setTimeout(() => loadSteamAvatar(uid, player.steam, 'var(--red)'), 100);
+    return card;
+  }).join('') + '</div>';
+
+  // Player grid
   listEl.innerHTML = '<div class="spieler-grid">' + players.map(p => {
-    const allTime = calcAllTime(p.seasons);
-    const uid = 'sp-av-' + p.name.replace(/\s+/g,'').toLowerCase();
+    const at = calcAllTime(p.seasons);
+    const uid = 'sp-av-' + p.name.replace(/\s+/g,'').toLowerCase().slice(0,12) + Math.random().toString(36).slice(2,5);
     const teamNames = [...new Set(p.seasons.map(s => s.teamName))].join(' · ');
     const card = `<div class="spieler-card" onclick="showSpielerDetail('${esc(p.name.replace(/'/g,"\'"))}')">
       <div class="spieler-avatar" id="${uid}">${initials(p.name)}</div>
@@ -1539,6 +1612,32 @@ function memberCardHTML(p, isStandin) {
 function openSpielerFromCard(name) {
   showPage('spieler');
   setTimeout(() => showSpielerDetail(name), 50);
+}
+
+
+// ── SEARCH ─────────────────────────────────────────────────
+function filterSpieler(q) {
+  const term = q.toLowerCase().trim();
+  document.querySelectorAll('#spieler-list .spieler-card').forEach(card => {
+    const name = card.querySelector('.spieler-name')?.textContent.toLowerCase() || '';
+    const teams = card.querySelector('.spieler-teams')?.textContent.toLowerCase() || '';
+    card.style.display = (!term || name.includes(term) || teams.includes(term)) ? '' : 'none';
+  });
+}
+
+function filterHistoire(q) {
+  const term = q.toLowerCase().trim();
+  document.querySelectorAll('#hist-panels .season-card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = (!term || text.includes(term)) ? '' : 'none';
+  });
+  // Also filter tabs – show/hide panels based on whether they have visible seasons
+  document.querySelectorAll('#hist-panels .hist-panel').forEach(panel => {
+    const visible = [...panel.querySelectorAll('.season-card')].some(c => c.style.display !== 'none');
+    const tid = panel.id.replace('hpanel-','');
+    const tab = document.getElementById('htab-'+tid);
+    if (tab) tab.style.display = (!term || visible) ? '' : 'none';
+  });
 }
 
 // ── Load from GitHub ───────────────────────────────────────
