@@ -149,7 +149,81 @@
     {
       "id": "rage",
       "name": "BoBoRage",
-      "seasons": []
+      "seasons": [
+        {
+          "season": "DACH CS Masters Saison 3 Open 2",
+          "placement": "8 von 9",
+          "wins": "1",
+          "losses": "7",
+          "players": [
+            {
+              "name": "Symphonie",
+              "games": "7",
+              "kills": "281",
+              "assists": "",
+              "deaths": "231",
+              "hltv": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "7",
+              "kills": "184",
+              "assists": "",
+              "deaths": "219",
+              "hltv": ""
+            },
+            {
+              "name": "Caine",
+              "games": "7",
+              "kills": "187",
+              "assists": "",
+              "deaths": "250",
+              "hltv": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "5",
+              "kills": "123",
+              "assists": "",
+              "deaths": "176",
+              "hltv": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "8",
+              "kills": "195",
+              "assists": "",
+              "deaths": "286",
+              "hltv": ""
+            },
+            {
+              "name": "Vorea Kayne",
+              "games": "3",
+              "kills": "58",
+              "assists": "",
+              "deaths": "93",
+              "hltv": ""
+            },
+            {
+              "name": "Killinix",
+              "games": "2",
+              "kills": "26",
+              "assists": "",
+              "deaths": "70",
+              "hltv": ""
+            },
+            {
+              "name": "Fishy",
+              "games": "1",
+              "kills": "44",
+              "assists": "",
+              "deaths": "34",
+              "hltv": ""
+            }
+          ],
+          "coach": "Skywalker"
+        }
+      ]
     }
   ],
   "news": []
