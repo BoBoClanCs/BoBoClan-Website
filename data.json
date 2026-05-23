@@ -23,21 +23,61 @@
       "name": "BoBoBoot",
       "seasons": [
         {
-          "season": "tedt",
-          "placement": "",
-          "wins": "",
-          "losses": "",
+          "season": "DACH CS Masters Saison 2 Spielklasse 6",
+          "placement": "7 von 7",
+          "wins": "0",
+          "losses": "6",
           "players": [
             {
-              "name": "t",
-              "games": "",
-              "kills": "",
+              "name": "Meow",
+              "games": "6",
+              "kills": "212",
               "assists": "",
-              "deaths": "",
+              "deaths": "204",
+              "hltv": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "5",
+              "kills": "158",
+              "assists": "",
+              "deaths": "169",
+              "hltv": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "5",
+              "kills": "126",
+              "assists": "",
+              "deaths": "163",
+              "hltv": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "6",
+              "kills": "149",
+              "assists": "",
+              "deaths": "195",
+              "hltv": ""
+            },
+            {
+              "name": "Camo",
+              "games": "6",
+              "kills": "128",
+              "assists": "",
+              "deaths": "207",
+              "hltv": ""
+            },
+            {
+              "name": "Tof Tof",
+              "games": "2",
+              "kills": "53",
+              "assists": "",
+              "deaths": "79",
               "hltv": ""
             }
           ],
-          "coach": "t"
+          "coach": "Skywalker"
         }
       ]
     },
