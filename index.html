@@ -644,7 +644,7 @@
 
 </div>
 
-<div id="page-spieler" style="display:none; min-height:calc(100vh - 64px); background:var(--dark); padding:80px 2rem;">
+<div id="pub-spieler" style="display:none; min-height:calc(100vh - 64px); background:var(--dark); padding:80px 2rem;">
   <div class="container">
     <h2 class="section-title">Unsere <span>Spieler</span></h2>
     <div class="section-line"></div>
@@ -656,7 +656,7 @@
   </div>
 </div>
 
-<div id="page-histoire" style="display:none; min-height:calc(100vh - 64px); background:var(--dark2); padding:80px 2rem;">
+<div id="pub-histoire" style="display:none; min-height:calc(100vh - 64px); background:var(--dark2); padding:80px 2rem;">
   <div class="container">
     <h2 class="section-title">Clan <span>Historie</span></h2>
     <div class="section-line"></div>
@@ -1154,13 +1154,14 @@ function switchHist(id) {
 }
 function showPage(page, e) {
   if(e) e.preventDefault();
-  // Hide all pages
-  ['home','spieler','histoire'].forEach(p => {
-    const el = document.getElementById('page-'+p);
+  // Hide all public pages
+  ['page-home', 'pub-histoire', 'pub-spieler'].forEach(id => {
+    const el = document.getElementById(id);
     if(el) el.style.display = 'none';
   });
   // Show target
-  const target = document.getElementById('page-'+page);
+  const idMap = { home:'page-home', histoire:'pub-histoire', spieler:'pub-spieler' };
+  const target = document.getElementById(idMap[page] || 'page-home');
   if(target) target.style.display = 'block';
   // Scroll to top
   window.scrollTo({top:0});
