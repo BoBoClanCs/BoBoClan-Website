@@ -78,6 +78,71 @@
             }
           ],
           "coach": "Skywalker"
+        },
+        {
+          "season": "DACH CS Masters Saison 3 Open 2",
+          "placement": "7 von 8",
+          "wins": "1",
+          "losses": "6",
+          "players": [
+            {
+              "name": "Fishy",
+              "games": "6",
+              "kills": "277",
+              "assists": "",
+              "deaths": "174",
+              "hltv": ""
+            },
+            {
+              "name": "Teddy",
+              "games": "7",
+              "kills": "216",
+              "assists": "",
+              "deaths": "196",
+              "hltv": ""
+            },
+            {
+              "name": "Meow",
+              "games": "7",
+              "kills": "180",
+              "assists": "",
+              "deaths": "219",
+              "hltv": ""
+            },
+            {
+              "name": "Camo",
+              "games": "7",
+              "kills": "85",
+              "assists": "",
+              "deaths": "220",
+              "hltv": ""
+            },
+            {
+              "name": "Tof Tof",
+              "games": "6",
+              "kills": "80",
+              "assists": "",
+              "deaths": "178",
+              "hltv": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "1",
+              "kills": "39",
+              "assists": "",
+              "deaths": "44",
+              "hltv": ""
+            },
+            {
+              "name": "Snooflo",
+              "games": "1",
+              "kills": "17",
+              "assists": "",
+              "deaths": "32",
+              "hltv": ""
+            }
+          ],
+          "coach": "Skywalker"
         }
       ]
     },
