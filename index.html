@@ -782,13 +782,7 @@
     <h2 class="section-title">Clan <span>Historie</span></h2>
     <div class="section-line"></div>
     <input id="histoire-search" type="text" placeholder="Saison oder Team suchen..." oninput="filterHistoire(this.value)" style="display:block;width:100%;max-width:400px;margin:0 auto 1.5rem;background:var(--dark3);border:1px solid #2a2a2a;border-bottom:2px solid var(--red);color:var(--cream);padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;">
-    <div class="hist-tabs" id="hist-tabs"></div>
-    <div id="hist-panels"></div>
-  </div>
-</div>
-
-
-<script>
+    <div id="hist-loading" style="text-align:center;padding:3rem;color:#555;font-family:'Oswald',sans-serif;
 // ── Config ─────────────────────────────────────────────────
 const ADMIN_PW = 'unserPasswortIst124';
 const GH_USER = 'BoBoClanCs';
@@ -1185,28 +1179,45 @@ function renderResultsList(t) {
 }
 
 
+// Steam avatar queue to avoid rate limits
+const _steamQueue = [];
+let _steamRunning = false;
+function _processSteamQueue() {
+  if (_steamRunning || _steamQueue.length === 0) return;
+  _steamRunning = true;
+  const {uid, steamUrl, borderColor} = _steamQueue.shift();
+  _doLoadSteamAvatar(uid, steamUrl, borderColor).finally(() => {
+    _steamRunning = false;
+    setTimeout(_processSteamQueue, 300); // 300ms between requests
+  });
+}
 function loadSteamAvatar(uid, steamUrl, borderColor) {
+  _steamQueue.push({uid, steamUrl, borderColor});
+  setTimeout(_processSteamQueue, 10);
+}
+async function _doLoadSteamAvatar(uid, steamUrl, borderColor) {
   const el = document.getElementById(uid); if (!el) return;
   const clean = steamUrl.replace(/\/+$/, '');
   const parts = clean.split('/').filter(Boolean);
   const last = parts[parts.length-1], type = parts[parts.length-2];
   const xmlUrl = (type === 'profiles' && /^\d{15,}$/.test(last))
-    ? `https://steamcommunity.com/profiles/${last}?xml=1`
-    : `https://steamcommunity.com/id/${last}?xml=1`;
-  fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl))
-    .then(r => r.json()).then(data => {
-      const xml = data.contents || '';
-      const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) ||
-                xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
-      if (m && m[1] && m[1].startsWith('http')) {
-        el.innerHTML = ''; el.style.cssText += ';background:none;overflow:hidden;padding:0;';
-        const img = document.createElement('img');
-        img.src = m[1].trim();
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
-        img.onerror = () => { el.style.background = 'var(--dark4)'; };
-        el.appendChild(img);
-      }
-    }).catch(()=>{});
+    ? 'https://steamcommunity.com/profiles/' + last + '?xml=1'
+    : 'https://steamcommunity.com/id/' + last + '?xml=1';
+  try {
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl));
+    const data = await r.json();
+    const xml = data.contents || '';
+    const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) ||
+              xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
+    if (m && m[1] && m[1].startsWith('http')) {
+      el.innerHTML = ''; el.style.cssText += ';background:none;overflow:hidden;padding:0;';
+      const img = document.createElement('img');
+      img.src = m[1].trim();
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+      img.onerror = () => { el.style.background = 'var(--dark4)'; };
+      el.appendChild(img);
+    }
+  } catch(e) {}
 }
 
 // ── Histoire ───────────────────────────────────────────────
@@ -1251,6 +1262,9 @@ function buildSeasonCard(s) {
 function renderHistoire() {
   const tabsEl = document.getElementById('hist-tabs');
   const panelsEl = document.getElementById('hist-panels');
+  const loadingEl = document.getElementById('hist-loading');
+  if (loadingEl) loadingEl.style.display = 'none';
+  tabsEl.style.display = '';
   if (!state.histoire || state.histoire.length === 0) {
     tabsEl.innerHTML = '';
     panelsEl.innerHTML = '<div class="empty">Noch keine Teams in der Historie angelegt</div>';
@@ -1979,6 +1993,11 @@ async function loadFromGitHub() {
     } catch(e2) {}
   }
   renderPublic();
+  // If user already navigated to histoire/spieler before data loaded, re-render
+  const ph = document.getElementById('pub-histoire');
+  const ps = document.getElementById('pub-spieler');
+  if (ph && ph.style.display !== 'none') renderHistoire();
+  if (ps && ps.style.display !== 'none') renderSpielerList();
 }
 
 // ── Public UI switching ────────────────────────────────────
@@ -1996,6 +2015,15 @@ function switchResults(id) {
   const panel = document.getElementById('rpanel-'+id);
   const tab = document.getElementById('rtab-'+id);
   if(panel) panel.classList.add('active');
+  if(tab) tab.classList.add('active');
+}
+function scrollToTeam(id) {
+  switchTeam(id);
+  document.getElementById('teams').scrollIntoView({behavior:'smooth'});
+}
+
+loadFromGitHub();
+active');
   if(tab) tab.classList.add('active');
 }
 function scrollToTeam(id) {
