@@ -50,7 +50,7 @@
     position:relative; overflow:hidden;
   }
   .hero::before {
-    content:''; position:absolute; inset:0;
+    content:''; position:absolute; inset:0; pointer-events:none;
     background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(139,26,26,0.06) 40px),
       repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(139,26,26,0.06) 40px);
     pointer-events:none;
@@ -763,6 +763,8 @@
     <div id="hist-panels"></div>
   </div>
 </div>
+
+
 
 
 <footer>
