@@ -1235,7 +1235,7 @@ function buildSeasonCard(s) {
       + '<th class="num">HLTV</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
   const coachLine = s.coach ? '<div style="font-size:0.85rem;color:#888;margin-bottom:1rem">Coach: <span style="color:var(--red-light);font-weight:600">' + esc(s.coach) + '</span></div>' : '';
-  const ytBtn = s.youtube ? '<a href="' + esc(s.youtube) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff4444;border:1px solid #ff4444;padding:4px 12px;margin-bottom:1rem;" onmouseover="this.style.background='#ff4444';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='#ff4444'">&#9654; Playlist</a>' : '';
+  const ytBtn = s.youtube ? '<a href="' + esc(s.youtube) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff4444;border:1px solid #ff4444;padding:4px 12px;margin-bottom:1rem;">&#9654; Playlist</a>' : ''
   const placementHTML = s.placement ? '<div class="season-placement">' + esc(s.placement) + '</div>' : '';
   const recordHTML = (s.wins || s.losses) ? '<div class="season-record">W/L: <span>' + esc(s.wins||'0') + '</span>/<span>' + esc(s.losses||'0') + '</span></div>' : '';
   return '<div class="season-card">'
@@ -2005,9 +2005,5 @@ function scrollToTeam(id) {
 
 loadFromGitHub();
 </script>
-</body>
-</html></script>
-</body>
-</html></script>
 </body>
 </html>
