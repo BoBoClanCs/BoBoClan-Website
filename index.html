@@ -831,11 +831,11 @@ function saveToken() {
 
 // ── Login ──────────────────────────────────────────────────
 function openAdmin() {
-  document.getElementById('admin-login-overlay').classList.add('show');
+  document.getElementById('admin-login-overlay').style.display = 'flex';
   setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
 }
 function closeLogin() {
-  document.getElementById('admin-login-overlay').classList.remove('show');
+  document.getElementById('admin-login-overlay').style.display = 'none';
   document.getElementById('admin-pw-input').value = '';
   document.getElementById('login-err').classList.remove('show');
 }
@@ -848,7 +848,8 @@ function checkLogin() {
   }
 }
 function openAdminPanel() {
-  document.getElementById('admin-panel').classList.add('show');
+  const ap = document.getElementById('admin-panel');
+  ap.style.display = 'flex';
   document.getElementById('admin-toggle-btn').classList.add('active');
   const tok = getToken();
   if (tok) {
@@ -862,7 +863,7 @@ function openAdminPanel() {
   showAdminPage('page-settings');
 }
 function closeAdmin() {
-  document.getElementById('admin-panel').classList.remove('show');
+  document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-toggle-btn').classList.remove('active');
 }
 
