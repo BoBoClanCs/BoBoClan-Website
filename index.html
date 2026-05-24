@@ -788,7 +788,7 @@
 </div>
 
 
-<script>
+<script><script>
 // ── Config ─────────────────────────────────────────────────
 const ADMIN_PW = 'unserPasswortIst124';
 const GH_USER = 'BoBoClanCs';
@@ -1257,7 +1257,7 @@ function renderHistoire() {
     return;
   }
   tabsEl.innerHTML = state.histoire.map((t,i) =>
-    '<button class="hist-tab' + (i===0?' active':'') + '" id="htab-' + t.id + '" onclick="switchHist('' + t.id + '')">' + esc(t.name) + '</button>'
+    '<button class="hist-tab' + (i===0?' active':'') + '" id="htab-' + t.id + '" onclick="switchHist(\'' + t.id + '\')">' + esc(t.name) + '</button>'
   ).join('');
   panelsEl.innerHTML = state.histoire.map((t,i) => {
     const seasons = t.seasons || [];
@@ -1284,13 +1284,14 @@ function showPage(page, e) {
   });
   // Show target
   const idMap = { home:'page-home', histoire:'pub-histoire', spieler:'pub-spieler' };
-  const target = document.getElementById(idMap[page] || 'page-home');
+  const targetId = idMap[page] || 'page-home';
+  const target = document.getElementById(targetId);
   if(target) target.style.display = 'block';
   // Scroll to top
   window.scrollTo({top:0});
-  // Render content
-  if(page === 'histoire') renderHistoire();
-  if(page === 'spieler') renderSpielerList();
+  // Render content - wrapped in try/catch so errors don't break navigation
+  try { if(page === 'histoire') renderHistoire(); } catch(err) { console.error('renderHistoire error:', err); }
+  try { if(page === 'spieler') renderSpielerList(); } catch(err) { console.error('renderSpielerList error:', err); }
   // Mark active nav links
   document.querySelectorAll('.nav-links a').forEach(a => {
     const ap = a.getAttribute('data-page');
@@ -2004,5 +2005,9 @@ function scrollToTeam(id) {
 
 loadFromGitHub();
 </script>
+</body>
+</html></script>
+</body>
+</html></script>
 </body>
 </html>
