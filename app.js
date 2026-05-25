@@ -90,6 +90,40 @@ if (saved) currentUser = JSON.parse(saved);
 } catch(e) { currentUser = null; }
 }
 
+
+// ── ROLE HELPERS ────────────────────────────────────────────
+function getRoleLabel(role) {
+  if (!role) return '';
+  if (role === 'admin') return 'Admin';
+  if (role === 'pending') return 'Ausstehend';
+  const m = role.match(/^(coach|player)_(.+)$/);
+  if (!m) return role;
+  const type = m[1] === 'coach' ? 'Coach' : 'Spieler';
+  const team = state.teams.find(t => t.id === m[2]);
+  return type + ' ' + (team ? team.name : m[2]);
+}
+function getRoleColor(role) {
+  if (role === 'admin') return 'var(--red-light)';
+  if (role === 'pending') return '#f39c12';
+  if (role && role.startsWith('coach_')) return '#3498db';
+  return '#888';
+}
+function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+function isCoachOf(teamId) { return isAdmin() || (currentUser && currentUser.role === 'coach_' + teamId); }
+function isPlayerOf(teamId) { return isAdmin() || isCoachOf(teamId) || (currentUser && currentUser.role === 'player_' + teamId); }
+function getMyTeamId() {
+  if (!currentUser) return null;
+  const r = currentUser.role;
+  if (!r || r === 'admin' || r === 'pending') return null;
+  const m = r.match(/^(?:coach|player)_(.+)$/);
+  return m ? m[1] : null;
+}
+function getTeamData(teamId) {
+  if (!state.teamData) state.teamData = {};
+  if (!state.teamData[teamId]) state.teamData[teamId] = {tactics:[], training:[]};
+  return state.teamData[teamId];
+}
+
 function updateAuthUI() {
 const btn = document.getElementById('admin-toggle-btn');
 const logoutBtn = document.getElementById('logout-btn');
