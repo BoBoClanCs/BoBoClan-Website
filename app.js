@@ -702,11 +702,12 @@ const target = document.getElementById(targetId);
 if(target) target.style.display = 'block';
 window.scrollTo({top:0});
 // Render content - wrapped in try/catch so errors don't break navigation
-try { if(page === 'histoire') renderHistoire(); } catch(err) { console.error('renderHistoire error:', err); }
-try { if(page === 'spieler') renderSpielerList(); } catch(err) { console.error('renderSpielerList error:', err); }
+if(page === 'histoire') { try { renderHistoire(); } catch(err) { console.error('renderHistoire:', err); document.getElementById('hist-panels').innerHTML = '<div class="empty">Fehler beim Laden</div>'; } }
+if(page === 'spieler') { try { renderSpielerList(); } catch(err) { console.error('renderSpielerList:', err); } }
 document.querySelectorAll('.nav-links a').forEach(a => {
 const ap = a.getAttribute('data-page');
-a.classList.toggle('nav-active', ap === page);
+const isActive = ap === page && (page !== 'home' || a.getAttribute('data-nav-id') === 'start');
+a.classList.toggle('nav-active', isActive);
 });
 }
 function toggleHistorie(e) { showPage('histoire', e); }
@@ -998,6 +999,9 @@ return state.spielerProfiles.find(p => p.name.trim().toLowerCase() === name.trim
 
 function getSpielerList() {
 const players = {};
+// Index spielerProfiles for fast lookup
+const profileIndex = {};
+(state.spielerProfiles||[]).forEach(p => { profileIndex[p.name.trim().toLowerCase()] = p; });
 state.histoire.forEach(team => {
 (team.seasons || []).forEach(season => {
 (season.players || []).forEach(p => {
