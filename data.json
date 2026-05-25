@@ -49,6 +49,24 @@
             }
           ],
           "coach": "t"
+        },
+        {
+          "season": "tt",
+          "placement": "",
+          "wins": "",
+          "losses": "",
+          "players": [
+            {
+              "name": "t",
+              "games": "",
+              "kills": "",
+              "assists": "",
+              "deaths": "",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "t"
         }
       ]
     },
