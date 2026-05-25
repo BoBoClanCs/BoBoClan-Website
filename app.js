@@ -29,6 +29,184 @@ localStorage.setItem('bobo_gh_token', t);
 document.getElementById('token-status').className = 'token-status ok';
 document.getElementById('token-status').textContent = '✓ Token gespeichert';
 }
+// ── AUTH ───────────────────────────────────────────────────
+let currentUser = null;
+
+async function sha256(str) {
+const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function authLogin(name, password) {
+const hash = await sha256(password);
+return (state.users||[]).find(u =>
+u.name.trim().toLowerCase() === name.trim().toLowerCase() && u.hash === hash
+) || null;
+}
+
+function setCurrentUser(user) {
+currentUser = user;
+localStorage.setItem('bobo_session', JSON.stringify(user));
+updateAuthUI();
+}
+
+function logout() {
+currentUser = null;
+localStorage.removeItem('bobo_session');
+closeAdmin();
+updateAuthUI();
+showPage('home');
+}
+
+function restoreSession() {
+try {
+const saved = localStorage.getItem('bobo_session');
+if (saved) currentUser = JSON.parse(saved);
+} catch(e) { currentUser = null; }
+}
+
+function updateAuthUI() {
+const btn = document.getElementById('admin-toggle-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const loginBtn = document.getElementById('login-btn');
+const userLabel = document.getElementById('user-label');
+if (currentUser) {
+if (btn) btn.style.display = currentUser.role === 'admin' ? 'block' : 'none';
+if (logoutBtn) logoutBtn.style.display = 'block';
+if (loginBtn) loginBtn.style.display = 'none';
+if (userLabel) { userLabel.textContent = currentUser.name; userLabel.style.display = 'block'; }
+} else {
+if (btn) btn.style.display = 'none';
+if (logoutBtn) logoutBtn.style.display = 'none';
+if (loginBtn) loginBtn.style.display = 'block';
+if (userLabel) userLabel.style.display = 'none';
+}
+}
+
+function openLoginOverlay() {
+document.getElementById('login-overlay').style.display = 'flex';
+setTimeout(() => document.getElementById('login-name-input').focus(), 100);
+}
+
+function closeLoginOverlay() {
+document.getElementById('login-overlay').style.display = 'none';
+document.getElementById('login-name-input').value = '';
+document.getElementById('login-pw-input').value = '';
+document.getElementById('login-err').style.display = 'none';
+}
+
+function switchLoginTab(tab) {
+document.getElementById('login-overlay-tab-login').classList.toggle('active', tab === 'login');
+document.getElementById('login-overlay-tab-steam').classList.toggle('active', tab === 'steam');
+document.getElementById('login-panel-login').style.display = tab === 'login' ? 'block' : 'none';
+document.getElementById('login-panel-steam').style.display = tab === 'steam' ? 'block' : 'none';
+}
+
+async function doLogin() {
+const name = document.getElementById('login-name-input').value.trim();
+const pw = document.getElementById('login-pw-input').value;
+if (!name || !pw) return;
+const btn = document.getElementById('login-submit-btn');
+btn.textContent = '...'; btn.disabled = true;
+const user = await authLogin(name, pw);
+btn.textContent = 'Einloggen'; btn.disabled = false;
+if (user) {
+closeLoginOverlay();
+setCurrentUser({name: user.name, role: user.role});
+if (user.role === 'admin') openAdminPanel();
+else openPlayerPanel();
+} else {
+document.getElementById('login-err').style.display = 'block';
+}
+}
+
+function openPlayerPanel() {
+document.getElementById('player-panel').style.display = 'flex';
+const profile = (state.spielerProfiles||[]).find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+document.getElementById('player-panel-name').textContent = currentUser.name;
+document.getElementById('player-steam-input').value = profile ? profile.steam || '' : '';
+}
+
+function closePlayerPanel() {
+document.getElementById('player-panel').style.display = 'none';
+}
+
+async function savePlayerSteam() {
+if (!currentUser) return;
+const steam = document.getElementById('player-steam-input').value.trim();
+if (!state.spielerProfiles) state.spielerProfiles = [];
+const existing = state.spielerProfiles.find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+if (existing) { existing.steam = steam; }
+else { state.spielerProfiles.push({name: currentUser.name, steam}); }
+const key = 'bobo_av_' + currentUser.name.trim().toLowerCase().replace(/\s+/g,'_');
+localStorage.removeItem(key);
+const btn = document.getElementById('player-save-btn');
+btn.textContent = 'Wird gespeichert...'; btn.disabled = true;
+await saveAll();
+btn.textContent = '✓ Gespeichert!';
+setTimeout(() => { btn.textContent = 'Speichern'; btn.disabled = false; }, 2000);
+renderPublic();
+}
+
+function renderUsersAdmin() {
+const el = document.getElementById('users-admin-list');
+if (!el) return;
+if (!state.users) state.users = [];
+el.innerHTML = state.users.length === 0
+? '<div class="empty">Noch keine Benutzer angelegt</div>'
+: state.users.map((u,i) => `
+<div class="tbl-row" style="grid-template-columns:1fr 100px 1fr 32px;margin-bottom:0.4rem;align-items:center;">
+<span style="font-family:'Oswald',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
+<span style="font-size:0.75rem;letter-spacing:1px;color:${u.role==='admin'?'var(--red-light)':'#888'};padding:0 8px;text-transform:uppercase;">${u.role}</span>
+<span style="font-size:0.75rem;color:#555;padding:0 8px;">Passwort gesetzt ✓</span>
+<button class="del-btn" onclick="delUser(${i})">&#10005;</button>
+</div>`).join('');
+if (document.getElementById('users-count'))
+document.getElementById('users-count').textContent = state.users.length + ' Benutzer';
+}
+
+async function addUser() {
+const name = document.getElementById('new-user-name').value.trim();
+const pw = document.getElementById('new-user-pw').value;
+const role = document.getElementById('new-user-role').value;
+if (!name || !pw) { alert('Name und Passwort erforderlich'); return; }
+if (!state.users) state.users = [];
+if (state.users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
+alert('Benutzername bereits vergeben'); return;
+}
+const hash = await sha256(pw);
+state.users.push({name, hash, role});
+document.getElementById('new-user-name').value = '';
+document.getElementById('new-user-pw').value = '';
+renderUsersAdmin();
+}
+
+function delUser(i) {
+if (!confirm('Benutzer wirklich löschen?')) return;
+state.users.splice(i,1);
+renderUsersAdmin();
+}
+
+async function changePlayerPassword() {
+if (!currentUser) return;
+const oldPw = document.getElementById('player-old-pw')?.value;
+const newPw = document.getElementById('player-new-pw')?.value;
+if (!oldPw || !newPw) return;
+const oldHash = await sha256(oldPw);
+const user = (state.users||[]).find(u =>
+u.name.toLowerCase() === currentUser.name.toLowerCase() && u.hash === oldHash
+);
+if (!user) { alert('Altes Passwort falsch'); return; }
+user.hash = await sha256(newPw);
+await saveAll();
+alert('Passwort geändert!');
+}
+
+
 function openAdmin() {
 if (currentUser && currentUser.role === 'admin') {
 openAdminPanel();
@@ -1161,4 +1339,5 @@ switchTeam(id);
 document.getElementById('teams').scrollIntoView({behavior:'smooth'});
 }
 restoreSession();
+updateAuthUI();
 loadFromGitHub();
