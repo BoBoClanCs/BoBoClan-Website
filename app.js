@@ -3,8 +3,9 @@ const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 let state = {
-users: [], // [{name, hash, role}] - managed by admin
-spielerProfiles: [], // [{name, steam, steamCache}]
+users: [], // [{name, hash, role:'admin'|'coach_ID'|'player_ID'|'pending'}]
+spielerProfiles: [], // [{name, steam, discord}]
+teamData: {}, // {teamId: {tactics:[{title,desc,image,date}], training:[{date,time,notes,todos:[]}]}} // [{name, steam, steamCache}]
 teams: [
 { id:'boot', name:'BoBoBoot', coach:'', dachcs:'', players:[], results:[] },
 { id:'rage', name:'BoBoRage', coach:'', dachcs:'', players:[], results:[] }
@@ -70,16 +71,33 @@ const btn = document.getElementById('admin-toggle-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const loginBtn = document.getElementById('login-btn');
 const userLabel = document.getElementById('user-label');
+const teamAreaBtn = document.getElementById('team-area-btn');
 if (currentUser) {
 if (btn) btn.style.display = currentUser.role === 'admin' ? 'block' : 'none';
 if (logoutBtn) logoutBtn.style.display = 'block';
 if (loginBtn) loginBtn.style.display = 'none';
-if (userLabel) { userLabel.textContent = currentUser.name; userLabel.style.display = 'block'; }
+if (userLabel) {
+userLabel.textContent = currentUser.name + ' (' + getRoleLabel(currentUser.role) + ')';
+userLabel.style.display = 'block';
+}
+// Show team area button if user has a team role
+const teamId = getMyTeamId();
+const hasTeamRole = isAdmin() || teamId;
+if (teamAreaBtn) {
+teamAreaBtn.style.display = hasTeamRole ? 'block' : 'none';
+if (teamId) {
+const team = state.teams.find(t => t.id === teamId);
+teamAreaBtn.textContent = '🔒 ' + (team ? team.name : teamId);
+} else {
+teamAreaBtn.textContent = '🔒 Teams';
+}
+}
 } else {
 if (btn) btn.style.display = 'none';
 if (logoutBtn) logoutBtn.style.display = 'none';
 if (loginBtn) loginBtn.style.display = 'block';
 if (userLabel) userLabel.style.display = 'none';
+if (teamAreaBtn) teamAreaBtn.style.display = 'none';
 }
 }
 
@@ -96,10 +114,17 @@ document.getElementById('login-err').style.display = 'none';
 }
 
 function switchLoginTab(tab) {
-document.getElementById('login-overlay-tab-login').classList.toggle('active', tab === 'login');
-document.getElementById('login-overlay-tab-steam').classList.toggle('active', tab === 'steam');
-document.getElementById('login-panel-login').style.display = tab === 'login' ? 'block' : 'none';
-document.getElementById('login-panel-steam').style.display = tab === 'steam' ? 'block' : 'none';
+['login','register'].forEach(t => {
+const tabBtn = document.getElementById('login-overlay-tab-' + t);
+const panel = document.getElementById('login-panel-' + t);
+if (tabBtn) tabBtn.classList.toggle('active', t === tab);
+if (panel) panel.style.display = t === tab ? 'block' : 'none';
+});
+// Clear errors on tab switch
+['login-err','reg-err','reg-success'].forEach(id => {
+const el = document.getElementById(id);
+if (el) el.style.display = 'none';
+});
 }
 
 async function doLogin() {
@@ -111,13 +136,47 @@ btn.textContent = '...'; btn.disabled = true;
 const user = await authLogin(name, pw);
 btn.textContent = 'Einloggen'; btn.disabled = false;
 if (user) {
+if (user.role === 'pending') {
+document.getElementById('login-err').textContent = 'Account wartet auf Freischaltung durch einen Admin.';
+document.getElementById('login-err').style.display = 'block';
+return;
+}
 closeLoginOverlay();
 setCurrentUser({name: user.name, role: user.role});
 if (user.role === 'admin') openAdminPanel();
 else openPlayerPanel();
 } else {
+document.getElementById('login-err').textContent = 'Falscher Name oder Passwort.';
 document.getElementById('login-err').style.display = 'block';
 }
+}
+
+async function doRegister() {
+const name = document.getElementById('reg-name-input').value.trim();
+const pw = document.getElementById('reg-pw-input').value;
+const pw2 = document.getElementById('reg-pw2-input').value;
+const errEl = document.getElementById('reg-err');
+errEl.style.display = 'none';
+if (!name || !pw) { errEl.textContent = 'Name und Passwort erforderlich.'; errEl.style.display = 'block'; return; }
+if (pw !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = 'block'; return; }
+if (!state.users) state.users = [];
+if (state.users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
+errEl.textContent = 'Benutzername bereits vergeben.'; errEl.style.display = 'block'; return;
+}
+const btn = document.getElementById('reg-submit-btn');
+btn.textContent = '...'; btn.disabled = true;
+const hash = await sha256(pw);
+state.users.push({name, hash, role: 'pending'});
+await saveAll();
+btn.textContent = 'Registrieren'; btn.disabled = false;
+document.getElementById('reg-name-input').value = '';
+document.getElementById('reg-pw-input').value = '';
+document.getElementById('reg-pw2-input').value = '';
+document.getElementById('reg-success').style.display = 'block';
+setTimeout(() => {
+document.getElementById('reg-success').style.display = 'none';
+switchLoginTab('login');
+}, 3000);
 }
 
 function openPlayerPanel() {
@@ -126,22 +185,25 @@ const profile = (state.spielerProfiles||[]).find(p =>
 p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
 );
 document.getElementById('player-panel-name').textContent = currentUser.name;
+document.getElementById('player-panel-role').textContent = getRoleLabel(currentUser.role);
 document.getElementById('player-steam-input').value = profile ? profile.steam || '' : '';
+document.getElementById('player-discord-input').value = profile ? profile.discord || '' : '';
 }
 
 function closePlayerPanel() {
 document.getElementById('player-panel').style.display = 'none';
 }
 
-async function savePlayerSteam() {
+async function savePlayerProfile() {
 if (!currentUser) return;
 const steam = document.getElementById('player-steam-input').value.trim();
+const discord = document.getElementById('player-discord-input').value.trim();
 if (!state.spielerProfiles) state.spielerProfiles = [];
 const existing = state.spielerProfiles.find(p =>
 p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
 );
-if (existing) { existing.steam = steam; }
-else { state.spielerProfiles.push({name: currentUser.name, steam}); }
+if (existing) { existing.steam = steam; existing.discord = discord; }
+else { state.spielerProfiles.push({name: currentUser.name, steam, discord}); }
 const key = 'bobo_av_' + currentUser.name.trim().toLowerCase().replace(/\s+/g,'_');
 localStorage.removeItem(key);
 const btn = document.getElementById('player-save-btn');
@@ -156,34 +218,67 @@ function renderUsersAdmin() {
 const el = document.getElementById('users-admin-list');
 if (!el) return;
 if (!state.users) state.users = [];
-el.innerHTML = state.users.length === 0
-? '<div class="empty">Noch keine Benutzer angelegt</div>'
-: state.users.map((u,i) => `
-<div class="tbl-row" style="grid-template-columns:1fr 100px 1fr 32px;margin-bottom:0.4rem;align-items:center;">
-<span style="font-family:'Oswald',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
-<span style="font-size:0.75rem;letter-spacing:1px;color:${u.role==='admin'?'var(--red-light)':'#888'};padding:0 8px;text-transform:uppercase;">${u.role}</span>
-<span style="font-size:0.75rem;color:#555;padding:0 8px;">Passwort gesetzt ✓</span>
+const pending = state.users.filter(u => u.role === 'pending');
+const active = state.users.filter(u => u.role !== 'pending');
+let html = '';
+if (pending.length > 0) {
+html += '<div style="font-family:\'Oswald\',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--red-light);text-transform:uppercase;margin-bottom:0.5rem;margin-top:0.25rem;">⏳ Warten auf Freischaltung</div>';
+html += pending.map((u,_) => {
+const i = state.users.indexOf(u);
+return `<div class="tbl-row" style="grid-template-columns:1fr 130px 130px 32px;margin-bottom:0.4rem;align-items:center;border-left:3px solid #f39c12;">
+<span style="font-family:\'Oswald\',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
+<select onchange="approveUser(${i},this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:6px 10px;font-family:\'Rajdhani\',sans-serif;font-size:0.9rem;outline:none;"><option value="">Rolle wählen...</option>${buildRoleOptions('')}</select>
+<button class="admin-save-btn" style="padding:6px 12px;font-size:0.75rem;" onclick="approveUser(${i},this.previousElementSibling.value)">Freischalten</button>
 <button class="del-btn" onclick="delUser(${i})">&#10005;</button>
-</div>`).join('');
+</div>`;
+}).join('');
+}
+if (active.length > 0) {
+if (pending.length > 0) html += '<div style="font-family:\'Oswald\',sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;text-transform:uppercase;margin:1rem 0 0.5rem;">Aktive Benutzer</div>';
+html += active.map((u,_) => {
+const i = state.users.indexOf(u);
+return `<div class="tbl-row" style="grid-template-columns:1fr 100px 100px 32px;margin-bottom:0.4rem;align-items:center;">
+<span style="font-family:\'Oswald\',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
+<span style="font-size:0.75rem;letter-spacing:1px;color:${u.role==='admin'?'var(--red-light)':'#888'};padding:0 8px;text-transform:uppercase;">${u.role}</span>
+<select onchange="changeRole(${i},this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:6px 10px;font-family:\'Rajdhani\',sans-serif;font-size:0.9rem;outline:none;">${buildRoleOptions(u.role)}</select>
+<button class="del-btn" onclick="delUser(${i})">&#10005;</button>
+</div>`;
+}).join('');
+}
+if (state.users.length === 0) html = '<div class="empty">Noch keine registrierten Benutzer</div>';
+el.innerHTML = html;
 if (document.getElementById('users-count'))
 document.getElementById('users-count').textContent = state.users.length + ' Benutzer';
 }
 
-async function addUser() {
-const name = document.getElementById('new-user-name').value.trim();
-const pw = document.getElementById('new-user-pw').value;
-const role = document.getElementById('new-user-role').value;
-if (!name || !pw) { alert('Name und Passwort erforderlich'); return; }
-if (!state.users) state.users = [];
-if (state.users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
-alert('Benutzername bereits vergeben'); return;
-}
-const hash = await sha256(pw);
-state.users.push({name, hash, role});
-document.getElementById('new-user-name').value = '';
-document.getElementById('new-user-pw').value = '';
+function approveUser(i, role) {
+if (!role) { alert('Bitte zuerst eine Rolle auswählen'); return; }
+state.users[i].role = role;
 renderUsersAdmin();
 }
+function buildRoleOptions(currentRole) {
+const opts = [
+{v:'admin', l:'Admin'},
+{v:'pending', l:'Ausstehend'},
+];
+state.teams.forEach(t => {
+opts.push({v:'coach_'+t.id, l:'Coach '+t.name});
+opts.push({v:'player_'+t.id, l:'Spieler '+t.name});
+});
+return opts.map(o => `<option value="${o.v}" ${currentRole===o.v?'selected':''}>${o.l}</option>`).join('');
+}
+
+function changeRole(i, role) {
+state.users[i].role = role;
+// Update session if changing own role
+if (currentUser && state.users[i].name === currentUser.name) {
+currentUser.role = role;
+localStorage.setItem('bobo_session', JSON.stringify(currentUser));
+updateAuthUI();
+}
+}
+
+// addUser removed - users register themselves
 
 function delUser(i) {
 if (!confirm('Benutzer wirklich löschen?')) return;
@@ -229,6 +324,18 @@ document.getElementById('token-status').textContent = '✓ Token vorhanden';
 rebuildAdminSidebar();
 rebuildTeamPages();
 refreshAllAdminForms();
+// Pre-fill admin profile fields
+if (currentUser) {
+const profile = (state.spielerProfiles||[]).find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+const steamEl = document.getElementById('admin-steam-input');
+const discordEl = document.getElementById('admin-discord-input');
+if (steamEl) steamEl.value = profile ? profile.steam || '' : '';
+if (discordEl) discordEl.value = profile ? profile.discord || '' : '';
+const nameEl = document.getElementById('admin-profile-name');
+if (nameEl) nameEl.textContent = currentUser.name;
+}
 showAdminPage('page-settings');
 }
 function closeAdmin() {
@@ -1276,6 +1383,7 @@ if (data.news) state.news = data.news;
 if (data.matches) state.matches = data.matches;
 if (data.spielerProfiles) state.spielerProfiles = data.spielerProfiles;
 if (data.users) state.users = data.users;
+if (data.teamData) state.teamData = data.teamData;
 }
 function afterLoad() {
 renderPublic();
