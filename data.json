@@ -37,7 +37,18 @@
           "placement": "",
           "wins": "",
           "losses": "",
-          "players": []
+          "players": [
+            {
+              "name": "Nullkisir",
+              "games": "",
+              "kills": "",
+              "assists": "",
+              "deaths": "",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "t"
         }
       ]
     },
