@@ -1,11 +1,7 @@
 {
-  "users": [
-    {
-      "name": "Nullkisir",
-      "hash": "9485be732d9b94a681c02aae0301ed35da66cd199d73a95d5935c10e2a10f109",
-      "role": "admin"
-    }
-  ],
+  "users": [],
+  "spielerProfiles": [],
+  "teamData": {},
   "teams": [
     {
       "id": "boot",
@@ -29,7 +25,26 @@
     {
       "id": "boot",
       "name": "BoBoBoot",
-      "seasons": []
+      "seasons": [
+        {
+          "season": "test",
+          "placement": "",
+          "wins": "",
+          "losses": "",
+          "players": [
+            {
+              "name": "Nullkisir",
+              "games": "1",
+              "kills": "1",
+              "assists": "1",
+              "deaths": "1",
+              "hltv": "1",
+              "steam": ""
+            }
+          ],
+          "coach": "ttt"
+        }
+      ]
     },
     {
       "id": "rage",
@@ -37,6 +52,5 @@
       "seasons": []
     }
   ],
-  "spielerProfiles": [],
   "news": []
 }
