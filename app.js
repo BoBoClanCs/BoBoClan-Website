@@ -390,6 +390,10 @@ document.getElementById('token-status').textContent = '✓ Token vorhanden';
 rebuildAdminSidebar();
 rebuildTeamPages();
 refreshAllAdminForms();
+renderHistoireAdminPage();
+renderUsersAdmin();
+renderSpielerProfilesAdmin();
+renderMatchesAdmin();
 // Pre-fill admin profile fields
 if (currentUser) {
 const profile = (state.spielerProfiles||[]).find(p =>
