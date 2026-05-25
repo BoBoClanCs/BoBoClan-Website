@@ -91,6 +91,61 @@ if (saved) currentUser = JSON.parse(saved);
 }
 
 
+
+// ── INVITE SYSTEM ───────────────────────────────────────────
+function generateInviteLink() {
+  const token = getToken();
+  if (!token) { alert('Kein GitHub Token gespeichert. Bitte erst Token eintragen.'); return; }
+  const expires = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+  const payload = btoa(JSON.stringify({t: token, e: expires}));
+  const url = window.location.origin + window.location.pathname + '?invite=' + payload;
+  // Show in a copyable field
+  const el = document.getElementById('invite-link-output');
+  if (el) {
+    el.value = url;
+    el.style.display = 'block';
+    el.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.getElementById('invite-link-status').textContent = '✓ Link kopiert! Gültig für 7 Tage.';
+    document.getElementById('invite-link-status').style.display = 'block';
+  }
+}
+
+function checkInviteParam() {
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get('invite');
+  if (!invite) return;
+  try {
+    const payload = JSON.parse(atob(invite));
+    if (!payload.t || !payload.e) return;
+    if (Date.now() > payload.e) {
+      alert('Dieser Einladungslink ist abgelaufen. Bitte einen neuen anfordern.');
+      return;
+    }
+    // Store invite token temporarily for registration
+    sessionStorage.setItem('bobo_invite_token', payload.t);
+    sessionStorage.setItem('bobo_invite_expires', payload.e);
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+    // Open registration directly
+    openLoginOverlay();
+    switchLoginTab('register');
+    document.getElementById('reg-invite-notice').style.display = 'block';
+  } catch(e) {
+    console.error('Invalid invite link', e);
+  }
+}
+
+function getRegistrationToken() {
+  // Use invite token if available, otherwise admin token
+  const inviteToken = sessionStorage.getItem('bobo_invite_token');
+  const inviteExpires = sessionStorage.getItem('bobo_invite_expires');
+  if (inviteToken && inviteExpires && Date.now() < parseInt(inviteExpires)) {
+    return inviteToken;
+  }
+  return getToken();
+}
+
 // ── ROLE HELPERS ────────────────────────────────────────────
 function getRoleLabel(role) {
   if (!role) return '';
@@ -204,6 +259,27 @@ document.getElementById('login-err').style.display = 'block';
 }
 }
 
+
+async function saveAllWithToken(token) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+  const apiUrl = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+  const headers = { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  try {
+    let sha = null;
+    const shaRes = await fetch(apiUrl + '?ref=' + GH_BRANCH + '&_=' + Date.now(), { headers });
+    if (shaRes.ok) { const d = await shaRes.json(); sha = d.sha || null; }
+    const putBody = { message: 'User registration', content, branch: GH_BRANCH };
+    if (sha) putBody.sha = sha;
+    const res = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+    if (res.ok) {
+      try { localStorage.setItem('bobo_data_cache', JSON.stringify(state)); } catch(e) {}
+    } else {
+      const err = await res.json();
+      alert('Registrierung fehlgeschlagen: ' + (err.message || res.status));
+    }
+  } catch(e) { alert('Netzwerkfehler: ' + e.message); }
+}
+
 async function doRegister() {
 const name = document.getElementById('reg-name-input').value.trim();
 const pw = document.getElementById('reg-pw-input').value;
@@ -216,11 +292,18 @@ if (!state.users) state.users = [];
 if (state.users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
 errEl.textContent = 'Benutzername bereits vergeben.'; errEl.style.display = 'block'; return;
 }
+const regToken = getRegistrationToken();
+if (!regToken) {
+errEl.textContent = 'Kein gültiger Einladungslink. Bitte einen Admin kontaktieren.';
+errEl.style.display = 'block'; return;
+}
 const btn = document.getElementById('reg-submit-btn');
 btn.textContent = '...'; btn.disabled = true;
 const hash = await sha256(pw);
 state.users.push({name, hash, role: 'none'});
-await saveAll();
+await saveAllWithToken(regToken);
+sessionStorage.removeItem('bobo_invite_token');
+sessionStorage.removeItem('bobo_invite_expires');
 btn.textContent = 'Registrieren'; btn.disabled = false;
 document.getElementById('reg-name-input').value = '';
 document.getElementById('reg-pw-input').value = '';
@@ -238,7 +321,10 @@ const profile = (state.spielerProfiles||[]).find(p =>
 p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
 );
 document.getElementById('player-panel-name').textContent = currentUser.name;
-document.getElementById('player-panel-role').textContent = getRoleLabel(currentUser.role);
+const roleEl = document.getElementById('player-panel-role');
+const roleLabel = getRoleLabel(currentUser.role);
+roleEl.textContent = (roleLabel && roleLabel !== 'none' && currentUser.role !== 'none') ? roleLabel : '';
+roleEl.style.display = (currentUser.role && currentUser.role !== 'none') ? 'block' : 'none';
 document.getElementById('player-steam-input').value = profile ? profile.steam || '' : '';
 document.getElementById('player-discord-input').value = profile ? profile.discord || '' : '';
 }
@@ -271,7 +357,11 @@ const btn = document.getElementById('player-save-btn');
 btn.textContent = 'Wird gespeichert...'; btn.disabled = true;
 await saveAll();
 btn.textContent = '✓ Gespeichert!';
-setTimeout(() => { btn.textContent = 'Speichern'; btn.disabled = false; }, 2000);
+setTimeout(() => {
+btn.textContent = 'Speichern';
+btn.disabled = false;
+closePlayerPanel();
+}, 1500);
 renderPublic();
 }
 
@@ -1553,4 +1643,5 @@ document.getElementById('teams').scrollIntoView({behavior:'smooth'});
 localStorage.removeItem('bobo_data_cache');
 restoreSession();
 updateAuthUI();
+checkInviteParam();
 loadFromGitHub();
