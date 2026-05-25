@@ -46,6 +46,7 @@
       <div class="admin-sidebar-group" id="sidebar-team-links"></div>
       <div class="admin-sidebar-group">
         <span class="admin-sidebar-label">Sonstiges</span>
+        <button class="admin-nav-item" data-page="page-spieler-profiles" onclick="showAdminPage('page-spieler-profiles')">&#127939; Spieler &amp; Steam</button>
         <button class="admin-nav-item" data-page="page-matches" onclick="showAdminPage('page-matches')">&#128197; N&auml;chste Matches</button>
         <button class="admin-nav-item" data-page="page-news" onclick="showAdminPage('page-news')">&#128240; News</button>
         <button class="admin-nav-item" data-page="page-histoire" onclick="showAdminPage('page-histoire')">&#128218; Historie</button>
@@ -84,6 +85,28 @@
 
       <!-- Team pages injected here -->
       <div id="team-pages-container"></div>
+
+
+      <!-- PAGE: SPIELER PROFILES -->
+      <div class="admin-page" id="page-spieler-profiles">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">Spieler &amp; Steam-URLs</div>
+            <div class="admin-card-subtitle" id="spieler-profiles-count">0 Eintr&auml;ge</div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;line-height:1.6">
+              Spielernamen m&uuml;ssen <strong style="color:var(--cream)">exakt</strong> mit den Namen in der Historie &uuml;bereinstimmen. Bilder werden nach dem ersten Laden gecacht &ndash; sofort schnell.
+            </p>
+            <div class="tbl-editor-head tbl-row" style="grid-template-columns:1fr 2fr 32px;margin-bottom:0.4rem">
+              <span>Spielername</span><span>Steam-URL</span><span></span>
+            </div>
+            <div id="spieler-profiles-admin"></div>
+            <button class="tbl-add-btn" onclick="addSpielerProfile()">+ Spieler hinzuf&uuml;gen</button>
+          </div>
+        </div>
+      </div>
 
       <!-- PAGE: MATCHES -->
       <div class="admin-page" id="page-matches">

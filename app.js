@@ -4,6 +4,7 @@ const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 let state = {
+spielerProfiles: [], // [{name, steam, steamCache}]
 teams: [
 { id:'boot', name:'BoBoBoot', coach:'', dachcs:'', players:[], results:[] },
 { id:'rage', name:'BoBoRage', coach:'', dachcs:'', players:[], results:[] }
@@ -71,6 +72,7 @@ const page = document.getElementById(id);
 if (page) page.classList.add('active');
 document.querySelectorAll(`.admin-nav-item[data-page="${id}"]`).forEach(b => b.classList.add('active'));
 if (id === 'page-histoire') renderHistoireAdminPage();
+if (id === 'page-spieler-profiles') renderSpielerProfilesAdmin();
 if (id === 'page-matches') renderMatchesAdmin();
 if (id === 'page-news') {
 document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
@@ -616,6 +618,106 @@ const el = document.getElementById('save-status');
 el.textContent = msg;
 el.className = 'save-status' + (isErr ? ' err' : (msg ? ' ok' : ''));
 }
+
+
+// ── SPIELER PROFILES ADMIN ─────────────────────────────────
+function renderSpielerProfilesAdmin() {
+const el = document.getElementById('spieler-profiles-admin');
+if (!el) return;
+if (!state.spielerProfiles) state.spielerProfiles = [];
+el.innerHTML = state.spielerProfiles.map((p,i) => `
+<div class="tbl-row" style="grid-template-columns:1fr 2fr 32px;margin-bottom:0.4rem">
+<input type="text" placeholder="Spielername (exakt wie in Historie)" value="${esc(p.name||'')}" oninput="updateSpielerProfile(${i},'name',this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;width:100%;">
+<input type="text" placeholder="https://steamcommunity.com/id/..." value="${esc(p.steam||'')}" oninput="updateSpielerProfile(${i},'steam',this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;width:100%;">
+<button class="del-btn" onclick="delSpielerProfile(${i})">&#10005;</button>
+</div>`).join('');
+document.getElementById('spieler-profiles-count').textContent = state.spielerProfiles.length + ' Einträge';
+}
+function addSpielerProfile() {
+if (!state.spielerProfiles) state.spielerProfiles = [];
+state.spielerProfiles.push({name:'', steam:''});
+renderSpielerProfilesAdmin();
+}
+function updateSpielerProfile(i, k, v) {
+if (state.spielerProfiles[i]) {
+state.spielerProfiles[i][k] = v;
+// Clear cached avatar when steam URL changes
+if (k === 'steam') {
+const name = state.spielerProfiles[i].name;
+if (name) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+localStorage.removeItem(key);
+}
+}
+}
+}
+function delSpielerProfile(i) {
+const name = state.spielerProfiles[i]?.name;
+if (name) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+localStorage.removeItem(key);
+}
+state.spielerProfiles.splice(i,1);
+renderSpielerProfilesAdmin();
+}
+
+// ── STEAM AVATAR CACHE ─────────────────────────────────────
+function getSteamAvatarUrl(steamUrl) {
+if (!steamUrl) return null;
+const clean = steamUrl.replace(/\/+$/, '');
+const parts = clean.split('/').filter(Boolean);
+const last = parts[parts.length-1], type = parts[parts.length-2];
+return (type === 'profiles' && /^\d{15,}$/.test(last))
+? 'https://steamcommunity.com/profiles/' + last + '?xml=1'
+: 'https://steamcommunity.com/id/' + last + '?xml=1';
+}
+function getCachedAvatar(name) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+return localStorage.getItem(key);
+}
+function setCachedAvatar(name, url) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+try { localStorage.setItem(key, url); } catch(e) {}
+}
+async function loadAndCacheAvatar(name, steamUrl, callback) {
+// Return cached immediately
+const cached = getCachedAvatar(name);
+if (cached) { callback(cached); return; }
+// Fetch from Steam via allorigins
+const xmlUrl = getSteamAvatarUrl(steamUrl);
+if (!xmlUrl) return;
+try {
+const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl));
+const data = await r.json();
+const xml = data.contents || '';
+const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) ||
+xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
+if (m && m[1] && m[1].startsWith('http')) {
+setCachedAvatar(name, m[1].trim());
+callback(m[1].trim());
+}
+} catch(e) {}
+}
+function setAvatarImg(el, url) {
+if (!el) return;
+el.innerHTML = '';
+el.style.cssText += ';background:none;overflow:hidden;padding:0;';
+const img = document.createElement('img');
+img.src = url;
+img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+img.onerror = () => { el.innerHTML = el.getAttribute('data-initials')||'?'; el.style.background='var(--dark4)'; };
+el.appendChild(img);
+}
+function applyAvatarToEl(elId, name, steamUrl) {
+const el = document.getElementById(elId);
+if (!el) return;
+el.setAttribute('data-initials', el.textContent);
+loadAndCacheAvatar(name, steamUrl, url => setAvatarImg(document.getElementById(elId), url));
+}
+function getSteamProfile(name) {
+return state.spielerProfiles.find(p => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+}
+
 function getSpielerList() {
 const players = {};
 state.histoire.forEach(team => {
@@ -698,6 +800,8 @@ const card = `<div class="top-stat-card" onclick="showSpielerDetail('${esc(playe
 <div class="top-stat-name">${esc(player.name)}</div>
 <div class="top-stat-value">${val}</div>
 </div>`;
+const spt = getSteamProfile(player.name);
+if (spt && spt.steam) setTimeout(() => applyAvatarToEl(uid, spt.name, spt.steam), 30);
 return card;
 }).join('') + '</div>';
 listEl.innerHTML = '<div class="spieler-grid">' + players.map(p => {
@@ -709,6 +813,8 @@ const card = `<div class="spieler-card" onclick="showSpielerDetail('${esc(p.name
 <div class="spieler-name">${esc(p.name)}</div>
 <div class="spieler-teams">${esc(teamNames)}</div>
 </div>`;
+const sp2 = getSteamProfile(p.name);
+if (sp2 && sp2.steam) setTimeout(() => applyAvatarToEl(uid, sp2.name, sp2.steam), 50);
 return card;
 }).join('') + '</div>';
 }
@@ -771,6 +877,8 @@ ${s.hltv ? `<div class="season-stat"><div class="season-stat-val" style="color:$
 }).join('')}
 </div>`;
 document.getElementById('spieler-detail-content').innerHTML = html;
+const spd = getSteamProfile(p.name);
+if (spd && spd.steam) setTimeout(() => applyAvatarToEl(uid, spd.name, spd.steam), 50);
 }
 function closeSpielerDetail() {
 document.getElementById('spieler-detail').style.display = 'none';
@@ -788,6 +896,9 @@ const card = `<div class="member-card ${isStandin?'standin':''}" ${clickAttr}>
 ${p.role ? '<div class="member-role">'+esc(p.role)+'</div>' : ''}
 ${hasProfile ? '<div style="font-size:0.7rem;color:var(--red-light);margin-top:4px;letter-spacing:1px">PROFIL ›</div>' : ''}
 </div>`;
+return card;
+const sp = getSteamProfile(p.name||'');
+if (sp && sp.steam) setTimeout(() => applyAvatarToEl(uid, sp.name, sp.steam), 50);
 return card;
 }
 function openSpielerFromCard(name) {
@@ -992,6 +1103,7 @@ state.histoire = data.histoire.map(t => Object.assign({id:'',name:'',seasons:[]}
 }
 if (data.news) state.news = data.news;
 if (data.matches) state.matches = data.matches;
+if (data.spielerProfiles) state.spielerProfiles = data.spielerProfiles;
 }
 function afterLoad() {
 renderPublic();
