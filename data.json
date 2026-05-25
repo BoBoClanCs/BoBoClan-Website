@@ -31,26 +31,7 @@
     {
       "id": "boot",
       "name": "BoBoBoot",
-      "seasons": [
-        {
-          "season": "t",
-          "placement": "",
-          "wins": "",
-          "losses": "",
-          "players": [
-            {
-              "name": "Nullkisir",
-              "games": "",
-              "kills": "",
-              "assists": "",
-              "deaths": "",
-              "hltv": "",
-              "steam": ""
-            }
-          ],
-          "coach": "t"
-        }
-      ]
+      "seasons": []
     },
     {
       "id": "rage",
