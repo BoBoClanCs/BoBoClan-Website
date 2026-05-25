@@ -576,6 +576,25 @@ const cards = page.querySelectorAll('.admin-card');
 const idx = type === 'players' ? 1 : 2;
 if (cards[idx]) { const sub = cards[idx].querySelector('.admin-card-subtitle'); if(sub) sub.textContent = count; }
 }
+
+function refreshAdminIfOpen() {
+const panel = document.getElementById('admin-panel');
+if (!panel || panel.style.display === 'none') return;
+// Refresh whichever admin page is currently active
+const activePage = document.querySelector('.admin-page.active');
+if (!activePage) return;
+const id = activePage.id;
+if (id === 'page-histoire') renderHistoireAdminPage();
+if (id === 'page-news') refreshAllAdminForms();
+if (id === 'page-teams') renderTeamMgmtList();
+if (id === 'page-users') renderUsersAdmin();
+if (id === 'page-spieler-profiles') renderSpielerProfilesAdmin();
+if (id === 'page-matches') renderMatchesAdmin();
+// Also refresh sidebar team links
+rebuildAdminSidebar();
+rebuildTeamPages();
+}
+
 function refreshAllAdminForms() {
 document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
 document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
@@ -657,6 +676,18 @@ ${r.map ? '<div class="result-meta">'+esc(r.map)+'</div>' : ''}
 </div>`;
 }).join('');
 }
+
+function hltvClass(v) {
+const n = parseFloat(v);
+if (isNaN(n)) return '';
+return n >= 1.15 ? 'hltv-good' : n >= 0.95 ? 'hltv-avg' : 'hltv-bad';
+}
+
+function toggleSeason(head) {
+head.nextElementSibling.classList.toggle('open');
+head.querySelector('.season-toggle').classList.toggle('open');
+}
+
 function buildSeasonCard(s) {
 let pHTML;
 if (!s.players || s.players.length === 0) {
@@ -1449,12 +1480,12 @@ if (ph && ph.style.display !== 'none') renderHistoire();
 if (ps && ps.style.display !== 'none') renderSpielerList();
 }
 async function loadFromGitHub() {
-// Show cached data instantly if available
+// Show cached data instantly if available (but always fetch fresh)
 const cached = localStorage.getItem('bobo_data_cache');
 if (cached) {
-try { applyData(JSON.parse(cached)); afterLoad(); } catch(e) {}
+try { applyData(JSON.parse(cached)); afterLoad(); } catch(e) { localStorage.removeItem('bobo_data_cache'); }
 }
-// Then fetch fresh data in background
+// Fetch fresh data
 try {
 const res = await fetch(
 `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`,
@@ -1467,6 +1498,7 @@ const data = JSON.parse(decoded);
 localStorage.setItem('bobo_data_cache', JSON.stringify(data));
 applyData(data);
 afterLoad();
+refreshAdminIfOpen();
 return;
 }
 } catch(e) {}
@@ -1478,6 +1510,7 @@ const data = await res2.json();
 localStorage.setItem('bobo_data_cache', JSON.stringify(data));
 applyData(data);
 afterLoad();
+refreshAdminIfOpen();
 }
 } catch(e) {}
 }
