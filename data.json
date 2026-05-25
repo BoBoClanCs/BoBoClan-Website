@@ -32,40 +32,220 @@
       "name": "BoBoBoot",
       "seasons": [
         {
-          "season": "tttttttttttt",
-          "placement": "",
-          "wins": "",
-          "losses": "",
+          "season": "DACH CS Masters Saison 2 Spielklasse 6",
+          "placement": "7 von 7",
+          "wins": "0",
+          "losses": "6",
           "players": [
+            {
+              "name": "Meow",
+              "games": "6",
+              "kills": "212",
+              "assists": "",
+              "deaths": "204",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "5",
+              "kills": "158",
+              "assists": "",
+              "deaths": "169",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "5",
+              "kills": "126",
+              "assists": "",
+              "deaths": "163",
+              "hltv": "",
+              "steam": ""
+            },
             {
               "name": "Nullkisir",
-              "games": "",
-              "kills": "",
+              "games": "6",
+              "kills": "149",
               "assists": "",
-              "deaths": "",
+              "deaths": "195",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Camo",
+              "games": "6",
+              "kills": "128",
+              "assists": "",
+              "deaths": "207",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Tof Tof",
+              "games": "2",
+              "kills": "53",
+              "assists": "",
+              "deaths": "79",
               "hltv": "",
               "steam": ""
             }
           ],
-          "coach": "t"
+          "coach": "Skywalker"
         },
         {
-          "season": "tt",
-          "placement": "",
-          "wins": "",
-          "losses": "",
+          "season": "DACH CS Masters Saison 3 Open 2",
+          "placement": "7 von 8",
+          "wins": "1",
+          "losses": "6",
           "players": [
             {
-              "name": "t",
-              "games": "",
-              "kills": "",
+              "name": "Fishy",
+              "games": "6",
+              "kills": "277",
               "assists": "",
-              "deaths": "",
+              "deaths": "174",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Teddy",
+              "games": "7",
+              "kills": "216",
+              "assists": "",
+              "deaths": "196",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Meow",
+              "games": "7",
+              "kills": "180",
+              "assists": "",
+              "deaths": "219",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Tof Tof",
+              "games": "6",
+              "kills": "80",
+              "assists": "",
+              "deaths": "178",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Camo",
+              "games": "7",
+              "kills": "85",
+              "assists": "",
+              "deaths": "220",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "1",
+              "kills": "39",
+              "assists": "",
+              "deaths": "44",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Snooflo",
+              "games": "1",
+              "kills": "17",
+              "assists": "",
+              "deaths": "32",
               "hltv": "",
               "steam": ""
             }
           ],
-          "coach": "t"
+          "coach": "Skywalker"
+        },
+        {
+          "season": "DACH CS Masters Saison 4 Spielklasse 6",
+          "placement": "6 von 9",
+          "wins": "3",
+          "losses": "5",
+          "players": [
+            {
+              "name": "Skywalker",
+              "games": "7",
+              "kills": "340",
+              "assists": "",
+              "deaths": "206",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "8",
+              "kills": "270",
+              "assists": "",
+              "deaths": "252",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Meow",
+              "games": "7",
+              "kills": "207",
+              "assists": "",
+              "deaths": "253",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Camo",
+              "games": "7",
+              "kills": "188",
+              "assists": "",
+              "deaths": "239",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Potato",
+              "games": "7",
+              "kills": "92",
+              "assists": "",
+              "deaths": "248",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Gamer",
+              "games": "2",
+              "kills": "84",
+              "assists": "",
+              "deaths": "98",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "1",
+              "kills": "63",
+              "assists": "",
+              "deaths": "50",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Kahinar",
+              "games": "1",
+              "kills": "52",
+              "assists": "",
+              "deaths": "45",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker"
         }
       ]
     },
