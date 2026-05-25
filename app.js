@@ -914,7 +914,9 @@ const d = await shaRes.json();
 sha = d.sha || null;
 } else if (shaRes.status !== 404) {
 const err = await shaRes.json();
-setStatus('Fehler beim SHA-Abruf: ' + (err.message || shaRes.status), true);
+const shaMsg = 'SHA-Fehler: ' + (err.message || shaRes.status);
+setStatus(shaMsg, true);
+alert(shaMsg);
 if (btn) btn.disabled = false;
 if (btnText) btnText.textContent = '💾 Speichern & Veröffentlichen';
 return;
@@ -929,16 +931,21 @@ setStatus('✓ Gespeichert!', false);
 try { localStorage.setItem('bobo_data_cache', JSON.stringify(state)); } catch(e) {}
 } else {
 const err = await res.json();
-setStatus('Fehler: ' + (err.message || res.status), true);
+const putMsg = 'PUT-Fehler ' + res.status + ': ' + (err.message || JSON.stringify(err));
+setStatus(putMsg, true);
+alert(putMsg);
 }
 } catch(e) {
-setStatus('Netzwerkfehler: ' + e.message, true);
+const msg = 'Netzwerkfehler: ' + e.message;
+setStatus(msg, true);
+alert('Speichern fehlgeschlagen: ' + msg);
 }
 if (btn) btn.disabled = false;
 if (btnText) btnText.textContent = '💾 Speichern & Veröffentlichen';
 }
 function setStatus(msg, isErr) {
 const el = document.getElementById('save-status');
+if (!el) return; // admin panel might be closed
 el.textContent = msg;
 el.className = 'save-status' + (isErr ? ' err' : (msg ? ' ok' : ''));
 }
