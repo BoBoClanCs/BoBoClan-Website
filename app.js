@@ -1,9 +1,9 @@
-const ADMIN_PW = 'unserPasswortIst124';
 const GH_USER = 'BoBoClanCs';
 const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 let state = {
+users: [], // [{name, hash, role}] - managed by admin
 spielerProfiles: [], // [{name, steam, steamCache}]
 teams: [
 { id:'boot', name:'BoBoBoot', coach:'', dachcs:'', players:[], results:[] },
@@ -30,22 +30,14 @@ document.getElementById('token-status').className = 'token-status ok';
 document.getElementById('token-status').textContent = '✓ Token gespeichert';
 }
 function openAdmin() {
-document.getElementById('admin-login-overlay').style.display = 'flex';
-setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
-}
-function closeLogin() {
-document.getElementById('admin-login-overlay').style.display = 'none';
-document.getElementById('admin-pw-input').value = '';
-document.getElementById('login-err').classList.remove('show');
-}
-function checkLogin() {
-if (document.getElementById('admin-pw-input').value === ADMIN_PW) {
-closeLogin(); openAdminPanel();
+if (currentUser && currentUser.role === 'admin') {
+openAdminPanel();
 } else {
-document.getElementById('login-err').classList.add('show');
-document.getElementById('admin-pw-input').value = '';
+openLoginOverlay();
 }
 }
+// closeLogin replaced
+// checkLogin replaced by doLogin
 function openAdminPanel() {
 const ap = document.getElementById('admin-panel');
 ap.style.display = 'flex';
@@ -73,6 +65,7 @@ if (page) page.classList.add('active');
 document.querySelectorAll(`.admin-nav-item[data-page="${id}"]`).forEach(b => b.classList.add('active'));
 if (id === 'page-histoire') renderHistoireAdminPage();
 if (id === 'page-spieler-profiles') renderSpielerProfilesAdmin();
+if (id === 'page-users') renderUsersAdmin();
 if (id === 'page-matches') renderMatchesAdmin();
 if (id === 'page-news') {
 document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
@@ -1104,9 +1097,11 @@ state.histoire = data.histoire.map(t => Object.assign({id:'',name:'',seasons:[]}
 if (data.news) state.news = data.news;
 if (data.matches) state.matches = data.matches;
 if (data.spielerProfiles) state.spielerProfiles = data.spielerProfiles;
+if (data.users) state.users = data.users;
 }
 function afterLoad() {
 renderPublic();
+updateAuthUI();
 const ph = document.getElementById('pub-histoire');
 const ps = document.getElementById('pub-spieler');
 if (ph && ph.style.display !== 'none') renderHistoire();
@@ -1165,4 +1160,5 @@ function scrollToTeam(id) {
 switchTeam(id);
 document.getElementById('teams').scrollIntoView({behavior:'smooth'});
 }
+restoreSession();
 loadFromGitHub();
