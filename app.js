@@ -957,8 +957,9 @@ const putBody = { message: 'Update clan data via admin panel', content, branch: 
 if (sha) putBody.sha = sha;
 const res = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(putBody) });
 if (res.ok) {
+const savedData = JSON.parse(decodeURIComponent(escape(atob(content))));
+console.log('[BoBo] Saved to GitHub - histoire seasons:', savedData.histoire?.[0]?.seasons?.length, 'profiles:', savedData.spielerProfiles?.length);
 setStatus('✓ Gespeichert!', false);
-// Update local cache to match saved state
 try { localStorage.setItem('bobo_data_cache', JSON.stringify(state)); } catch(e) {}
 } else {
 const err = await res.json();
@@ -1480,23 +1481,25 @@ if (ph && ph.style.display !== 'none') renderHistoire();
 if (ps && ps.style.display !== 'none') renderSpielerList();
 }
 async function loadFromGitHub() {
-// Always fetch fresh from GitHub - localStorage only as emergency fallback
+// Always fetch fresh from GitHub
 try {
 const res = await fetch(
 `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`,
-{ headers: { Accept: 'application/vnd.github.v3+json' } }
+{ headers: { Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } }
 );
 if (res.ok) {
 const meta = await res.json();
 const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
 const data = JSON.parse(decoded);
+console.log('[BoBo] Loaded from GitHub API, histoire seasons:', data.histoire?.[0]?.seasons?.length, 'profiles:', data.spielerProfiles?.length);
 localStorage.setItem('bobo_data_cache', JSON.stringify(data));
 applyData(data);
 afterLoad();
 refreshAdminIfOpen();
 return;
 }
-} catch(e) {}
+console.warn('[BoBo] GitHub API failed:', res.status);
+} catch(e) { console.error('[BoBo] GitHub API error:', e); }
 // Fallback: try raw URL
 try {
 const res2 = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`);
