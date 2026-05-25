@@ -1,12 +1,6 @@
 {
   "users": [],
-  "spielerProfiles": [
-    {
-      "name": "Nullkisir",
-      "steam": "https://steamcommunity.com/id/Nullkisir/",
-      "discord": ""
-    }
-  ],
+  "spielerProfiles": [],
   "teamData": {},
   "teams": [
     {
@@ -33,13 +27,13 @@
       "name": "BoBoBoot",
       "seasons": [
         {
-          "season": "ttt",
+          "season": "t",
           "placement": "",
           "wins": "",
           "losses": "",
           "players": [
             {
-              "name": "Nullkisir",
+              "name": "t",
               "games": "",
               "kills": "",
               "assists": "",
