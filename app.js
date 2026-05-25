@@ -900,7 +900,9 @@ const token = getToken();
 if (!token) { setStatus('⚠ Kein Token gespeichert!', true); return; }
 const btn = document.getElementById('save-btn');
 const btnText = document.getElementById('save-btn-text');
-btn.disabled = true; btnText.textContent = 'Wird gespeichert...'; setStatus('','');
+if (btn) btn.disabled = true;
+if (btnText) btnText.textContent = 'Wird gespeichert...';
+setStatus('','');
 const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
 const apiUrl = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
 const headers = { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
@@ -913,7 +915,8 @@ sha = d.sha || null;
 } else if (shaRes.status !== 404) {
 const err = await shaRes.json();
 setStatus('Fehler beim SHA-Abruf: ' + (err.message || shaRes.status), true);
-btn.disabled = false; btnText.textContent = '💾 Speichern & Veröffentlichen';
+if (btn) btn.disabled = false;
+if (btnText) btnText.textContent = '💾 Speichern & Veröffentlichen';
 return;
 }
 // 404 = file doesn't exist yet → sha stays null → GitHub creates it
@@ -922,6 +925,8 @@ if (sha) putBody.sha = sha;
 const res = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(putBody) });
 if (res.ok) {
 setStatus('✓ Gespeichert!', false);
+// Update local cache to match saved state
+try { localStorage.setItem('bobo_data_cache', JSON.stringify(state)); } catch(e) {}
 } else {
 const err = await res.json();
 setStatus('Fehler: ' + (err.message || res.status), true);
@@ -929,7 +934,8 @@ setStatus('Fehler: ' + (err.message || res.status), true);
 } catch(e) {
 setStatus('Netzwerkfehler: ' + e.message, true);
 }
-btn.disabled = false; btnText.textContent = '💾 Speichern & Veröffentlichen';
+if (btn) btn.disabled = false;
+if (btnText) btnText.textContent = '💾 Speichern & Veröffentlichen';
 }
 function setStatus(msg, isErr) {
 const el = document.getElementById('save-status');
