@@ -194,15 +194,10 @@ btn.textContent = '...'; btn.disabled = true;
 const user = await authLogin(name, pw);
 btn.textContent = 'Einloggen'; btn.disabled = false;
 if (user) {
-if (user.role === 'pending') {
-document.getElementById('login-err').textContent = 'Account wartet auf Freischaltung durch einen Admin.';
-document.getElementById('login-err').style.display = 'block';
-return;
-}
 closeLoginOverlay();
 setCurrentUser({name: user.name, role: user.role});
 if (user.role === 'admin') openAdminPanel();
-else openPlayerPanel();
+else openPlayerPanel(); // works for all roles incl. 'none'
 } else {
 document.getElementById('login-err').textContent = 'Falscher Name oder Passwort.';
 document.getElementById('login-err').style.display = 'block';
@@ -224,7 +219,7 @@ errEl.textContent = 'Benutzername bereits vergeben.'; errEl.style.display = 'blo
 const btn = document.getElementById('reg-submit-btn');
 btn.textContent = '...'; btn.disabled = true;
 const hash = await sha256(pw);
-state.users.push({name, hash, role: 'pending'});
+state.users.push({name, hash, role: 'none'});
 await saveAll();
 btn.textContent = 'Registrieren'; btn.disabled = false;
 document.getElementById('reg-name-input').value = '';
@@ -284,44 +279,22 @@ function renderUsersAdmin() {
 const el = document.getElementById('users-admin-list');
 if (!el) return;
 if (!state.users) state.users = [];
-const pending = state.users.filter(u => u.role === 'pending');
-const active = state.users.filter(u => u.role !== 'pending');
-let html = '';
-if (pending.length > 0) {
-html += '<div style="font-family:\'Oswald\',sans-serif;font-size:0.75rem;letter-spacing:2px;color:var(--red-light);text-transform:uppercase;margin-bottom:0.5rem;margin-top:0.25rem;">⏳ Warten auf Freischaltung</div>';
-html += pending.map((u,_) => {
-const i = state.users.indexOf(u);
-return `<div class="tbl-row" style="grid-template-columns:1fr 130px 130px 32px;margin-bottom:0.4rem;align-items:center;border-left:3px solid #f39c12;">
-<span style="font-family:\'Oswald\',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
-<select onchange="approveUser(${i},this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:6px 10px;font-family:\'Rajdhani\',sans-serif;font-size:0.9rem;outline:none;"><option value="">Rolle wählen...</option>${buildRoleOptions('')}</select>
-<button class="admin-save-btn" style="padding:6px 12px;font-size:0.75rem;" onclick="approveUser(${i},this.previousElementSibling.value)">Freischalten</button>
+el.innerHTML = state.users.length === 0
+? '<div class="empty">Noch keine registrierten Benutzer</div>'
+: state.users.map((u,i) => `
+<div class="tbl-row" style="grid-template-columns:1fr 1fr 32px;margin-bottom:0.4rem;align-items:center;">
+<span style="font-family:'Oswald',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
+<select onchange="changeRole(${i},this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:6px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;">
+<option value="none" ${u.role==='none'?'selected':''}>Keine Rolle</option>
+${buildRoleOptions(u.role)}
+</select>
 <button class="del-btn" onclick="delUser(${i})">&#10005;</button>
-</div>`;
-}).join('');
-}
-if (active.length > 0) {
-if (pending.length > 0) html += '<div style="font-family:\'Oswald\',sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;text-transform:uppercase;margin:1rem 0 0.5rem;">Aktive Benutzer</div>';
-html += active.map((u,_) => {
-const i = state.users.indexOf(u);
-return `<div class="tbl-row" style="grid-template-columns:1fr 100px 100px 32px;margin-bottom:0.4rem;align-items:center;">
-<span style="font-family:\'Oswald\',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
-<span style="font-size:0.75rem;letter-spacing:1px;color:${u.role==='admin'?'var(--red-light)':'#888'};padding:0 8px;text-transform:uppercase;">${u.role}</span>
-<select onchange="changeRole(${i},this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:6px 10px;font-family:\'Rajdhani\',sans-serif;font-size:0.9rem;outline:none;">${buildRoleOptions(u.role)}</select>
-<button class="del-btn" onclick="delUser(${i})">&#10005;</button>
-</div>`;
-}).join('');
-}
-if (state.users.length === 0) html = '<div class="empty">Noch keine registrierten Benutzer</div>';
-el.innerHTML = html;
+</div>`).join('');
 if (document.getElementById('users-count'))
 document.getElementById('users-count').textContent = state.users.length + ' Benutzer';
 }
 
-function approveUser(i, role) {
-if (!role) { alert('Bitte zuerst eine Rolle auswählen'); return; }
-state.users[i].role = role;
-renderUsersAdmin();
-}
+// approveUser removed
 function buildRoleOptions(currentRole) {
 const opts = [
 {v:'admin', l:'Admin'},
