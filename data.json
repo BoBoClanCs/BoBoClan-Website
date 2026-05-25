@@ -252,7 +252,152 @@
     {
       "id": "rage",
       "name": "BoBoRage",
-      "seasons": []
+      "seasons": [
+        {
+          "season": "DACH CS Masters Saison 3 Open 2",
+          "placement": "8 von 9",
+          "wins": "1",
+          "losses": "7",
+          "players": [
+            {
+              "name": "Symphonie",
+              "games": "7",
+              "kills": "281",
+              "assists": "",
+              "deaths": "231",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "7",
+              "kills": "184",
+              "assists": "",
+              "deaths": "219",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Caine",
+              "games": "7",
+              "kills": "187",
+              "assists": "",
+              "deaths": "250",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "5",
+              "kills": "123",
+              "assists": "",
+              "deaths": "176",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "8",
+              "kills": "195",
+              "assists": "",
+              "deaths": "286",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Vorea Kayne",
+              "games": "3",
+              "kills": "58",
+              "assists": "",
+              "deaths": "93",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Killinix",
+              "games": "2",
+              "kills": "26",
+              "assists": "",
+              "deaths": "70",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Fishy",
+              "games": "1",
+              "kills": "44",
+              "assists": "",
+              "deaths": "34",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker"
+        },
+        {
+          "season": "DACH CS Masters Saison 4 Open 2",
+          "placement": "4 von 8",
+          "wins": "4",
+          "losses": "3",
+          "players": [
+            {
+              "name": "Fishy",
+              "games": "7",
+              "kills": "311",
+              "assists": "",
+              "deaths": "246",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Ibox",
+              "games": "7",
+              "kills": "294",
+              "assists": "",
+              "deaths": "245",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Symphonie",
+              "games": "7",
+              "kills": "302",
+              "assists": "",
+              "deaths": "262",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "6",
+              "kills": "184",
+              "assists": "",
+              "deaths": "207",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "7",
+              "kills": "175",
+              "assists": "",
+              "deaths": "264",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Vorea Kayne",
+              "games": "1",
+              "kills": "22",
+              "assists": "",
+              "deaths": "36",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker"
+        }
+      ]
     }
   ],
   "news": []
