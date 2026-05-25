@@ -22,6 +22,30 @@ function initials(n) { return (n||'?').split(/\s+/).map(w=>w[0]).join('').toUppe
 function teamById(id) { return state.teams.find(t => t.id === id); }
 function histById(id) { return state.histoire.find(t => t.id === id); }
 function genId() { return 'team_' + Math.random().toString(36).slice(2,7); }
+
+async function saveAdminProfile() {
+if (!currentUser) return;
+const steamEl = document.getElementById('admin-steam-input');
+const discordEl = document.getElementById('admin-discord-input');
+const steam = steamEl ? steamEl.value.trim() : '';
+const discord = discordEl ? discordEl.value.trim() : '';
+if (!state.spielerProfiles) state.spielerProfiles = [];
+const existing = state.spielerProfiles.find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+if (existing) { existing.steam = steam; existing.discord = discord; }
+else { state.spielerProfiles.push({name: currentUser.name, steam, discord}); }
+localStorage.removeItem('bobo_av_' + currentUser.name.trim().toLowerCase().replace(/\s+/g,'_'));
+try {
+const c = localStorage.getItem('bobo_data_cache');
+if (c) { const d = JSON.parse(c); d.spielerProfiles = state.spielerProfiles; localStorage.setItem('bobo_data_cache', JSON.stringify(d)); }
+} catch(e) {}
+const btn = document.getElementById('admin-profile-save-btn');
+if (btn) { btn.textContent = 'Wird gespeichert...'; btn.disabled = true; }
+await saveAll();
+if (btn) { btn.textContent = '✓ Gespeichert!'; setTimeout(() => { btn.textContent = 'Speichern'; btn.disabled = false; }, 2000); }
+renderPublic();
+}
 function getToken() { return localStorage.getItem('bobo_gh_token') || ''; }
 function saveToken() {
 const t = document.getElementById('gh-token-input').value.trim();
@@ -196,8 +220,8 @@ document.getElementById('player-panel').style.display = 'none';
 
 async function savePlayerProfile() {
 if (!currentUser) return;
-const steam = document.getElementById('player-steam-input').value.trim();
-const discord = document.getElementById('player-discord-input').value.trim();
+const steam = (document.getElementById('player-steam-input').value || '').trim();
+const discord = (document.getElementById('player-discord-input').value || '').trim();
 if (!state.spielerProfiles) state.spielerProfiles = [];
 const existing = state.spielerProfiles.find(p =>
 p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
@@ -206,6 +230,14 @@ if (existing) { existing.steam = steam; existing.discord = discord; }
 else { state.spielerProfiles.push({name: currentUser.name, steam, discord}); }
 const key = 'bobo_av_' + currentUser.name.trim().toLowerCase().replace(/\s+/g,'_');
 localStorage.removeItem(key);
+try {
+const cached = localStorage.getItem('bobo_data_cache');
+if (cached) {
+const d = JSON.parse(cached);
+d.spielerProfiles = state.spielerProfiles;
+localStorage.setItem('bobo_data_cache', JSON.stringify(d));
+}
+} catch(e) {}
 const btn = document.getElementById('player-save-btn');
 btn.textContent = 'Wird gespeichert...'; btn.disabled = true;
 await saveAll();
@@ -634,8 +666,7 @@ let rows = '';
 s.players.forEach(p => {
 const kd = calcKD(p.kills, p.deaths);
 const kdColor = parseFloat(kd) >= 1 ? '#2ecc71' : parseFloat(kd) < 0.8 ? 'var(--red-light)' : '#f39c12';
-rows += '<tr>'
-+ '<td>' + esc(p.name) + '</td>'
+rows += '<tr><td>' + esc(p.name) + '</td>'
 + '<td class="num">' + esc(p.games||'-') + '</td>'
 + '<td class="num">' + esc(p.kills||'-') + '</td>'
 + '<td class="num">' + esc(p.assists||'-') + '</td>'
@@ -649,10 +680,16 @@ pHTML = '<table class="stats-table"><thead><tr>'
 + '<th class="num">Assists</th><th class="num">Tode</th><th class="num">K/D</th>'
 + '<th class="num">HLTV</th></tr></thead><tbody>' + rows + '</tbody></table>';
 }
-const coachLine = s.coach ? '<div style="font-size:0.85rem;color:#888;margin-bottom:1rem">Coach: <span style="color:var(--red-light);font-weight:600">' + esc(s.coach) + '</span></div>' : '';
-const ytBtn = s.youtube ? '<a href="' + esc(s.youtube) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff4444;border:1px solid #ff4444;padding:4px 12px;margin-bottom:1rem;">&#9654; Playlist</a>' : ''
+const coachLine = s.coach
+? '<div style="font-size:0.85rem;color:#888;margin-bottom:1rem">Coach: <span style="color:var(--red-light);font-weight:600">' + esc(s.coach) + '</span></div>'
+: '';
+const ytBtn = s.youtube
+? '<a href="' + esc(s.youtube) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff4444;border:1px solid #ff4444;padding:4px 12px;margin-bottom:1rem;">&#9654; Playlist</a>'
+: '';
 const placementHTML = s.placement ? '<div class="season-placement">' + esc(s.placement) + '</div>' : '';
-const recordHTML = (s.wins || s.losses) ? '<div class="season-record">W/L: <span>' + esc(s.wins||'0') + '</span>/<span>' + esc(s.losses||'0') + '</span></div>' : '';
+const recordHTML = (s.wins || s.losses)
+? '<div class="season-record">W/L: <span>' + esc(s.wins||'0') + '</span>/<span>' + esc(s.losses||'0') + '</span></div>'
+: '';
 return '<div class="season-card">'
 + '<div class="season-head" onclick="toggleSeason(this)">'
 + '<div class="season-name">' + esc(s.season||'Unbekannte Saison') + '</div>'
@@ -662,6 +699,8 @@ return '<div class="season-card">'
 + '<div class="season-body">' + ytBtn + coachLine + pHTML + '</div>'
 + '</div>';
 }
+
+
 function renderHistoire() {
 const tabsEl = document.getElementById('hist-tabs');
 const panelsEl = document.getElementById('hist-panels');
@@ -1178,7 +1217,6 @@ const card = `<div class="member-card ${isStandin?'standin':''}" ${clickAttr}>
 ${p.role ? '<div class="member-role">'+esc(p.role)+'</div>' : ''}
 ${hasProfile ? '<div style="font-size:0.7rem;color:var(--red-light);margin-top:4px;letter-spacing:1px">PROFIL ›</div>' : ''}
 </div>`;
-return card;
 const sp = getSteamProfile(p.name||'');
 if (sp && sp.steam) setTimeout(() => applyAvatarToEl(uid, sp.name, sp.steam), 50);
 return card;
