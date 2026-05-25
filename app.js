@@ -1480,12 +1480,7 @@ if (ph && ph.style.display !== 'none') renderHistoire();
 if (ps && ps.style.display !== 'none') renderSpielerList();
 }
 async function loadFromGitHub() {
-// Show cached data instantly if available (but always fetch fresh)
-const cached = localStorage.getItem('bobo_data_cache');
-if (cached) {
-try { applyData(JSON.parse(cached)); afterLoad(); } catch(e) { localStorage.removeItem('bobo_data_cache'); }
-}
-// Fetch fresh data
+// Always fetch fresh from GitHub - localStorage only as emergency fallback
 try {
 const res = await fetch(
 `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`,
@@ -1502,7 +1497,7 @@ refreshAdminIfOpen();
 return;
 }
 } catch(e) {}
-// Fallback to raw
+// Fallback: try raw URL
 try {
 const res2 = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`);
 if (res2.ok) {
@@ -1511,8 +1506,14 @@ localStorage.setItem('bobo_data_cache', JSON.stringify(data));
 applyData(data);
 afterLoad();
 refreshAdminIfOpen();
+return;
 }
 } catch(e) {}
+// Last resort: use cached data if GitHub unreachable
+const cached = localStorage.getItem('bobo_data_cache');
+if (cached) {
+try { applyData(JSON.parse(cached)); afterLoad(); } catch(e) {}
+}
 }
 function switchTeam(id) {
 document.querySelectorAll('#teams .team-panel').forEach(p=>p.classList.remove('active'));
@@ -1534,6 +1535,8 @@ function scrollToTeam(id) {
 switchTeam(id);
 document.getElementById('teams').scrollIntoView({behavior:'smooth'});
 }
+// Clear stale cache to force fresh data from GitHub
+localStorage.removeItem('bobo_data_cache');
 restoreSession();
 updateAuthUI();
 loadFromGitHub();
