@@ -1519,7 +1519,7 @@ async function loadFromGitHub() {
 try {
 const res = await fetch(
 `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`,
-{ headers: { Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } }
+{ headers: { Accept: 'application/vnd.github.v3+json' } }
 );
 if (res.ok) {
 const meta = await res.json();
