@@ -27,7 +27,7 @@
       "name": "BoBoBoot",
       "seasons": [
         {
-          "season": "test",
+          "season": "t",
           "placement": "",
           "wins": "",
           "losses": "",
@@ -42,7 +42,7 @@
               "steam": ""
             }
           ],
-          "coach": "ttt"
+          "coach": "t"
         }
       ]
     },
