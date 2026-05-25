@@ -1,12 +1,6 @@
 {
   "users": [],
-  "spielerProfiles": [
-    {
-      "name": "Nullkisir",
-      "steam": "https://steamcommunity.com/id/Nullkisir/",
-      "discord": ""
-    }
-  ],
+  "spielerProfiles": [],
   "teamData": {},
   "teams": [
     {
