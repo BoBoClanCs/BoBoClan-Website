@@ -27,31 +27,11 @@
       "name": "BoBoBoot",
       "seasons": [
         {
-          "season": "tt",
+          "season": "tttttttttttt",
           "placement": "",
           "wins": "",
           "losses": "",
-          "players": [
-            {
-              "name": "tt",
-              "games": "",
-              "kills": "",
-              "assists": "",
-              "deaths": "",
-              "hltv": "",
-              "steam": ""
-            },
-            {
-              "name": "tttt",
-              "games": "",
-              "kills": "",
-              "assists": "",
-              "deaths": "",
-              "hltv": "",
-              "steam": ""
-            }
-          ],
-          "coach": "tt"
+          "players": []
         }
       ]
     },
