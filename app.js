@@ -3,6 +3,7 @@ const GH_USER = 'BoBoClanCs';
 const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
+const DEFAULT_DISCORD = 'https://discord.gg/bobo';
 // Shared write token for coaches/players (Fine-grained: Contents Write only)
 // Replace with your Fine-grained GitHub token
 const GH_SHARED_TOKEN = '';
@@ -21,7 +22,8 @@ let state = {
     {id:'boot',name:'BoBoBoot',seasons:[]},
     {id:'rage',name:'BoBoRage',seasons:[]}
   ],
-  news: []
+  news: [],
+  discordLink: ''
 };
 let currentUser = null;
 let countdownInterval = null;
@@ -40,6 +42,18 @@ function hltvClass(v){const n=parseFloat(v);if(isNaN(n))return '';return n>=1.15
 function toggleSeason(head){head.nextElementSibling.classList.toggle('open');head.querySelector('.season-toggle').classList.toggle('open');}
 
 // ── Role Helpers ───────────────────────────────────────────
+function getDiscordLink(){return state.discordLink||DEFAULT_DISCORD;}
+function updateDiscordLinks(){
+  document.querySelectorAll('.discord-invite-btn').forEach(a=>{a.href=getDiscordLink();});
+  const inp=document.getElementById('discord-link-input');
+  if(inp)inp.value=state.discordLink||'';
+}
+function saveDiscordLink(){
+  const val=(document.getElementById('discord-link-input').value||'').trim();
+  state.discordLink=val;
+  updateDiscordLinks();
+}
+
 function getRoleLabel(role){
   if(!role||role==='none')return '';
   if(role==='admin')return 'Admin';
@@ -691,6 +705,7 @@ ${renderStandins(t)}</div>`).join('');
   const newsEl=document.getElementById('news-display');
   if(newsEl)newsEl.innerHTML=state.news.length===0?'<div class="empty" style="grid-column:1/-1">Noch keine News</div>':state.news.map(n=>'<div class="news-card"><div class="news-date">'+esc(n.date)+'</div><div class="news-title">'+esc(n.title)+'</div><div class="news-text">'+esc(n.text)+'</div></div>').join('');
   updateDachcsLinks();
+  updateDiscordLinks();
   renderMatches();
 }
 function renderRoster(t,standin){
@@ -1241,6 +1256,7 @@ function applyData(data){
   if(data.users)state.users=data.users;
   if(data.teamData)state.teamData=data.teamData;
   if(data._t)state._t=data._t;
+  if(data.discordLink)state.discordLink=data.discordLink;
 }
 function afterLoad(){
   renderPublic();
