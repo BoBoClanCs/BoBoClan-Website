@@ -1,5 +1,11 @@
 {
-  "users": [],
+  "users": [
+    {
+      "name": "Kalt",
+      "hash": "0c68c866d1a35dce7fa87eab86700ff4f921ba03ff2dd9c6e0463205c0315d98",
+      "role": "none"
+    }
+  ],
   "spielerProfiles": [
     {
       "name": "Nullkisir",
