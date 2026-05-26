@@ -971,7 +971,7 @@ function openTeamArea(){
   console.log('[BoBo] openTeamArea - role:', currentUser.role, 'teamIds:', teamIds);
   if(teamIds.length===0){console.warn('[BoBo] No team IDs found');return;}
   document.getElementById('team-area-panel').style.display='flex';
-  try{renderTeamArea(teamIds[0]);}catch(e){console.error('[BoBo] renderTeamArea error:',e);}
+  try{renderTeamArea(teamIds[0]);}catch(e){console.error('[BoBo] renderTeamArea:',e.message);}
 }
 function closeTeamArea(){document.getElementById('team-area-panel').style.display='none';}
 function switchTeamAreaTab(tab){
@@ -989,15 +989,18 @@ document.getElementById('team-area-title').textContent=team.name;
 const teamIds=isAdmin()?state.teams.map(t=>t.id):[getMyTeamId()].filter(Boolean);
 const tabsEl=document.getElementById('team-area-tabs');
 if(teamIds.length>1){
-  tabsEl.innerHTML='<div style="display:flex;gap:0;border:1px solid #2a2a2a;width:fit-content;margin-bottom:1.5rem;">';
+  tabsEl.innerHTML='';
+  const wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;gap:0;border:1px solid #2a2a2a;width:fit-content;margin-bottom:1.5rem;';
   teamIds.forEach(id=>{
     const t=state.teams.find(x=>x.id===id);
     const btn=document.createElement('button');
     btn.className='tab-btn'+(id===teamId?' active':'');
     btn.textContent=t?t.name:id;
     btn.onclick=()=>renderTeamArea(id);
-    tabsEl.querySelector('div').appendChild(btn);
+    wrap.appendChild(btn);
   });
+  tabsEl.appendChild(wrap);
 }else{tabsEl.innerHTML='';}
 // Tactics
 const tacticsEl=document.getElementById('team-area-tactics');
