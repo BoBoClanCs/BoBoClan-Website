@@ -1851,6 +1851,7 @@ async function saveBackup(token){
 async function saveAll(){
   const token=getToken()||GH_SHARED_TOKEN;
   if(!token){setStatus('⚠ Kein Token!',true);return;}
+  await saveBackup(token);
   const btn=document.getElementById('save-btn');
   const btnText=document.getElementById('save-btn-text');
   if(btn)btn.disabled=true;
