@@ -976,6 +976,13 @@ function openTeamArea(){
   try{
     renderTeamArea(teamIds[0]);
     console.log('[BoBo] renderTeamArea done');
+    // Debug: check what's actually in the panel
+    const p=document.getElementById('team-area-panel');
+    const t=document.getElementById('team-area-tactics');
+    const titleEl=document.getElementById('team-area-title');
+    console.log('[BoBo] panel rect:', JSON.stringify(p.getBoundingClientRect()));
+    console.log('[BoBo] tactics innerHTML length:', t?t.innerHTML.length:0);
+    console.log('[BoBo] title:', titleEl?titleEl.textContent:'?');
   }catch(e){
     console.error('[BoBo] renderTeamArea ERROR:', e.message, '\n', e.stack);
   }
