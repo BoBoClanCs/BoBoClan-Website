@@ -1172,13 +1172,20 @@ function renderHistoire(){
     const statsEl=document.getElementById('hist-alltime-stats');
     if(statsEl&&(allGames>0||totalKills>0)){
       statsEl.style.display='block';
-      statsEl.innerHTML='<div class="hist-alltime-grid">'
-        +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+allGames+'</div><div class="hist-alltime-lbl">Spiele</div></div>'
-        +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:#2ecc71">'+totalWins+'</div><div class="hist-alltime-lbl">Siege</div></div>'
-        +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:var(--red-light)">'+totalLosses+'</div><div class="hist-alltime-lbl">Niederlagen</div></div>'
-        +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+totalKills+'</div><div class="hist-alltime-lbl">Kills</div></div>'
-        +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+totalDeaths+'</div><div class="hist-alltime-lbl">Tode</div></div>'
-        +'</div>';
+      const winRate=allGames>0?Math.round((totalWins/allGames)*100):0;
+    statsEl.innerHTML=
+      '<div style="text-align:center;margin-bottom:1.5rem;">'
+      +'<div style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:4px;text-transform:uppercase;color:#555;margin-bottom:0.5rem;">Clan All-Time Statistiken</div>'
+      +'<div style="width:60px;height:2px;background:var(--red);margin:0 auto;"></div>'
+      +'</div>'
+      +'<div class="hist-alltime-grid">'
+      +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+allGames+'</div><div class="hist-alltime-lbl">Spiele</div></div>'
+      +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:#2ecc71">'+totalWins+'</div><div class="hist-alltime-lbl">Siege</div></div>'
+      +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:var(--red-light)">'+totalLosses+'</div><div class="hist-alltime-lbl">Niederlagen</div></div>'
+      +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:#f39c12">'+winRate+'%</div><div class="hist-alltime-lbl">Winrate</div></div>'
+      +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+totalKills+'</div><div class="hist-alltime-lbl">Kills</div></div>'
+      +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+totalDeaths+'</div><div class="hist-alltime-lbl">Tode</div></div>'
+      +'</div>';
     }else if(statsEl){statsEl.style.display='none';}
   }
   if(!tabsEl)return;
