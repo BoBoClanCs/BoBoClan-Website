@@ -759,12 +759,15 @@ function renderHistoire(){
   }).join('');
 }
 function switchHist(id){
+  console.log('[BoBo] switchHist', id);
   document.querySelectorAll('.hist-tab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.hist-panel').forEach(p=>p.classList.remove('active'));
   const tab=document.getElementById('htab-'+id);
   const panel=document.getElementById('hpanel-'+id);
+  console.log('[BoBo] panel found:', !!panel, 'classes:', panel?.className, 'style:', panel?.style.display);
   if(tab)tab.classList.add('active');
   if(panel)panel.classList.add('active');
+  console.log('[BoBo] panel after:', panel?.className, 'computed display:', panel?window.getComputedStyle(panel).display:'?');
 }
 
 // ── Spieler Page ───────────────────────────────────────────
