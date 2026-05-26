@@ -268,15 +268,7 @@ function buildDOM(){
   </div>
 
 
-<!-- ERGEBNISSE -->
-<section class="results" id="ergebnisse">
-  <div class="container">
-    <h2 class="section-title">Letzte <span>Ergebnisse</span></h2>
-    <div class="section-line"></div>
-    <div class="team-tabs" id="results-tabs"></div>
-    <div id="results-panels"></div>
-  </div>
-</section>
+
 
 <!-- NEWS -->
 <section id="news" class="section section-dark">
@@ -337,7 +329,7 @@ function buildDOM(){
     <div class="section-line"></div>
     <div style="display:flex;gap:1rem;margin-bottom:2rem;">
       <button onclick="switchSpielerTab('list')" id="stab-list" class="tab-btn active" style="font-size:0.85rem;padding:8px 24px;">Alle Spieler</button>
-      <button onclick="switchSpielerTab('compare')" id="stab-compare" class="tab-btn" style="font-size:0.85rem;padding:8px 24px;">Vergleich</button>
+  
     </div>
     <div id="spieler-tab-list">
       <div id="spieler-top-stats" style="display:none; margin-bottom:2.5rem;"></div>
