@@ -841,8 +841,11 @@ function openAdminPanel(){
   showAdminPage('page-settings');
 }
 function closeAdmin(){
-  document.getElementById('admin-panel').style.display='none';
-  document.getElementById('admin-toggle-btn').classList.remove('active');
+  const panel=document.getElementById('admin-panel');
+  if(panel)panel.style.display='none';
+  const btn=document.getElementById('admin-toggle-btn');
+  if(btn)btn.classList.remove('active');
+  showPage('home');
 }
 function showAdminPage(id){
   document.querySelectorAll('.admin-page').forEach(p=>p.classList.remove('active'));
