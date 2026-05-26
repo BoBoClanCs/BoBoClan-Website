@@ -751,7 +751,16 @@ function renderHistoire(){
   if(!tabsEl)return;
   tabsEl.style.display='';
   if(!state.histoire||state.histoire.length===0){tabsEl.innerHTML='';panelsEl.innerHTML='<div class="empty">Noch keine Teams in der Historie</div>';return;}
-  tabsEl.innerHTML=state.histoire.map((t,i)=>'<button class="hist-tab'+(i===0?' active':'')+'" id="htab-'+t.id+'" onclick="switchHist(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
+  // Build tabs using DOM to avoid quoting issues
+  tabsEl.innerHTML='';
+  state.histoire.forEach((t,i)=>{
+    const btn=document.createElement('button');
+    btn.className='hist-tab'+(i===0?' active':'');
+    btn.id='htab-'+t.id;
+    btn.textContent=t.name||t.id;
+    btn.onclick=()=>switchHist(t.id);
+    tabsEl.appendChild(btn);
+  });
   panelsEl.innerHTML=state.histoire.map((t,i)=>{
     const seasons=t.seasons||[];
     const content=seasons.length===0?'<div class="empty">Noch keine Saisonen</div>':[...seasons].reverse().map(s=>buildSeasonCard(s)).join('');
