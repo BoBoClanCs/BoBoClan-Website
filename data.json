@@ -35,9 +35,58 @@
     {
       "name": "Vorea Kayne",
       "steam": "https://steamcommunity.com/profiles/76561198975570274"
+    },
+    {
+      "name": "Fishy",
+      "steam": "https://steamcommunity.com/id/Fishyhits"
+    },
+    {
+      "name": "Camo",
+      "steam": "https://steamcommunity.com/profiles/76561199070501181"
+    },
+    {
+      "name": "Dedrod",
+      "steam": "https://steamcommunity.com/id/dedrod"
+    },
+    {
+      "name": "Gamer",
+      "steam": "https://steamcommunity.com/profiles/76561198847273358"
+    },
+    {
+      "name": "Meow",
+      "steam": "https://steamcommunity.com/profiles/76561198421268731"
+    },
+    {
+      "name": "Namefall",
+      "steam": "https://steamcommunity.com/profiles/76561198798795955"
+    },
+    {
+      "name": "Potato",
+      "steam": "https://steamcommunity.com/id/ichbinsamy"
+    },
+    {
+      "name": "Skywalker",
+      "steam": "https://steamcommunity.com/id/5kywaiker"
+    },
+    {
+      "name": "Snooflo",
+      "steam": "https://steamcommunity.com/profiles/76561198973319253"
+    },
+    {
+      "name": "Symphonie",
+      "steam": "https://steamcommunity.com/profiles/76561198240688312"
+    },
+    {
+      "name": "Teddy",
+      "steam": "https://steamcommunity.com/profiles/76561199058208618"
     }
   ],
-  "teamData": {},
+  "teamData": {
+    "boot": {
+      "tactics": [],
+      "training": []
+    }
+  },
   "teams": [
     {
       "id": "boot",
