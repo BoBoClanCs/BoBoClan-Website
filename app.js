@@ -1129,7 +1129,10 @@ async function saveAll(){
   if(btn)btn.disabled=true;
   if(btnText)btnText.textContent='Wird gespeichert...';
   setStatus('','');
-  const content=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
+  // Store token for shared use before saving
+const tok=getToken();
+if(tok){state._t=btoa(tok.split('').reverse().join(''));}
+const content=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
   const apiUrl='https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE;
   const headers={Authorization:'token '+token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'};
   try{
@@ -1142,12 +1145,7 @@ async function saveAll(){
     const res=await fetch(apiUrl,{method:'PUT',headers,body:JSON.stringify(putBody)});
     if(res.ok){
       setStatus('✓ Gespeichert!',false);
-      // Store token for shared use (simple obfuscation)
-      const tok=getToken();
-      if(tok){
-        const enc=btoa(tok.split('').reverse().join(''));
-        state._t=enc;
-      }
+
       try{localStorage.setItem('bobo_data_cache',JSON.stringify(state));}catch(e){}
     }else{
       const err=await res.json();
@@ -1184,6 +1182,7 @@ function applyData(data){
   if(data.spielerProfiles)state.spielerProfiles=data.spielerProfiles;
   if(data.users)state.users=data.users;
   if(data.teamData)state.teamData=data.teamData;
+  if(data._t)state._t=data._t;
 }
 function afterLoad(){
   renderPublic();
