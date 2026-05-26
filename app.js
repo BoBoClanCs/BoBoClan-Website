@@ -3,6 +3,8 @@ const GH_USER = 'BoBoClanCs';
 const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
+// Replace with your Cloudflare Worker URL after deployment
+const STEAM_PROXY = 'https://corsproxy.io/?';
 const DEFAULT_DISCORD = 'https://discord.gg/bobo';
 // Shared write token for coaches/players (Fine-grained: Contents Write only)
 // Replace with your Fine-grained GitHub token
@@ -1835,6 +1837,28 @@ function scrollToTeam(id){switchTeam(id);document.getElementById('teams').scroll
 
 // ── Save to GitHub ─────────────────────────────────────────
 function setStatus(msg,isErr){const el=document.getElementById('save-status');if(!el)return;el.textContent=msg;el.className='save-status'+(isErr?' err':(msg?' ok':''));}
+async function saveBackup(token){
+  // Save current data.json to data_backup.json before overwriting
+  try{
+    const res=await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/data_backup.json`,{
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}
+    });
+    // Get current data.json SHA and content
+    const cur=await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`,{
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json'}
+    });
+    if(!cur.ok)return;
+    const curData=await cur.json();
+    const backupBody={message:'Auto backup',content:curData.content.replace(/\n/g,'')};
+    if(res.ok){const bd=await res.json();backupBody.sha=bd.sha;}
+    await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/data_backup.json`,{
+      method:'PUT',
+      headers:{'Authorization':'token '+token,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(backupBody)
+    });
+  }catch(e){console.warn('Backup failed:',e);}
+}
+
 async function saveAll(){
   const token=getToken()||GH_SHARED_TOKEN;
   if(!token){setStatus('⚠ Kein Token!',true);return;}
