@@ -968,10 +968,17 @@ function openTeamArea(){
   if(!currentUser){openLoginOverlay();return;}
   const teamId=getMyTeamId();
   const teamIds=isAdmin()?state.teams.map(t=>t.id):(teamId?[teamId]:[]);
-  console.log('[BoBo] openTeamArea - role:', currentUser.role, 'teamIds:', teamIds);
-  if(teamIds.length===0){console.warn('[BoBo] No team IDs found');return;}
-  document.getElementById('team-area-panel').style.display='flex';
-  try{renderTeamArea(teamIds[0]);}catch(e){console.error('[BoBo] renderTeamArea:',e.message);}
+  console.log('[BoBo] openTeamArea teams:', JSON.stringify(state.teams.map(t=>t.id)), 'teamIds:', teamIds);
+  if(teamIds.length===0){console.warn('[BoBo] No teams');return;}
+  const panel=document.getElementById('team-area-panel');
+  panel.style.display='flex';
+  console.log('[BoBo] panel display set to:', panel.style.display);
+  try{
+    renderTeamArea(teamIds[0]);
+    console.log('[BoBo] renderTeamArea done');
+  }catch(e){
+    console.error('[BoBo] renderTeamArea ERROR:', e.message, '\n', e.stack);
+  }
 }
 function closeTeamArea(){document.getElementById('team-area-panel').style.display='none';}
 function switchTeamAreaTab(tab){
