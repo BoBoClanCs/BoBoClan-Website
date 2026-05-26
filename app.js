@@ -1244,8 +1244,8 @@ function afterLoad(){
         if(ap && ap.style.display !== 'none') closeAdmin();
       }
     }
-    // If user was deleted - log out
-    if(!dbUser){
+    // If user was deleted - log out (only if users list is populated)
+    if(!dbUser && state.users && state.users.length > 0){
       logout();
       return;
     }
