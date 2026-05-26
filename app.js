@@ -3,6 +3,9 @@ const GH_USER = 'BoBoClanCs';
 const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
+// Shared write token for coaches/players (Fine-grained: Contents Write only)
+// Replace with your Fine-grained GitHub token
+const GH_SHARED_TOKEN = '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';
 
 // ── State ──────────────────────────────────────────────────
 let state = {
@@ -1113,7 +1116,7 @@ function scrollToTeam(id){switchTeam(id);document.getElementById('teams').scroll
 // ── Save to GitHub ─────────────────────────────────────────
 function setStatus(msg,isErr){const el=document.getElementById('save-status');if(!el)return;el.textContent=msg;el.className='save-status'+(isErr?' err':(msg?' ok':''));}
 async function saveAll(){
-  const token=getToken();
+  const token=getToken()||GH_SHARED_TOKEN;
   if(!token){setStatus('⚠ Kein Token!',true);return;}
   const btn=document.getElementById('save-btn');
   const btnText=document.getElementById('save-btn-text');
@@ -1144,6 +1147,7 @@ async function saveAll(){
   if(btnText)btnText.textContent='💾 Speichern & Veröffentlichen';
 }
 async function saveAllWithToken(token){
+  if(!token||token==='REPLACE_WITH_YOUR_FINE_GRAINED_TOKEN')token=GH_SHARED_TOKEN;
   const content=btoa(unescape(encodeURIComponent(JSON.stringify(state,null,2))));
   const apiUrl='https://api.github.com/repos/'+GH_USER+'/'+GH_REPO+'/contents/'+GH_FILE;
   const headers={Authorization:'token '+token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'};
