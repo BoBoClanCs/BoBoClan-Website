@@ -5,7 +5,7 @@ const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 // Shared write token for coaches/players (Fine-grained: Contents Write only)
 // Replace with your Fine-grained GitHub token
-const GH_SHARED_TOKEN = '__BOBO_TOKEN__';
+const GH_SHARED_TOKEN = '';
 
 // ── State ──────────────────────────────────────────────────
 let state = {
@@ -81,7 +81,13 @@ function buildRoleOptions(currentRole){
 }
 
 // ── GitHub Token ───────────────────────────────────────────
-function getToken(){return localStorage.getItem('bobo_gh_token')||'';}
+function getToken(){
+  const local=localStorage.getItem('bobo_gh_token');
+  if(local)return local;
+  // Try shared token from state (set by admin on their device)
+  if(state._t){try{return atob(state._t).split('').reverse().join('');}catch(e){}}
+  return '';
+}
 function saveToken(){
   const t=document.getElementById('gh-token-input').value.trim();
   if(!t||t.startsWith('•'))return;
@@ -1136,6 +1142,12 @@ async function saveAll(){
     const res=await fetch(apiUrl,{method:'PUT',headers,body:JSON.stringify(putBody)});
     if(res.ok){
       setStatus('✓ Gespeichert!',false);
+      // Store token for shared use (simple obfuscation)
+      const tok=getToken();
+      if(tok){
+        const enc=btoa(tok.split('').reverse().join(''));
+        state._t=enc;
+      }
       try{localStorage.setItem('bobo_data_cache',JSON.stringify(state));}catch(e){}
     }else{
       const err=await res.json();
