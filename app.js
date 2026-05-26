@@ -706,11 +706,12 @@ ${renderStandins(t)}</div>`).join('');
   rpanelsEl.innerHTML=state.teams.map((t,i)=>'<div class="team-panel'+(i===0?' active':'')+'" id="rpanel-'+t.id+'"><div class="results-list">'+renderResultsList(t)+'</div></div>').join('');
   const navTeamLinks=document.getElementById('nav-team-links');
   if(navTeamLinks)navTeamLinks.innerHTML=state.teams.map((t,i)=>'<button class="hero-team-btn" onclick="scrollToTeam(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
-  const newsEl=document.getElementById('news-display');
-  if(newsEl)newsEl.innerHTML=state.news.length===0?'<div class="empty" style="grid-column:1/-1">Noch keine News</div>':state.news.map(n=>'<div class="news-card"><div class="news-date">'+esc(n.date)+'</div><div class="news-title">'+esc(n.title)+'</div><div class="news-text">'+esc(n.text)+'</div></div>').join('');
+// news section removed
   updateDachcsLinks();
   updateDiscordLinks();
   renderMatches();
+  renderHomeMatches();
+  renderHomeResults();
 }
 function renderRoster(t,standin){
   const players=t.players.filter(p=>(p.type||'main')===(standin?'standin':'main'));
@@ -935,9 +936,64 @@ function openSpielerFromCard(name){
 
 
 // ── Matches / Countdown ────────────────────────────────────
+
+// ── HOME MATCHES & RESULTS ────────────────────────────────
+function renderHomeMatches(){
+  const now=Date.now();
+  const upcoming=(state.matches||[])
+    .filter(m=>m.date&&new Date(m.date).getTime()>now)
+    .sort((a,b)=>new Date(a.date)-new Date(b.date))
+    .slice(0,5);
+  const el=document.getElementById('matches-home-display');
+  if(!el)return;
+  if(upcoming.length===0){el.innerHTML='<div class="empty">Keine anstehenden Matches</div>';return;}
+  el.innerHTML='<div class="home-matches-list">'+upcoming.map(m=>{
+    const team=state.teams.find(t=>t.id===m.teamId);
+    const teamName=team?team.name:'BoBo Clan';
+    const diff=new Date(m.date).getTime()-now;
+    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),min=Math.floor((diff%3600000)/60000);
+    const countdown=d>0?d+'T '+h+'h':h>0?h+'h '+min+'m':min+'m';
+    const dateStr=new Date(m.date).toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    return '<div class="home-match-row">'
+      +'<div class="home-match-team">'+esc(teamName)+'</div>'
+      +'<div class="home-match-vs">VS</div>'
+      +'<div class="home-match-opp">'+esc(m.opponent||'?')+'</div>'
+      +'<div class="home-match-date">'+dateStr+'</div>'
+      +'<div class="home-match-countdown">in '+countdown+'</div>'
+      +(m.twitch?'<a href="'+esc(m.twitch)+'" target="_blank" rel="noopener" class="home-match-twitch">&#9654; Stream</a>':'<div></div>')
+      +'</div>';
+  }).join('')+'</div>';
+}
+
+function renderHomeResults(){
+  const el=document.getElementById('results-home-display');
+  if(!el)return;
+  const allResults=[];
+  (state.teams||[]).forEach(t=>{
+    (t.results||[]).forEach(r=>{
+      allResults.push({...r,teamName:t.name,teamId:t.id});
+    });
+  });
+  if(allResults.length===0){el.innerHTML='<div class="empty">Noch keine Ergebnisse</div>';return;}
+  // Show last 5 results (from end of array = most recently added)
+  const last=allResults.slice(-5).reverse();
+  const resMap={win:'badge-win',loss:'badge-loss',draw:'badge-draw'};
+  const lblMap={win:'Sieg',loss:'Niederlage',draw:'Unentschieden'};
+  el.innerHTML='<div class="home-results-list">'+last.map(r=>{
+    const res=r.res||'draw';
+    return '<div class="home-result-row '+res+'">'
+      +'<div class="home-result-team">'+esc(r.teamName)+'</div>'
+      +'<div class="home-result-score">'+esc(r.s1||'?')+' – '+esc(r.s2||'?')+'</div>'
+      +'<div class="home-result-opp">vs '+esc(r.opp||'?')+'</div>'
+      +(r.map?'<div class="home-result-map">'+esc(r.map)+'</div>':'<div></div>')
+      +'<span class="badge '+resMap[res]+'">'+lblMap[res]+'</span>'
+      +'</div>';
+  }).join('')+'</div>';
+}
+
 function renderMatches(){
   const now=Date.now();
-  const upcoming=(state.matches||[]).filter(m=>m.date&&new Date(m.date).getTime()>now-3600000).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const upcoming=(state.matches||[]).filter(m=>m.date&&new Date(m.date).getTime()>now).sort((a,b)=>new Date(a.date)-new Date(b.date));
   const sec=document.getElementById('section-matches');
   const el=document.getElementById('matches-display');
   if(!sec||!el)return;
