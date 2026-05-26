@@ -236,28 +236,7 @@ function buildDOM(){
 </div>
 
 <!-- NAV -->
-<nav>
-  <a href="#" onclick="showPage('home',event)" class="nav-logo">
-    <img src="logo.webp" onerror="this.style.display='none'" alt="BoBo Clan Logo">
-    <span class="nav-logo-text">Bo<span>Bo</span> Clan</span>
-  </a>
-  <ul class="nav-links">
-    <li><a href="#" onclick="showPage('home',event)" data-page="home" data-nav-id="start">Start</a></li>
-    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('teams').scrollIntoView({behavior:'smooth'}),50)" data-page="home">Teams</a></li>
-    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('ergebnisse').scrollIntoView({behavior:'smooth'}),50)" data-page="home">Ergebnisse</a></li>
-    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),50)" data-page="home">News</a></li>
-    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('kontakt').scrollIntoView({behavior:'smooth'}),50)" data-page="home">Kontakt</a></li>
-    <li><a href="#" onclick="showPage('histoire',event)" data-page="histoire">Historie</a></li>
-    <li><a href="#" onclick="showPage('spieler',event)" data-page="spieler">Spieler</a></li>
-  </ul>
-  <div style="display:flex;align-items:center;gap:0.75rem;">
-    <span id="user-label" style="display:none;font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:1px;color:var(--red-light);"></span>
-    <button class="admin-nav-btn" id="team-area-btn" style="display:none;" onclick="openTeamArea()">&#128274; Team</button>
-    <button class="admin-nav-btn" id="admin-toggle-btn" style="display:none;" onclick="openAdminPanel()">&#9881; Admin</button>
-    <button class="admin-nav-btn" id="logout-btn" style="display:none;" onclick="logout()">Abmelden</button>
-    <button class="admin-nav-btn" id="login-btn" onclick="openLoginOverlay()">&#128100; Login</button>
-  </div>
-</nav>
+
 <!-- HOME PAGE -->
 <div id="page-home">
 
