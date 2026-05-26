@@ -104,14 +104,6 @@
         }
       ],
       "results": []
-    },
-    {
-      "id": "team_szkv9",
-      "name": "Test",
-      "coach": "",
-      "dachcs": "",
-      "players": [],
-      "results": []
     }
   ],
   "matches": [],
@@ -493,5 +485,6 @@
       ]
     }
   ],
-  "news": []
+  "news": [],
+  "_t": "WDJsUnIwd0U5RVRoamZhWWZrTzYwb2Z4Z3NHMjdidEwzUXlFX3BoZw=="
 }
