@@ -99,9 +99,9 @@
       "id": "boot",
       "name": "BoBoBoot",
       "coach": "",
-      "dachcs": "tets",
-      "tournament": "test",
-      "tournamentUrl": "test",
+      "dachcs": "",
+      "tournament": "",
+      "tournamentUrl": "",
       "players": [
         {
           "name": "Nullkisir",
