@@ -1,0 +1,497 @@
+{
+  "users": [
+    {
+      "name": "Kalt",
+      "hash": "0c68c866d1a35dce7fa87eab86700ff4f921ba03ff2dd9c6e0463205c0315d98",
+      "role": "admin"
+    }
+  ],
+  "spielerProfiles": [
+    {
+      "name": "Nullkisir",
+      "steam": "https://steamcommunity.com/id/Nullkisir/",
+      "discord": "nullkisir",
+      "bio": "",
+      "faceit": "Nullkisir"
+    },
+    {
+      "name": "Killinix",
+      "steam": "https://steamcommunity.com/profiles/76561198809812487"
+    },
+    {
+      "name": "Tof Tof",
+      "steam": "https://steamcommunity.com/profiles/76561198300173608"
+    },
+    {
+      "name": "Kahinar",
+      "steam": "https://steamcommunity.com/profiles/76561198080125906"
+    },
+    {
+      "name": "Caine",
+      "steam": "https://steamcommunity.com/id/rage_corgo"
+    },
+    {
+      "name": "Ibox",
+      "steam": "https://steamcommunity.com/profiles/76561197991680188"
+    },
+    {
+      "name": "Vorea Kayne",
+      "steam": "https://steamcommunity.com/profiles/76561198975570274"
+    },
+    {
+      "name": "Fishy",
+      "steam": "https://steamcommunity.com/id/Fishyhits"
+    },
+    {
+      "name": "Camo",
+      "steam": "https://steamcommunity.com/profiles/76561199070501181"
+    },
+    {
+      "name": "Dedrod",
+      "steam": "https://steamcommunity.com/id/dedrod"
+    },
+    {
+      "name": "Gamer",
+      "steam": "https://steamcommunity.com/profiles/76561198847273358"
+    },
+    {
+      "name": "Meow",
+      "steam": "https://steamcommunity.com/profiles/76561198421268731"
+    },
+    {
+      "name": "Namefall",
+      "steam": "https://steamcommunity.com/profiles/76561198798795955"
+    },
+    {
+      "name": "Potato",
+      "steam": "https://steamcommunity.com/id/ichbinsamy"
+    },
+    {
+      "name": "Skywalker",
+      "steam": "https://steamcommunity.com/id/5kywaiker"
+    },
+    {
+      "name": "Snooflo",
+      "steam": "https://steamcommunity.com/profiles/76561198973319253"
+    },
+    {
+      "name": "Symphonie",
+      "steam": "https://steamcommunity.com/profiles/76561198240688312"
+    },
+    {
+      "name": "Teddy",
+      "steam": "https://steamcommunity.com/profiles/76561199058208618"
+    }
+  ],
+  "teamData": {
+    "boot": {
+      "tactics": [],
+      "training": []
+    }
+  },
+  "teams": [
+    {
+      "id": "boot",
+      "name": "BoBoBoot",
+      "coach": "",
+      "dachcs": "",
+      "players": [
+        {
+          "name": "Nullkisir",
+          "role": "",
+          "steam": "",
+          "type": "main"
+        }
+      ],
+      "results": []
+    },
+    {
+      "id": "team_szkv9",
+      "name": "Test",
+      "coach": "",
+      "dachcs": "",
+      "players": [],
+      "results": []
+    }
+  ],
+  "matches": [],
+  "histoire": [
+    {
+      "id": "boot",
+      "name": "BoBoBoot",
+      "seasons": [
+        {
+          "season": "DACH CS Masters Saison 2 Spielklasse 6",
+          "placement": "7 von 7",
+          "wins": "0",
+          "losses": "6",
+          "players": [
+            {
+              "name": "Meow",
+              "games": "6",
+              "kills": "212",
+              "assists": "",
+              "deaths": "204",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "5",
+              "kills": "158",
+              "assists": "",
+              "deaths": "169",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "5",
+              "kills": "126",
+              "assists": "",
+              "deaths": "163",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "6",
+              "kills": "149",
+              "assists": "",
+              "deaths": "195",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Camo",
+              "games": "6",
+              "kills": "128",
+              "assists": "",
+              "deaths": "207",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Tof Tof",
+              "games": "2",
+              "kills": "53",
+              "assists": "",
+              "deaths": "79",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker"
+        },
+        {
+          "season": "DACH CS Masters Saison 3 Open 2",
+          "placement": "7 von 8",
+          "wins": "1",
+          "losses": "6",
+          "players": [
+            {
+              "name": "Fishy",
+              "games": "6",
+              "kills": "277",
+              "assists": "",
+              "deaths": "174",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Teddy",
+              "games": "7",
+              "kills": "216",
+              "assists": "",
+              "deaths": "196",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Meow",
+              "games": "7",
+              "kills": "180",
+              "assists": "",
+              "deaths": "219",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Tof Tof",
+              "games": "6",
+              "kills": "80",
+              "assists": "",
+              "deaths": "178",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Camo",
+              "games": "7",
+              "kills": "85",
+              "assists": "",
+              "deaths": "220",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "1",
+              "kills": "39",
+              "assists": "",
+              "deaths": "44",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Snooflo",
+              "games": "1",
+              "kills": "17",
+              "assists": "",
+              "deaths": "32",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker",
+          "youtube": "https://www.youtube.com/watch?v=QgxQGL1rNIc&list=PLX0YuqOOmO73Um4x0I6KuFcIX3aV00Kfn"
+        },
+        {
+          "season": "DACH CS Masters Saison 4 Spielklasse 6",
+          "placement": "6 von 9",
+          "wins": "3",
+          "losses": "5",
+          "players": [
+            {
+              "name": "Skywalker",
+              "games": "7",
+              "kills": "340",
+              "assists": "",
+              "deaths": "206",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "8",
+              "kills": "270",
+              "assists": "",
+              "deaths": "252",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Meow",
+              "games": "7",
+              "kills": "207",
+              "assists": "",
+              "deaths": "253",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Camo",
+              "games": "7",
+              "kills": "188",
+              "assists": "",
+              "deaths": "239",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Potato",
+              "games": "7",
+              "kills": "92",
+              "assists": "",
+              "deaths": "248",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Gamer",
+              "games": "2",
+              "kills": "84",
+              "assists": "",
+              "deaths": "98",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "1",
+              "kills": "63",
+              "assists": "",
+              "deaths": "50",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Kahinar",
+              "games": "1",
+              "kills": "52",
+              "assists": "",
+              "deaths": "45",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker",
+          "youtube": "https://www.youtube.com/watch?v=4XCVJdLez3U&list=PLX0YuqOOmO71vC4UmKWebeYbv2zePt6u8"
+        }
+      ]
+    },
+    {
+      "id": "rage",
+      "name": "BoBoRage",
+      "seasons": [
+        {
+          "season": "DACH CS Masters Saison 3 Open 2",
+          "placement": "8 von 9",
+          "wins": "1",
+          "losses": "7",
+          "players": [
+            {
+              "name": "Symphonie",
+              "games": "7",
+              "kills": "281",
+              "assists": "",
+              "deaths": "231",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Nullkisir",
+              "games": "7",
+              "kills": "184",
+              "assists": "",
+              "deaths": "219",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Caine",
+              "games": "7",
+              "kills": "187",
+              "assists": "",
+              "deaths": "250",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "5",
+              "kills": "123",
+              "assists": "",
+              "deaths": "176",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "8",
+              "kills": "195",
+              "assists": "",
+              "deaths": "286",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Vorea Kayne",
+              "games": "3",
+              "kills": "58",
+              "assists": "",
+              "deaths": "93",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Killinix",
+              "games": "2",
+              "kills": "26",
+              "assists": "",
+              "deaths": "70",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Fishy",
+              "games": "1",
+              "kills": "44",
+              "assists": "",
+              "deaths": "34",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker",
+          "youtube": "https://www.youtube.com/watch?v=clvKLz3Drfw&list=PLX0YuqOOmO721UIWCIZ6NxMWtSkpuuzHz"
+        },
+        {
+          "season": "DACH CS Masters Saison 4 Open 2",
+          "placement": "4 von 8",
+          "wins": "4",
+          "losses": "3",
+          "players": [
+            {
+              "name": "Fishy",
+              "games": "7",
+              "kills": "311",
+              "assists": "",
+              "deaths": "246",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Ibox",
+              "games": "7",
+              "kills": "294",
+              "assists": "",
+              "deaths": "245",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Symphonie",
+              "games": "7",
+              "kills": "302",
+              "assists": "",
+              "deaths": "262",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Dedrod",
+              "games": "6",
+              "kills": "184",
+              "assists": "",
+              "deaths": "207",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Namefall",
+              "games": "7",
+              "kills": "175",
+              "assists": "",
+              "deaths": "264",
+              "hltv": "",
+              "steam": ""
+            },
+            {
+              "name": "Vorea Kayne",
+              "games": "1",
+              "kills": "22",
+              "assists": "",
+              "deaths": "36",
+              "hltv": "",
+              "steam": ""
+            }
+          ],
+          "coach": "Skywalker",
+          "youtube": "https://www.youtube.com/watch?v=bX9AaETOjYk&list=PLX0YuqOOmO70TYJeU763cHNHa3huU9uVd"
+        }
+      ]
+    }
+  ],
+  "news": []
+}
