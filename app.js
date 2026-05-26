@@ -4,7 +4,7 @@ const GH_REPO = 'BoBoClan-Website';
 const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 // Replace with your Cloudflare Worker URL after deployment
-const STEAM_PROXY = 'https://corsproxy.io/?';
+const STEAM_PROXY = 'https://bobo-steam-proxy.teamboboboot.workers.dev';
 const DEFAULT_DISCORD = 'https://discord.gg/bobo';
 // Shared write token for coaches/players (Fine-grained: Contents Write only)
 // Replace with your Fine-grained GitHub token
