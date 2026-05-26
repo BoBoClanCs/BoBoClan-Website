@@ -110,7 +110,15 @@
           "type": "main"
         }
       ],
-      "results": []
+      "results": [
+        {
+          "opp": "test",
+          "s1": "13",
+          "s2": "8",
+          "map": "Mirage",
+          "res": "win"
+        }
+      ]
     }
   ],
   "matches": [],
