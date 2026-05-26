@@ -908,7 +908,10 @@ function showSpielerDetail(name){
   const bioHTML=prof&&prof.bio?'<div style="font-size:0.9rem;color:#aaa;margin-top:6px;line-height:1.6;">'+esc(prof.bio)+'</div>':'';
   const faceitHTML=prof&&prof.faceit?'<a href="https://www.faceit.com/en/players/'+esc(prof.faceit)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff5500;border:1px solid #ff5500;padding:4px 12px;">&#9654; FACEIT</a>':'';
   const discordHTML=prof&&prof.discord?'<div style="font-size:0.8rem;color:#7289da;margin-top:4px;">&#128172; '+esc(prof.discord)+'</div>':'';
-  let html='<div class="spieler-detail-header"><div class="spieler-detail-avatar" id="'+uid+'">'+initials(p.name)+'</div><div><div class="spieler-detail-name">'+esc(p.name)+'</div><div class="spieler-detail-teams">'+esc(teamNames)+'</div>'+discordHTML+bioHTML+faceitHTML+'</div></div>';
+  const mapMvps=prof&&prof.mapMvps?prof.mapMvps:0;
+  const matchMvps=prof&&prof.matchMvps?prof.matchMvps:0;
+  const mvpHTML=(mapMvps||matchMvps)?'<div style="display:flex;gap:1rem;margin-top:8px;">'+(mapMvps?'<span style="font-family:Oswald,sans-serif;font-size:0.8rem;letter-spacing:1px;color:#f39c12;">&#127942; Map MVP x'+mapMvps+'</span>':'')+(matchMvps?'<span style="font-family:Oswald,sans-serif;font-size:0.8rem;letter-spacing:1px;color:#e74c3c;">&#127941; Match MVP x'+matchMvps+'</span>':'')+'</div>':'';
+  let html='<div class="spieler-detail-header"><div class="spieler-detail-avatar" id="'+uid+'">'+initials(p.name)+'</div><div><div class="spieler-detail-name">'+esc(p.name)+'</div><div class="spieler-detail-teams">'+esc(teamNames)+'</div>'+discordHTML+mvpHTML+bioHTML+faceitHTML+'</div></div>';
   html+='<h3 style="font-family:Oswald,sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#9733; All Time Stats</h3>';
   html+='<div class="alltime-box">'+(allTime.games?'<div class="alltime-stat"><div class="alltime-stat-val">'+allTime.games+'</div><div class="alltime-stat-lbl">Spiele</div></div>':'')+'<div class="alltime-stat"><div class="alltime-stat-val">'+allTime.kills+'</div><div class="alltime-stat-lbl">Kills</div></div><div class="alltime-stat"><div class="alltime-stat-val">'+allTime.assists+'</div><div class="alltime-stat-lbl">Assists</div></div><div class="alltime-stat"><div class="alltime-stat-val">'+allTime.deaths+'</div><div class="alltime-stat-lbl">Tode</div></div><div class="alltime-stat"><div class="alltime-stat-val" style="color:'+kdColor(allTime.kd)+'">'+allTime.kd+'</div><div class="alltime-stat-lbl">K/D</div></div><div class="alltime-stat"><div class="alltime-stat-val" style="color:'+hltvColor(allTime.hltv)+'">'+allTime.hltv+'</div><div class="alltime-stat-lbl">HLTV &#216;</div></div></div>';
   html+='<h3 style="font-family:Oswald,sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#128218; Saisonhistorie</h3>';
@@ -962,7 +965,149 @@ function renderHomeMatches(){
   }).join('')+'</div>';
 }
 
+
+// ── MVP VOTING ────────────────────────────────────────────────
+function getMatchVotingOpen(result){
+  // Find match date from state.matches by opponent name
+  const matchEntry=(state.matches||[]).find(m=>m.opponent&&result.opp&&m.opponent.toLowerCase()===result.opp.toLowerCase());
+  if(result.votingClosed)return false;
+  if(matchEntry&&matchEntry.date){
+    const start=new Date(matchEntry.date).getTime();
+    const now=Date.now();
+    return now>=start+30*60*1000 && now<start+3*60*60*1000;
+  }
+  return false; // no match entry = voting closed
+}
+
+function castVote(teamId,resultIdx,type,player){
+  if(!currentUser){openLoginOverlay();return;}
+  const team=teamById(teamId);
+  if(!team)return;
+  const result=team.results[resultIdx];
+  if(!result)return;
+  if(!getMatchVotingOpen(result)){alert('Abstimmung ist geschlossen.');return;}
+  const votes=type==='map'?result.mapMvpVotes:result.matchMvpVotes;
+  // Remove previous vote by this user
+  Object.keys(votes).forEach(p=>{
+    if(votes[p]&&votes[p].voters){
+      votes[p].voters=votes[p].voters.filter(v=>v!==currentUser.name);
+      votes[p].count=votes[p].voters.length;
+    }
+  });
+  // Add new vote
+  if(!votes[player])votes[player]={count:0,voters:[]};
+  if(!votes[player].voters.includes(currentUser.name)){
+    votes[player].voters.push(currentUser.name);
+    votes[player].count++;
+  }
+  saveAll();
+  renderHomeResults();
+  renderMvpModal(teamId,resultIdx);
+}
+
+function tallyMvps(result){
+  const mapMvp=getMvpFromVotes(result.mapMvpVotes);
+  const matchMvp=getMvpFromVotes(result.matchMvpVotes);
+  const addMvp=(name,type)=>{
+    if(!name)return;
+    let p=(state.spielerProfiles||[]).find(x=>x.name===name);
+    if(!p){p={name,steam:'',discord:'',bio:'',faceit:''};state.spielerProfiles.push(p);}
+    if(type==='map')p.mapMvps=(p.mapMvps||0)+1;
+    else p.matchMvps=(p.matchMvps||0)+1;
+  };
+  addMvp(mapMvp,'map');
+  addMvp(matchMvp,'match');
+  // Clear votes after tallying
+  result.mapMvpVotes={};
+  result.matchMvpVotes={};
+}
+
+function closeVoting(teamId,resultIdx){
+  const team=teamById(teamId);
+  if(!team)return;
+  const result=team.results[resultIdx];
+  tallyMvps(result);
+  result.votingClosed=true;
+  saveAll();
+  renderHomeResults();
+  const modal=document.getElementById('mvp-modal');
+  if(modal)modal.style.display='none';
+}
+
+function getMvpFromVotes(votes){
+  if(!votes||Object.keys(votes).length===0)return null;
+  let best=null,bestCount=0;
+  Object.entries(votes).forEach(([p,v])=>{
+    const c=v.count||0;
+    if(c>bestCount){bestCount=c;best=p;}
+  });
+  return best;
+}
+
+function renderMvpModal(teamId,resultIdx){
+  const team=teamById(teamId);
+  if(!team)return;
+  const r=team.results[resultIdx];
+  const players=team.players.filter(p=>p.type!=='standin').map(p=>p.name);
+  const open=getMatchVotingOpen(r);
+  const mapMvp=getMvpFromVotes(r.mapMvpVotes);
+  const matchMvp=getMvpFromVotes(r.matchMvpVotes);
+  const _fv=(votes)=>{if(!currentUser)return null;const e=Object.entries(votes||{}).find(([p,v])=>v.voters&&v.voters.includes(currentUser.name));return e?e[0]:null;};
+  const userMapVote=_fv(r.mapMvpVotes);
+  const userMatchVote=_fv(r.matchMvpVotes);
+
+  let el=document.getElementById('mvp-modal');
+  if(!el){el=document.createElement('div');el.id='mvp-modal';document.body.appendChild(el);}
+  el.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;';
+
+  const voteRow=(type,votes,userVote)=>'<div style="margin-bottom:1.5rem;">'
+    +'<div style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;margin-bottom:0.75rem;text-transform:uppercase;">'+(type==='map'?'Map MVP':'Match MVP')+(mapMvp&&type==='map'?' – aktuell: <span style="color:var(--cream)">'+esc(mapMvp)+'</span>':matchMvp&&type==='match'?' – aktuell: <span style="color:var(--cream)">'+esc(matchMvp)+'</span>':'')+'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">'
+    +players.map(p=>{
+      const count=(votes[p]&&votes[p].count)||0;
+      const voted=userVote===p;
+      return '<button onclick="castVote(\''+teamId+'\','+resultIdx+',\''+type+'\',\''+esc(p)+'\')" '
+        +'style="font-family:Rajdhani,sans-serif;font-size:0.9rem;padding:6px 14px;cursor:pointer;border:1px solid '+(voted?'var(--red)':'#333')+';background:'+(voted?'var(--red)':'var(--dark4)')+';color:var(--cream);">'
+        +esc(p)+(count?' <span style="opacity:0.6;font-size:0.8rem;">('+count+')</span>':'')
+        +'</button>';
+    }).join('')
+    +'</div></div>';
+
+  el.innerHTML='<div style="background:var(--dark2);border:1px solid var(--red);padding:2rem;max-width:500px;width:90%;position:relative;">'
+    +'<div style="font-family:Oswald,sans-serif;font-size:1.1rem;letter-spacing:3px;color:var(--cream);margin-bottom:1.5rem;">&#127942; MVP ABSTIMMUNG<br><span style="font-size:0.8rem;color:#666;">'+esc(team.name)+' vs '+esc(r.opp)+(r.map?' – '+esc(r.map):'')+'</span></div>'
+    +(open?voteRow('map',r.mapMvpVotes||{},userMapVote)+voteRow('match',r.matchMvpVotes||{},userMatchVote)
+      :'<div style="color:#666;font-size:0.9rem;margin-bottom:1.5rem;">Abstimmung geschlossen.<br>'
+        +(mapMvp?'Map MVP: <span style="color:var(--cream)">'+esc(mapMvp)+'</span><br>':'')
+        +(matchMvp?'Match MVP: <span style="color:var(--cream)">'+esc(matchMvp)+'</span>':'')
+        +'</div>')
+    +(isAdmin()&&open?'<button onclick="closeVoting(\''+teamId+'\','+resultIdx+')" style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;background:none;border:1px solid #444;color:#666;padding:6px 14px;cursor:pointer;margin-bottom:1rem;display:block;">Abstimmung beenden</button>':'')
+    +(currentUser?'':'<div style="color:#666;font-size:0.85rem;margin-bottom:1rem;">Einloggen um abzustimmen.</div>')
+    +'<button onclick="document.getElementById(\'mvp-modal\').style.display=\'none\'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#666;font-size:1.2rem;cursor:pointer;">&#10005;</button>'
+    +'</div>';
+}
+
+function checkExpiredVotings(){
+  let changed=false;
+  (state.teams||[]).forEach(t=>{
+    (t.results||[]).forEach(r=>{
+      if(r.votingClosed)return;
+      const matchEntry=(state.matches||[]).find(m=>m.opponent&&r.opp&&m.opponent.toLowerCase()===r.opp.toLowerCase());
+      if(!matchEntry)return;
+      const start=new Date(matchEntry.date).getTime();
+      const expired=Date.now()>=start+3*60*60*1000;
+      const hasVotes=Object.keys(r.mapMvpVotes||{}).length>0||Object.keys(r.matchMvpVotes||{}).length>0;
+      if(expired&&hasVotes){
+        tallyMvps(r);
+        r.votingClosed=true;
+        changed=true;
+      }
+    });
+  });
+  if(changed)saveAll();
+}
+
 function renderHomeResults(){
+  checkExpiredVotings();
   const el=document.getElementById('results-home-display');
   if(!el)return;
   const allResults=[];
@@ -976,16 +1121,24 @@ function renderHomeResults(){
   const last=allResults.slice(-5).reverse();
   const resMap={win:'badge-win',loss:'badge-loss',draw:'badge-draw'};
   const lblMap={win:'Sieg',loss:'Niederlage',draw:'Unentschieden'};
-  el.innerHTML='<div class="home-results-list">'+last.map(r=>{
+  el.innerHTML='<div class="home-results-list">'+last.map((r)=>{
     const res=r.res||'draw';
+    const open=getMatchVotingOpen(r);
+    const mapMvp=getMvpFromVotes(r.mapMvpVotes);
+    const matchMvp=getMvpFromVotes(r.matchMvpVotes);
+    const team=state.teams.find(t=>t.id===r.teamId)||{results:[]};
+    const origIdx=team.results.findIndex(x=>x.opp===r.opp&&x.map===r.map&&x.s1===r.s1);
     return '<div class="home-result-row '+res+'">'
       +'<div class="home-result-team">'+esc(r.teamName)+'</div>'
       +'<div class="home-result-score">'+esc(r.s1||'?')+' – '+esc(r.s2||'?')+'</div>'
       +'<div class="home-result-opp">vs '+esc(r.opp||'?')+'</div>'
       +(r.map?'<div class="home-result-map">'+esc(r.map)+'</div>':'<div></div>')
       +'<span class="badge '+resMap[res]+'">'+lblMap[res]+'</span>'
+      +'<div class="home-result-mvp">'+(mapMvp?'🏆 Map: <b>'+esc(mapMvp)+'</b> ':'')+(matchMvp?'🥇 Match: <b>'+esc(matchMvp)+'</b>':'')+'</div>'
+      +'<button class="mvp-vote-btn'+(open?' mvp-open':'')+'" onclick="renderMvpModal(\''+r.teamId+'\','+origIdx+')">'+(open?'🏆 Abstimmen':'🏆 MVPs')+'</button>'
       +'</div>';
   }).join('')+'</div>';
+
 }
 
 function renderMatches(){
@@ -1330,7 +1483,7 @@ async function saveAllWithToken(token){
 
 // ── Load from GitHub ───────────────────────────────────────
 function applyData(data){
-  if(data.teams&&Array.isArray(data.teams))state.teams=data.teams.map(t=>Object.assign({id:'',name:'',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]},t));
+  if(data.teams&&Array.isArray(data.teams))state.teams=data.teams.map(t=>({...Object.assign({id:'',name:'',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]},t),results:(t.results||[]).map(r=>Object.assign({opp:'',s1:'',s2:'',map:'',res:'win',mapMvpVotes:{},matchMvpVotes:{},votingClosed:false},r))}));
   if(data.histoire&&Array.isArray(data.histoire))state.histoire=data.histoire.map(t=>Object.assign({id:'',name:'',seasons:[]},t));
   if(data.news)state.news=data.news;
   if(data.matches)state.matches=data.matches;

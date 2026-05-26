@@ -67,3 +67,9 @@
 .home-result-score{font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;color:var(--cream);text-align:center;}
 .home-result-opp{font-size:0.85rem;color:#aaa;}
 .home-result-map{font-size:0.8rem;color:#666;}
+
+.mvp-vote-btn{font-family:'Oswald',sans-serif;font-size:0.7rem;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid #333;color:#555;padding:4px 10px;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.mvp-vote-btn.mvp-open{border-color:var(--red);color:var(--red-light);}
+.mvp-vote-btn:hover{background:var(--dark4);}
+.home-result-mvp{font-size:0.78rem;color:#888;font-family:'Rajdhani',sans-serif;}
+.home-result-row{display:grid;grid-template-columns:1fr 80px 1fr 80px 100px 1fr auto;align-items:center;gap:1rem;background:var(--dark3);border:1px solid #2a2a2a;padding:0.875rem 1.25rem;border-left:3px solid #444;}
