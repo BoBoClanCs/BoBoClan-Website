@@ -767,6 +767,32 @@ function renderHistoire(){
   const panelsEl=document.getElementById('hist-panels');
   const loadingEl=document.getElementById('hist-loading');
   if(loadingEl)loadingEl.style.display='none';
+  // ── Clan All-Time Stats ──────────────────────────────────
+  {
+    let allGames=0,totalWins=0,totalLosses=0,totalKills=0,totalDeaths=0;
+    (state.histoire||[]).forEach(team=>{
+      (team.seasons||[]).forEach(s=>{
+        totalWins+=(parseInt(s.wins)||0);
+        totalLosses+=(parseInt(s.losses)||0);
+        allGames+=(parseInt(s.wins)||0)+(parseInt(s.losses)||0);
+        (s.players||[]).forEach(p=>{
+          totalKills+=(parseInt(p.kills)||0);
+          totalDeaths+=(parseInt(p.deaths)||0);
+        });
+      });
+    });
+    const statsEl=document.getElementById('hist-alltime-stats');
+    if(statsEl&&(allGames>0||totalKills>0)){
+      statsEl.style.display='block';
+      statsEl.innerHTML='<div class="hist-alltime-grid">'
+        +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+allGames+'</div><div class="hist-alltime-lbl">Spiele</div></div>'
+        +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:#2ecc71">'+totalWins+'</div><div class="hist-alltime-lbl">Siege</div></div>'
+        +'<div class="hist-alltime-item"><div class="hist-alltime-val" style="color:var(--red-light)">'+totalLosses+'</div><div class="hist-alltime-lbl">Niederlagen</div></div>'
+        +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+totalKills+'</div><div class="hist-alltime-lbl">Kills</div></div>'
+        +'<div class="hist-alltime-item"><div class="hist-alltime-val">'+totalDeaths+'</div><div class="hist-alltime-lbl">Tode</div></div>'
+        +'</div>';
+    }else if(statsEl){statsEl.style.display='none';}
+  }
   if(!tabsEl)return;
   tabsEl.style.display='';
   if(!state.histoire||state.histoire.length===0){tabsEl.innerHTML='';panelsEl.innerHTML='<div class="empty">Noch keine Teams in der Historie</div>';return;}

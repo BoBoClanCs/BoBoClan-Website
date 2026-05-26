@@ -44,3 +44,8 @@
 
 .tournament-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Oswald',sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;color:#f39c12;border:1px solid #f39c12;padding:3px 10px;margin-bottom:6px;width:fit-content;}
 .tournament-badge a:hover{opacity:0.8;}
+
+.hist-alltime-grid{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;padding:1.5rem;background:var(--dark3);border:1px solid #2a2a2a;border-top:3px solid var(--red);margin-bottom:2rem;}
+.hist-alltime-item{text-align:center;min-width:80px;}
+.hist-alltime-val{font-family:'Oswald',sans-serif;font-size:2rem;font-weight:700;color:var(--cream);line-height:1;}
+.hist-alltime-lbl{font-family:'Oswald',sans-serif;font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:#666;margin-top:4px;}
