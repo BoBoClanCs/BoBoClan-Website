@@ -1011,9 +1011,10 @@ function filterHistoire(q){
       if(cardMatches)anyCardVisible=true;
     });
     const panelVisible=!term||teamMatches||anyCardVisible;
-    panel.style.display=panelVisible?'':'none';
+    // Use classList instead of inline style to not override switchHist
+    panel.classList.toggle('hist-hidden',!panelVisible);
     const tab=document.getElementById('htab-'+teamId);
-    if(tab)tab.style.display=panelVisible?'':'none';
+    if(tab)tab.classList.toggle('hist-hidden',!panelVisible);
   });
 }
 
