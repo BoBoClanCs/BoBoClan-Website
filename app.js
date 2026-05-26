@@ -5,7 +5,7 @@ const GH_FILE = 'data.json';
 const GH_BRANCH = 'main';
 // Shared write token for coaches/players (Fine-grained: Contents Write only)
 // Replace with your Fine-grained GitHub token
-const GH_SHARED_TOKEN = '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';
+const GH_SHARED_TOKEN = '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';
 
 // ── State ──────────────────────────────────────────────────
 let state = {
