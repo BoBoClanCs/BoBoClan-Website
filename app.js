@@ -217,7 +217,7 @@ async function doLogin(){
     closeLoginOverlay();
     setCurrentUser({name:user.name,role:user.role});
     if(user.role==='admin')openAdminPanel();
-    else openPlayerPanel();
+    else{openPlayerPanel();}
   }else{
     document.getElementById('login-err').textContent='Falscher Name oder Passwort.';
     document.getElementById('login-err').style.display='block';
@@ -262,7 +262,43 @@ function openPlayerPanel(){
   document.getElementById('player-discord-input').value=profile?profile.discord||'':'';
   document.getElementById('player-bio-input').value=profile?profile.bio||'':'';
   document.getElementById('player-faceit-input').value=profile?profile.faceit||'':'';
+  // Token field
+  const tokEl=document.getElementById('player-token-input');
+  if(tokEl){
+    const t=localStorage.getItem('bobo_gh_token');
+    tokEl.value=t?'••••••••••••••••':'';
+    tokEl.placeholder=t?'Token gespeichert':'Token eintragen...';
+  }
+  // Show team button if has team role
+  const teamId=getMyTeamId();
+  const teamBtn=document.getElementById('player-panel-team-btn');
+  if(teamBtn){
+    if(teamId||isAdmin()){
+      const team=state.teams.find(t=>t.id===teamId);
+      teamBtn.style.display='block';
+      teamBtn.textContent='🔒 '+(team?team.name:'Teams')+' öffnen';
+    } else {
+      teamBtn.style.display='none';
+    }
+  }
 }
+
+function savePlayerToken(){
+  const tokEl=document.getElementById('player-token-input');
+  if(!tokEl)return;
+  const val=tokEl.value.trim();
+  if(!val||val.startsWith('•'))return;
+  localStorage.setItem('bobo_gh_token',val);
+  tokEl.value='••••••••••••••••';
+  tokEl.placeholder='Token gespeichert';
+  document.getElementById('player-token-status').textContent='✓ Token gespeichert';
+  document.getElementById('player-token-status').style.display='block';
+  setTimeout(()=>{
+    const s=document.getElementById('player-token-status');
+    if(s)s.style.display='none';
+  },3000);
+}
+
 function closePlayerPanel(){document.getElementById('player-panel').style.display='none';}
 async function savePlayerProfile(){
   if(!currentUser)return;

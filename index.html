@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BoBo Clan – Counter-Strike 2</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1779815033">
+<link rel="stylesheet" href="style.css?v=1779819205">
 </head>
 <body>
 
@@ -54,7 +54,14 @@
     <input type="text" id="player-faceit-input" placeholder="dein FaceIt Benutzername" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;margin-bottom:0.75rem;outline:none;">
     <label style="font-family:'Oswald',sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;text-transform:uppercase;display:block;margin-bottom:0.4rem;">Über mich</label>
     <textarea id="player-bio-input" placeholder="Kurz was über dich..." style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;margin-bottom:1rem;outline:none;resize:vertical;min-height:70px;"></textarea>
-    <button id="player-save-btn" class="btn-admin" onclick="savePlayerProfile()">Speichern</button>
+    <label style="font-family:'Oswald',sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;text-transform:uppercase;display:block;margin-bottom:0.4rem;">GitHub Token <span style="color:#555;font-size:0.7rem;">(einmalig)</span></label>
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+      <input type="password" id="player-token-input" placeholder="Token eintragen..." style="flex:1;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;">
+      <button onclick="savePlayerToken()" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:0.85rem;cursor:pointer;white-space:nowrap;">Speichern</button>
+    </div>
+    <div id="player-token-status" style="display:none;color:#2ecc71;font-size:0.8rem;margin-bottom:0.5rem;"></div>
+    <button id="player-save-btn" class="btn-admin" onclick="savePlayerProfile()">Profil speichern</button>
+    <button id="player-panel-team-btn" class="btn-admin" style="display:none;margin-top:0.5rem;background:var(--dark4);border:1px solid var(--red);" onclick="closePlayerPanel();openTeamArea();">&#128274; Team öffnen</button>
     <button class="btn-admin btn-cancel" onclick="closePlayerPanel()" style="margin-top:0.5rem;">Sp&auml;ter</button>
     <button class="btn-admin btn-cancel" onclick="closePlayerPanel();logout()" style="margin-top:0.5rem;">Abmelden</button>
   </div>
@@ -423,6 +430,6 @@
     </div>
   </div>
 </div>
-<script src="app.js?v=1779818858"></script>
+<script src="app.js?v=1779819205"></script>
 </body>
 </html>
