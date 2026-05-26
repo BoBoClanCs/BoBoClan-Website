@@ -14,8 +14,8 @@ let state = {
   spielerProfiles: [],
   teamData: {},
   teams: [
-    {id:'boot',name:'BoBoBoot',coach:'',dachcs:'',players:[],results:[]},
-    {id:'rage',name:'BoBoRage',coach:'',dachcs:'',players:[],results:[]}
+    {id:'boot',name:'BoBoBoot',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]},
+    {id:'rage',name:'BoBoRage',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]}
   ],
   matches: [],
   histoire: [
@@ -500,6 +500,8 @@ function addTeam(){
   state.teams.push({id,name:'Neues Team',coach:'',dachcs:'',players:[],results:[]});
   renderTeamMgmtList();rebuildAdminSidebar();rebuildTeamPages();renderPublic();
 }
+function updateTournament(id,val){const t=teamById(id);if(t){t.tournament=val;renderPublic();}}
+function updateTournamentUrl(id,val){const t=teamById(id);if(t){t.tournamentUrl=val;}}
 function renameTeam(id,name){const t=teamById(id);if(t){t.name=name;rebuildAdminSidebar();renderPublic();}}
 function deleteTeam(id){
   if(!confirm('Team löschen? Kader und Ergebnisse werden gelöscht. Historie bleibt.'))return;
@@ -524,6 +526,8 @@ function teamPageHTML(t){
 <div class="admin-card-body open">
 <div class="field-row"><label>Coach</label><input type="text" id="coach-${t.id}" value="${esc(t.coach)}" placeholder="Coach"></div>
 <div class="field-row"><label>DachCS</label><input type="text" id="dachcs-${t.id}" value="${esc(t.dachcs)}" placeholder="https://www.dachcs.de/..."></div>
+<div class="field-row"><label>Turnier</label><input type="text" id="tournament-${t.id}" value="${esc(t.tournament||'')}" placeholder="z.B. DachCS Saison 12" oninput="updateTournament('${t.id}',this.value)"></div>
+<div class="field-row"><label>Turnier-Link</label><input type="text" id="tournamentUrl-${t.id}" value="${esc(t.tournamentUrl||'')}" placeholder="https://..." oninput="updateTournamentUrl('${t.id}',this.value)"></div>
 </div></div>
 <div class="admin-card"><div class="admin-card-head" onclick="toggleCard(this)"><div class="admin-card-title">Kader</div><div class="admin-card-subtitle">${t.players.length} Spieler</div><div class="admin-card-arrow">&#9660;</div></div>
 <div class="admin-card-body">
@@ -695,7 +699,7 @@ function renderPublic(){
   tabsEl.innerHTML=state.teams.map((t,i)=>'<button class="tab-btn'+(i===0?' active':'')+'" id="tab-'+t.id+'" onclick="switchTeam(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
   rtabsEl.innerHTML=state.teams.map((t,i)=>'<button class="tab-btn'+(i===0?' active':'')+'" id="rtab-'+t.id+'" onclick="switchResults(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
   panelsEl.innerHTML=state.teams.map((t,i)=>`<div class="team-panel${i===0?' active':''}" id="panel-${t.id}">
-<div class="team-meta"><div><div class="team-meta-name">${esc(t.name)}</div><div class="team-meta-coach" id="coach-display-${t.id}">${t.coach?'Coach: <span>'+esc(t.coach)+'</span>':'Coach: <span style="color:#555">–</span>'}</div></div>
+<div class="team-meta"><div><div class="team-meta-name">${esc(t.name)}</div>${t.tournament ? '<div class="tournament-badge">' + (t.tournamentUrl ? '<a href="' + esc(t.tournamentUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">' : '') + '&#127942; ' + esc(t.tournament) + (t.tournamentUrl ? '</a>' : '') + '</div>' : ''}<div class="team-meta-coach" id="coach-display-${t.id}">${t.coach?'Coach: <span>'+esc(t.coach)+'</span>':'Coach: <span style="color:#555">–</span>'}</div></div>
 <a href="${esc(t.dachcs||'https://www.dachcs.de')}" target="_blank" rel="noopener" class="dacha-link dacha-link-${t.id}">&#x2197; DachCS</a></div>
 <div class="roster-section"><div class="roster-label">Stammkader</div><div class="team-grid">${renderRoster(t,false)}</div></div>
 ${renderStandins(t)}</div>`).join('');
@@ -1247,7 +1251,7 @@ async function saveAllWithToken(token){
 
 // ── Load from GitHub ───────────────────────────────────────
 function applyData(data){
-  if(data.teams&&Array.isArray(data.teams))state.teams=data.teams.map(t=>Object.assign({id:'',name:'',coach:'',dachcs:'',players:[],results:[]},t));
+  if(data.teams&&Array.isArray(data.teams))state.teams=data.teams.map(t=>Object.assign({id:'',name:'',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]},t));
   if(data.histoire&&Array.isArray(data.histoire))state.histoire=data.histoire.map(t=>Object.assign({id:'',name:'',seasons:[]},t));
   if(data.news)state.news=data.news;
   if(data.matches)state.matches=data.matches;
