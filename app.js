@@ -8,6 +8,412 @@ const DEFAULT_DISCORD = 'https://discord.gg/bobo';
 // Replace with your Fine-grained GitHub token
 const GH_SHARED_TOKEN = '';
 
+
+// ── DOM BUILDER ───────────────────────────────────────────────
+function buildDOM(){
+  const app=document.getElementById('app');
+  if(!app)return;
+  app.innerHTML=`
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div class="login-box">
+    <h2>Bo<span style="color:var(--red-light)">Bo</span> Clan</h2>
+    <p>Mitglieder-Login</p>
+    <div style="display:flex;margin-bottom:1.5rem;border:1px solid #2a2a2a;">
+      <button id="login-overlay-tab-login" class="tab-btn active" onclick="switchLoginTab('login')" style="flex:1;padding:8px;font-size:0.8rem;">Login</button>
+      <button id="login-overlay-tab-register" class="tab-btn" onclick="switchLoginTab('register')" style="flex:1;padding:8px;font-size:0.8rem;">Registrieren</button>
+    </div>
+    <!-- LOGIN PANEL -->
+    <div id="login-panel-login">
+      <input type="text" id="login-name-input" placeholder="Spielername" onkeydown="if(event.key==='Enter')document.getElementById('login-pw-input').focus()" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:12px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;margin-bottom:0.75rem;outline:none;">
+      <input type="password" id="login-pw-input" placeholder="Passwort" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:12px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;margin-bottom:0.75rem;outline:none;">
+      <div id="login-err" style="display:none;color:var(--red-light);font-size:0.85rem;margin-bottom:0.75rem;"></div>
+      <button id="login-submit-btn" class="btn-admin" onclick="doLogin()">Einloggen</button>
+      <button class="btn-admin btn-cancel" onclick="closeLoginOverlay()">Abbrechen</button>
+    </div>
+    <!-- REGISTER PANEL -->
+    <div id="login-panel-register" style="display:none;">
+      <input type="text" id="reg-name-input" placeholder="Spielername" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:12px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;margin-bottom:0.75rem;outline:none;">
+      <input type="password" id="reg-pw-input" placeholder="Passwort" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:12px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;margin-bottom:0.75rem;outline:none;">
+      <input type="password" id="reg-pw2-input" placeholder="Passwort wiederholen" onkeydown="if(event.key==='Enter')doRegister()" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:12px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;margin-bottom:0.75rem;outline:none;">
+      <div id="reg-err" style="display:none;color:var(--red-light);font-size:0.85rem;margin-bottom:0.75rem;"></div>
+      <div id="reg-success" style="display:none;color:#2ecc71;font-size:0.85rem;margin-bottom:0.75rem;">&#10003; Registrierung erfolgreich! Warte auf Freischaltung durch einen Admin.</div>
+      <button id="reg-submit-btn" class="btn-admin" onclick="doRegister()">Registrieren</button>
+      <button class="btn-admin btn-cancel" onclick="closeLoginOverlay()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+<!-- PLAYER PANEL -->
+<div id="player-panel" style="display:none;position:fixed;inset:0;z-index:997;background:rgba(0,0,0,0.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div class="login-box" style="width:420px;">
+    <h2>Hallo, <span id="player-panel-name" style="color:var(--red-light)"></span></h2>
+    <p style="margin-bottom:1.5rem;">Deine Steam-URL f&uuml;r das Profilbild:</p>
+    <p id="player-panel-role" style="font-size:0.8rem;color:var(--red-light);letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;"></p>
+    <label style="font-family:'Oswald',sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;text-transform:uppercase;display:block;margin-bottom:0.4rem;">Steam-URL</label>
+    <input type="text" id="player-steam-input" placeholder="https://steamcommunity.com/id/..." style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;margin-bottom:0.75rem;outline:none;">
+    <label style="font-family:'Oswald',sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;text-transform:uppercase;display:block;margin-bottom:0.4rem;">Discord</label>
+    <input type="text" id="player-discord-input" placeholder="deinname oder deinname#1234" style="width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:10px 14px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;margin-bottom:1rem;outline:none;">
+    <button id="player-save-btn" class="btn-admin" onclick="savePlayerProfile()">Speichern</button>
+    <button class="btn-admin btn-cancel" onclick="closePlayerPanel();logout()">Abmelden</button>
+  </div>
+</div>
+<!-- ADMIN PANEL -->
+<div id="admin-panel" style="display:none;">
+  <div class="admin-topbar">
+    <div class="admin-topbar-title">&#9881; ADMIN <span>PANEL</span></div>
+    <div class="admin-topbar-right">
+      <span class="save-status" id="save-status"></span>
+      <button class="admin-save-btn" id="save-btn" onclick="saveAll()">
+        <span id="save-btn-text">&#128190; Speichern &amp; Ver&ouml;ffentlichen</span>
+      </button>
+      <button class="admin-close-btn" onclick="closeAdmin()">&#10005; Schlie&szlig;en</button>
+    </div>
+  </div>
+  <div class="admin-layout">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-group">
+        <span class="admin-sidebar-label">Einstellungen</span>
+        <button class="admin-nav-item active" data-page="page-settings" onclick="showAdminPage('page-settings')">&#128274; GitHub Token</button>
+      </div>
+      <div class="admin-sidebar-group">
+        <span class="admin-sidebar-label">Teams</span>
+        <button class="admin-nav-item" data-page="page-teams" onclick="showAdminPage('page-teams')">&#9881; Team-Verwaltung</button>
+      </div>
+      <div class="admin-sidebar-group" id="sidebar-team-links"></div>
+      <div class="admin-sidebar-group">
+        <span class="admin-sidebar-label">Sonstiges</span>
+        <button class="admin-nav-item" data-page="page-users" onclick="showAdminPage('page-users')">&#128100; Benutzer &amp; Rechte</button>
+        <button class="admin-nav-item" data-page="page-spieler-profiles" onclick="showAdminPage('page-spieler-profiles')">&#127939; Spieler &amp; Steam</button>
+        <button class="admin-nav-item" data-page="page-matches" onclick="showAdminPage('page-matches')">&#128197; N&auml;chste Matches</button>
+        <button class="admin-nav-item" data-page="page-news" onclick="showAdminPage('page-news')">&#128240; News</button>
+        <button class="admin-nav-item" data-page="page-histoire" onclick="showAdminPage('page-histoire')">&#128218; Historie</button>
+      </div>
+    </div>
+    <div class="admin-content">
+
+      <!-- PAGE: SETTINGS -->
+      <div class="admin-page active" id="page-settings">
+        <!-- Admin Profile -->
+        <div class="admin-card" style="margin-bottom:1.5rem;">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">Mein Profil</div>
+            <div class="admin-card-subtitle" id="admin-profile-name"></div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <div class="field-row">
+              <label>Steam-URL</label>
+              <input type="text" id="admin-steam-input" placeholder="https://steamcommunity.com/id/...">
+            </div>
+            <div class="field-row">
+              <label>Discord</label>
+              <input type="text" id="admin-discord-input" placeholder="deinname oder deinname#1234">
+            </div>
+            <div class="field-row"><label>FaceIt</label><input type="text" id="admin-faceit-input" placeholder="FaceIt Benutzername"></div>
+            <div class="field-row"><label>&#220;ber mich</label><textarea id="admin-bio-input" placeholder="Kurz was &#252;ber dich..." style="flex:1;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:8px 12px;font-family:'Rajdhani',sans-serif;font-size:0.95rem;outline:none;resize:vertical;min-height:60px;"></textarea></div>
+            <button id="admin-profile-save-btn" class="admin-save-btn" onclick="saveAdminProfile()" style="margin-top:0.5rem;">Profil speichern</button>
+          </div>
+        </div>
+        <!-- Discord Link -->
+        <div class="admin-card" style="margin-bottom:1.5rem;">
+          <div class="admin-card-head" onclick="toggleCard(this)"><div class="admin-card-title">&#128172; Discord Einladungslink</div><div class="admin-card-arrow open">&#9660;</div></div>
+          <div class="admin-card-body open"><div class="field-row"><label>Discord Link</label><input type="text" id="discord-link-input" placeholder="https://discord.gg/..."></div><button class="admin-save-btn" onclick="saveDiscordLink()" style="margin-top:0.5rem;">Speichern</button></div>
+        </div>
+        <div class="token-box">
+          <p>&#128274; <strong style="color:var(--cream)">GitHub Token</strong> – wird nur lokal gespeichert.<br>
+          Erstellen: <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> &rarr; Tokens (classic) &rarr; repo</p>
+          <div class="token-row">
+            <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+            <button onclick="saveToken()">Speichern</button>
+          </div>
+          <div class="token-status" id="token-status"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: TEAMS MANAGEMENT -->
+      <div class="admin-page" id="page-teams">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">Teams verwalten</div>
+            <div class="admin-card-subtitle" id="teams-count-label"></div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;line-height:1.6">Teams anlegen und l&ouml;schen. Die Historie bleibt beim L&ouml;schen erhalten.</p>
+            <div class="team-mgmt-list" id="team-mgmt-list"></div>
+            <button class="tbl-add-btn" onclick="addTeam()">+ Neues Team anlegen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team pages injected here -->
+      <div id="team-pages-container"></div>
+
+
+
+      <!-- PAGE: USERS -->
+      <div class="admin-page" id="page-users">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">Benutzer &amp; Rechte</div>
+            <div class="admin-card-subtitle" id="users-count">0 Benutzer</div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1.25rem;line-height:1.6">
+              <strong style="color:var(--cream)">Admin</strong> = volles Admin-Panel &nbsp;|&nbsp;
+              <strong style="color:var(--cream)">Spieler</strong> = kann nur eigene Steam-URL &auml;ndern
+            </p>
+            <div id="users-admin-list"></div>
+            <p style="font-size:0.85rem;color:#555;margin-top:1rem;line-height:1.6;">Spieler registrieren sich selbst &uuml;ber den Login-Button auf der Seite. Neue Accounts erscheinen hier und k&ouml;nnen freigeschaltet werden.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: SPIELER PROFILES -->
+      <div class="admin-page" id="page-spieler-profiles">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">Spieler &amp; Steam-URLs</div>
+            <div class="admin-card-subtitle" id="spieler-profiles-count">0 Eintr&auml;ge</div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;line-height:1.6">
+              Spielernamen m&uuml;ssen <strong style="color:var(--cream)">exakt</strong> mit den Namen in der Historie &uuml;bereinstimmen. Bilder werden nach dem ersten Laden gecacht &ndash; sofort schnell.
+            </p>
+            <div class="tbl-editor-head tbl-row" style="grid-template-columns:1fr 2fr 32px;margin-bottom:0.4rem">
+              <span>Spielername</span><span>Steam-URL</span><span></span>
+            </div>
+            <div id="spieler-profiles-admin"></div>
+            <button class="tbl-add-btn" onclick="addSpielerProfile()">+ Spieler hinzuf&uuml;gen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: MATCHES -->
+      <div class="admin-page" id="page-matches">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">N&#228;chste Matches</div>
+            <div class="admin-card-subtitle" id="matches-count-lbl">0 Eintr&#228;ge</div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;">Vergangene Matches werden automatisch ausgeblendet.</p>
+            <div class="tbl-editor-head tbl-row" style="grid-template-columns:1fr 1fr 180px 1fr 32px"><span>Team</span><span>Gegner</span><span>Datum &amp; Zeit</span><span>Twitch-Link (optional)</span><span></span></div>
+            <div id="matches-edit"></div>
+            <button class="tbl-add-btn" onclick="addMatch()">+ Match hinzuf&uuml;gen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: NEWS -->
+      <div class="admin-page" id="page-news">
+        <div class="admin-card">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">News</div>
+            <div class="admin-card-subtitle" id="news-count-lbl"></div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <div class="tbl-editor-head tbl-row grid-news"><span>Datum</span><span>Titel</span><span>Text</span><span></span></div>
+            <div id="news-edit"></div>
+            <button class="tbl-add-btn" onclick="addNews()">+ News hinzuf&uuml;gen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: HISTOIRE -->
+      <div class="admin-page" id="page-histoire">
+        <div id="histoire-admin-content"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" onclick="showPage('home',event)" class="nav-logo">
+    <img src="logo.webp" onerror="this.style.display='none'" alt="BoBo Clan Logo">
+    <span class="nav-logo-text">Bo<span>Bo</span> Clan</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home',event)" data-page="home" data-nav-id="start">Start</a></li>
+    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('teams').scrollIntoView({behavior:'smooth'}),50)" data-page="home">Teams</a></li>
+    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('ergebnisse').scrollIntoView({behavior:'smooth'}),50)" data-page="home">Ergebnisse</a></li>
+    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),50)" data-page="home">News</a></li>
+    <li><a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('kontakt').scrollIntoView({behavior:'smooth'}),50)" data-page="home">Kontakt</a></li>
+    <li><a href="#" onclick="showPage('histoire',event)" data-page="histoire">Historie</a></li>
+    <li><a href="#" onclick="showPage('spieler',event)" data-page="spieler">Spieler</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <span id="user-label" style="display:none;font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:1px;color:var(--red-light);"></span>
+    <button class="admin-nav-btn" id="team-area-btn" style="display:none;" onclick="openTeamArea()">&#128274; Team</button>
+    <button class="admin-nav-btn" id="admin-toggle-btn" style="display:none;" onclick="openAdminPanel()">&#9881; Admin</button>
+    <button class="admin-nav-btn" id="logout-btn" style="display:none;" onclick="logout()">Abmelden</button>
+    <button class="admin-nav-btn" id="login-btn" onclick="openLoginOverlay()">&#128100; Login</button>
+  </div>
+</nav>
+<!-- HOME PAGE -->
+<div id="page-home">
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <img src="logo.webp" onerror="this.style.display='none'" alt="BoBo Clan" class="hero-logo">
+  <h1 class="hero-title">Bo<span>Bo</span> Clan</h1>
+  <p class="hero-subtitle">Counter-Strike 2 &middot; Deutschland</p>
+  <div class="hero-divider"></div>
+  <div class="hero-teams" id="nav-team-links"></div>
+</section>
+
+<!-- NAECHSTE MATCHES -->
+<section id="section-matches" style="background:var(--dark3);padding:60px 2rem;display:none;">
+  <div class="container">
+    <h2 class="section-title">N&auml;chste <span>Matches</span></h2>
+    <div class="section-line"></div>
+    <div id="matches-display"></div>
+  </div>
+</section>
+
+<!-- TEAMS -->
+<section style="background:var(--dark);padding:80px 2rem;" id="teams">
+  <div class="container">
+    <h2 class="section-title">Unsere <span>Teams</span></h2>
+    <div class="section-line"></div>
+    <div class="team-tabs" id="teams-tabs"></div>
+    <div id="teams-panels"></div>
+  </div>
+
+
+<!-- ERGEBNISSE -->
+<section class="results" id="ergebnisse">
+  <div class="container">
+    <h2 class="section-title">Letzte <span>Ergebnisse</span></h2>
+    <div class="section-line"></div>
+    <div class="team-tabs" id="results-tabs"></div>
+    <div id="results-panels"></div>
+  </div>
+</section>
+
+<!-- NEWS -->
+<section id="news" class="section section-dark">
+  <div class="container">
+    <div id="section-matches-home" style="margin-bottom:3rem;">
+      <h2 class="section-title">N&Auml;CHSTE <span>MATCHES</span></h2>
+      <div id="matches-home-display"><div class="empty">Keine anstehenden Matches</div></div>
+    </div>
+    <div id="section-results-home">
+      <h2 class="section-title">LETZTE <span>ERGEBNISSE</span></h2>
+      <div id="results-home-display"><div class="empty">Noch keine Ergebnisse</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- KONTAKT -->
+<section class="contact" id="kontakt">
+  <div class="container">
+    <div class="contact-inner">
+      <h2 class="section-title"><span>Kontakt</span></h2>
+      <div class="section-line"></div>
+      <a href="mailto:bobobootcs@gmail.com" class="contact-mail">&#9993;&nbsp; bobobootcs@gmail.com</a>
+      <a href="https://discord.gg/bobo" target="_blank" rel="noopener" class="contact-mail discord-invite-btn" style="margin-top:1rem;">&#128172;&nbsp; Discord beitreten</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <img src="logo.webp" onerror="this.style.display='none'" alt="BoBo Clan">
+  <div class="footer-social">
+    <a href="https://www.youtube.com/@BoBoClan-BoBo" target="_blank" rel="noopener" class="yt">
+      <svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+      YouTube
+    </a>
+    <a href="https://www.twitch.tv/diebobos" target="_blank" rel="noopener" class="tw">
+      <svg viewBox="0 0 24 24"><path d="M11.6 6H13v4h-1.4V6zm3.8 0H17v4h-1.6V6zM2.1 0L0 5.5V21h6v3h3.4l3-3H17l7-7V0H2.1zm19.5 13-3.4 3.4h-5l-3 3v-3H4.5V2.3h17.1V13z"/></svg>
+      Twitch
+    </a>
+  </div>
+  <div class="foot-links">
+    <a href="#" onclick="showPage('home',event)">Start</a>
+    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('teams').scrollIntoView({behavior:'smooth'}),50)">Teams</a>
+    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('ergebnisse').scrollIntoView({behavior:'smooth'}),50)">Ergebnisse</a>
+    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),50)">News</a>
+    <a href="#" onclick="showPage('histoire',event)">Historie</a>
+    <a href="#" onclick="showPage('spieler',event)">Spieler</a>
+    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('kontakt').scrollIntoView({behavior:'smooth'}),50)">Kontakt</a>
+    <a href="https://www.dachcs.de" target="_blank" rel="noopener">DachCS &#x2197;</a>
+  </div>
+  <p>&copy; 2025 BoBo Clan &middot; Counter-Strike 2</p>
+</footer>
+
+</div><!-- /page-home -->
+<!-- SPIELER PAGE -->
+<div id="pub-spieler" style="display:none; min-height:calc(100vh - 64px); background:var(--dark); padding:80px 2rem;">
+  <div class="container">
+    <h2 class="section-title">Unsere <span>Spieler</span></h2>
+    <div class="section-line"></div>
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;">
+      <button onclick="switchSpielerTab('list')" id="stab-list" class="tab-btn active" style="font-size:0.85rem;padding:8px 24px;">Alle Spieler</button>
+      <button onclick="switchSpielerTab('compare')" id="stab-compare" class="tab-btn" style="font-size:0.85rem;padding:8px 24px;">Vergleich</button>
+    </div>
+    <div id="spieler-tab-list">
+      <div id="spieler-top-stats" style="display:none; margin-bottom:2.5rem;"></div>
+      <input id="spieler-search" type="text" placeholder="Spieler suchen..." oninput="filterSpieler(this.value)" style="display:none;width:100%;max-width:400px;background:var(--dark3);border:1px solid #2a2a2a;border-bottom:2px solid var(--red);color:var(--cream);padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;margin-bottom:1.5rem;">
+      <div id="spieler-list"></div>
+    </div>
+    <div id="spieler-tab-compare" style="display:none;">
+      <div class="compare-selectors">
+        <select class="compare-select" id="compare-select-a" onchange="renderCompare()"><option value="">Spieler A w&auml;hlen...</option></select>
+        <div class="compare-vs-badge">VS</div>
+        <select class="compare-select" id="compare-select-b" onchange="renderCompare()"><option value="">Spieler B w&auml;hlen...</option></select>
+      </div>
+      <div id="compare-result"></div>
+    </div>
+    <div id="spieler-detail" style="display:none; margin-top:0;">
+      <button onclick="closeSpielerDetail()" style="font-family:'Oswald',sans-serif;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;background:transparent;border:1px solid #333;color:#888;padding:8px 18px;cursor:pointer;margin-bottom:2rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red-light)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'">&#8592; Alle Spieler</button>
+      <div id="spieler-detail-content"></div>
+    </div>
+  </div>
+</div>
+<!-- HISTOIRE PAGE -->
+<div id="pub-histoire" style="display:none; min-height:calc(100vh - 64px); background:var(--dark2); padding:80px 2rem;">
+  <div class="container">
+    <h2 class="section-title">Clan <span>Historie</span></h2>
+    <div class="section-line"></div>
+    <input id="histoire-search" type="text" placeholder="Saison oder Team suchen..." oninput="filterHistoire(this.value)" style="display:block;width:100%;max-width:400px;margin:0 auto 1.5rem;background:var(--dark3);border:1px solid #2a2a2a;border-bottom:2px solid var(--red);color:var(--cream);padding:10px 16px;font-family:'Rajdhani',sans-serif;font-size:1rem;outline:none;">
+    <div id="hist-alltime-stats" style="display:none;margin-bottom:2.5rem;"></div>
+    <div id="hist-loading" style="text-align:center;padding:3rem;color:#555;font-family:'Oswald',sans-serif;letter-spacing:2px;font-size:0.85rem;">WIRD GELADEN...</div>
+    <div class="hist-tabs" id="hist-tabs" style="display:none"></div>
+    <div id="hist-panels"></div>
+  </div>
+</div>
+<div id="team-area-panel"  style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:9999;background:#0a0a0a;overflow-y:auto;flex-direction:column;">
+  <div style="background:var(--dark2);border-bottom:1px solid var(--red);padding:0.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;">
+    <div style="font-family:'Oswald',sans-serif;color:var(--cream);letter-spacing:3px;font-size:1.1rem;">&#128274; <span id="team-area-title"></span></div>
+    <button class="admin-close-btn" onclick="closeTeamArea()">&#10005; Schlie&szlig;en</button>
+  </div>
+  <div style="max-width:900px;margin:0 auto;padding:2rem;">
+    <div id="team-area-tabs"></div>
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border:1px solid #2a2a2a;width:fit-content;margin-bottom:2rem;">
+      <button class="tab-btn active" id="team-tab-tactics" onclick="switchTeamAreaTab('tactics')">&#127918; Taktiken</button>
+      <button class="tab-btn" id="team-tab-training" onclick="switchTeamAreaTab('training')">&#128336; Training</button>
+    </div>
+    <!-- Tactics -->
+    <div id="team-section-tactics">
+      <div id="team-area-tactics"></div>
+    </div>
+    <!-- Training -->
+    <div id="team-section-training" style="display:none;">
+      <div id="team-area-training"></div>
+    </div>
+  </div>
+</div>
+  `;
+}
+
 // ── State ──────────────────────────────────────────────────
 let state = {
   users: [],
@@ -1542,6 +1948,7 @@ async function loadFromGitHub(){
 }
 
 // ── Startup ────────────────────────────────────────────────
+buildDOM();
 localStorage.removeItem('bobo_data_cache');
 restoreSession();
 updateAuthUI();
