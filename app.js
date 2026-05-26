@@ -693,17 +693,14 @@ function updateDachcsLinks(){state.teams.forEach(t=>{const url=t.dachcs||'https:
 function renderPublic(){
   const tabsEl=document.getElementById('teams-tabs');
   const panelsEl=document.getElementById('teams-panels');
-  const rtabsEl=document.getElementById('results-tabs');
-  const rpanelsEl=document.getElementById('results-panels');
   if(!tabsEl)return;
   tabsEl.innerHTML=state.teams.map((t,i)=>'<button class="tab-btn'+(i===0?' active':'')+'" id="tab-'+t.id+'" onclick="switchTeam(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
-  rtabsEl.innerHTML=state.teams.map((t,i)=>'<button class="tab-btn'+(i===0?' active':'')+'" id="rtab-'+t.id+'" onclick="switchResults(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
   panelsEl.innerHTML=state.teams.map((t,i)=>`<div class="team-panel${i===0?' active':''}" id="panel-${t.id}">
 <div class="team-meta"><div><div class="team-meta-name">${esc(t.name)}</div>${t.tournament ? '<div class="tournament-badge">' + (t.tournamentUrl ? '<a href="' + esc(t.tournamentUrl) + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">' : '') + '&#127942; ' + esc(t.tournament) + (t.tournamentUrl ? '</a>' : '') + '</div>' : ''}<div class="team-meta-coach" id="coach-display-${t.id}">${t.coach?'Coach: <span>'+esc(t.coach)+'</span>':'Coach: <span style="color:#555">–</span>'}</div></div>
 <a href="${esc(t.dachcs||'https://www.dachcs.de')}" target="_blank" rel="noopener" class="dacha-link dacha-link-${t.id}">&#x2197; DachCS</a></div>
 <div class="roster-section"><div class="roster-label">Stammkader</div><div class="team-grid">${renderRoster(t,false)}</div></div>
 ${renderStandins(t)}</div>`).join('');
-  rpanelsEl.innerHTML=state.teams.map((t,i)=>'<div class="team-panel'+(i===0?' active':'')+'" id="rpanel-'+t.id+'"><div class="results-list">'+renderResultsList(t)+'</div></div>').join('');
+
   const navTeamLinks=document.getElementById('nav-team-links');
   if(navTeamLinks)navTeamLinks.innerHTML=state.teams.map((t,i)=>'<button class="hero-team-btn" onclick="scrollToTeam(\'+t.id+\')">'+esc(t.name)+'</button>').join('');
 // news section removed
