@@ -251,16 +251,20 @@ function openPlayerPanel(){
   if(roleEl){roleEl.textContent=roleLabel||'';roleEl.style.display=roleLabel?'block':'none';}
   document.getElementById('player-steam-input').value=profile?profile.steam||'':'';
   document.getElementById('player-discord-input').value=profile?profile.discord||'':'';
+  document.getElementById('player-bio-input').value=profile?profile.bio||'':'';
+  document.getElementById('player-faceit-input').value=profile?profile.faceit||'':'';
 }
 function closePlayerPanel(){document.getElementById('player-panel').style.display='none';}
 async function savePlayerProfile(){
   if(!currentUser)return;
   const steam=(document.getElementById('player-steam-input').value||'').trim();
   const discord=(document.getElementById('player-discord-input').value||'').trim();
+  const bio=(document.getElementById('player-bio-input').value||'').trim();
+  const faceit=(document.getElementById('player-faceit-input').value||'').trim();
   if(!state.spielerProfiles)state.spielerProfiles=[];
   const existing=state.spielerProfiles.find(p=>p.name.trim().toLowerCase()===currentUser.name.trim().toLowerCase());
-  if(existing){existing.steam=steam;existing.discord=discord;}
-  else{state.spielerProfiles.push({name:currentUser.name,steam,discord});}
+  if(existing){existing.steam=steam;existing.discord=discord;existing.bio=bio;existing.faceit=faceit;}
+  else{state.spielerProfiles.push({name:currentUser.name,steam,discord,bio:'',faceit:''});}
   localStorage.removeItem('bobo_av_'+currentUser.name.trim().toLowerCase().replace(/\s+/g,'_'));
   const btn=document.getElementById('player-save-btn');
   btn.textContent='Wird gespeichert...';btn.disabled=true;
@@ -275,10 +279,14 @@ async function saveAdminProfile(){
   const discordEl=document.getElementById('admin-discord-input');
   const steam=steamEl?steamEl.value.trim():'';
   const discord=discordEl?discordEl.value.trim():'';
+  const bioEl=document.getElementById('admin-bio-input');
+  const faceitEl=document.getElementById('admin-faceit-input');
+  const bio=bioEl?bioEl.value.trim():'';
+  const faceit=faceitEl?faceitEl.value.trim():'';
   if(!state.spielerProfiles)state.spielerProfiles=[];
   const existing=state.spielerProfiles.find(p=>p.name.trim().toLowerCase()===currentUser.name.trim().toLowerCase());
-  if(existing){existing.steam=steam;existing.discord=discord;}
-  else{state.spielerProfiles.push({name:currentUser.name,steam,discord});}
+  if(existing){existing.steam=steam;existing.discord=discord;existing.bio=bio;existing.faceit=faceit;}
+  else{state.spielerProfiles.push({name:currentUser.name,steam,discord,bio:'',faceit:''});}
   localStorage.removeItem('bobo_av_'+currentUser.name.trim().toLowerCase().replace(/\s+/g,'_'));
   const btn=document.getElementById('admin-profile-save-btn');
   if(btn){btn.textContent='Wird gespeichert...';btn.disabled=true;}
@@ -340,6 +348,10 @@ function openAdminPanel(){
     const discordEl=document.getElementById('admin-discord-input');
     if(steamEl)steamEl.value=profile?profile.steam||'':'';
     if(discordEl)discordEl.value=profile?profile.discord||'':'';
+    const bioEl2=document.getElementById('admin-bio-input');
+    const faceitEl2=document.getElementById('admin-faceit-input');
+    if(bioEl2)bioEl2.value=profile?profile.bio||'':'';
+    if(faceitEl2)faceitEl2.value=profile?profile.faceit||'':'';
     const nameEl=document.getElementById('admin-profile-name');
     if(nameEl)nameEl.textContent=currentUser.name;
   }
@@ -783,7 +795,11 @@ function showSpielerDetail(name){
   const teamNames=[...new Set(p.seasons.map(s=>s.teamName))].join(' · ');
   const kdColor=v=>{const n=parseFloat(v);if(isNaN(n))return 'var(--cream)';return n>=1.2?'#2ecc71':n>=0.9?'#f39c12':'var(--red-light)';};
   const hltvColor=v=>{const n=parseFloat(v);if(isNaN(n))return 'var(--cream)';return n>=1.15?'#2ecc71':n>=0.95?'#f39c12':'var(--red-light)';};
-  let html='<div class="spieler-detail-header"><div class="spieler-detail-avatar" id="'+uid+'">'+initials(p.name)+'</div><div><div class="spieler-detail-name">'+esc(p.name)+'</div><div class="spieler-detail-teams">'+esc(teamNames)+'</div></div></div>';
+  const prof=getSteamProfile(p.name);
+  const bioHTML=prof&&prof.bio?'<div style="font-size:0.9rem;color:#aaa;margin-top:6px;line-height:1.6;">'+esc(prof.bio)+'</div>':'';
+  const faceitHTML=prof&&prof.faceit?'<a href="https://www.faceit.com/en/players/'+esc(prof.faceit)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff5500;border:1px solid #ff5500;padding:4px 12px;">&#9654; FACEIT</a>':'';
+  const discordHTML=prof&&prof.discord?'<div style="font-size:0.8rem;color:#7289da;margin-top:4px;">&#128172; '+esc(prof.discord)+'</div>':'';
+  let html='<div class="spieler-detail-header"><div class="spieler-detail-avatar" id="'+uid+'">'+initials(p.name)+'</div><div><div class="spieler-detail-name">'+esc(p.name)+'</div><div class="spieler-detail-teams">'+esc(teamNames)+'</div>'+discordHTML+bioHTML+faceitHTML+'</div></div>';
   html+='<h3 style="font-family:Oswald,sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#9733; All Time Stats</h3>';
   html+='<div class="alltime-box">'+(allTime.games?'<div class="alltime-stat"><div class="alltime-stat-val">'+allTime.games+'</div><div class="alltime-stat-lbl">Spiele</div></div>':'')+'<div class="alltime-stat"><div class="alltime-stat-val">'+allTime.kills+'</div><div class="alltime-stat-lbl">Kills</div></div><div class="alltime-stat"><div class="alltime-stat-val">'+allTime.assists+'</div><div class="alltime-stat-lbl">Assists</div></div><div class="alltime-stat"><div class="alltime-stat-val">'+allTime.deaths+'</div><div class="alltime-stat-lbl">Tode</div></div><div class="alltime-stat"><div class="alltime-stat-val" style="color:'+kdColor(allTime.kd)+'">'+allTime.kd+'</div><div class="alltime-stat-lbl">K/D</div></div><div class="alltime-stat"><div class="alltime-stat-val" style="color:'+hltvColor(allTime.hltv)+'">'+allTime.hltv+'</div><div class="alltime-stat-lbl">HLTV &#216;</div></div></div>';
   html+='<h3 style="font-family:Oswald,sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#128218; Saisonhistorie</h3>';
@@ -804,48 +820,9 @@ function openSpielerFromCard(name){
   renderSpielerList();showSpielerDetail(name);
   setTimeout(()=>{if(sec)sec.scrollIntoView({behavior:'smooth'});},50);
 }
-function switchSpielerTab(tab){
-  document.getElementById('spieler-tab-list').style.display=tab==='list'?'':'none';
-  document.getElementById('spieler-tab-compare').style.display=tab==='compare'?'':'none';
-  document.getElementById('stab-list').classList.toggle('active',tab==='list');
-  document.getElementById('stab-compare').classList.toggle('active',tab==='compare');
-  if(tab==='compare')populateCompareSelects();
-}
-function populateCompareSelects(){
-  const players=getSpielerList();
-  const opts='<option value="">Spieler wählen...</option>'+players.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>').join('');
-  document.getElementById('compare-select-a').innerHTML=opts;
-  document.getElementById('compare-select-b').innerHTML=opts;
-  document.getElementById('compare-result').innerHTML='<div class="empty">Wähle zwei Spieler</div>';
-}
-function renderCompare(){
-  const nameA=document.getElementById('compare-select-a').value;
-  const nameB=document.getElementById('compare-select-b').value;
-  if(!nameA||!nameB||nameA===nameB){document.getElementById('compare-result').innerHTML='<div class="empty">'+(nameA===nameB&&nameA?'Bitte zwei verschiedene Spieler':'Wähle zwei Spieler')+'</div>';return;}
-  const players=getSpielerList();
-  const pA=players.find(p=>p.name===nameA),pB=players.find(p=>p.name===nameB);
-  if(!pA||!pB)return;
-  const atA=calcAllTime(pA.seasons),atB=calcAllTime(pB.seasons);
-  const stats=[
-    {label:'Spiele',a:parseInt(atA.games)||0,b:parseInt(atB.games)||0,higher:true,fmt:v=>v},
-    {label:'Kills',a:atA.kills||0,b:atB.kills||0,higher:true,fmt:v=>v},
-    {label:'Assists',a:atA.assists||0,b:atB.assists||0,higher:true,fmt:v=>v},
-    {label:'Tode',a:atA.deaths||0,b:atB.deaths||0,higher:false,fmt:v=>v},
-    {label:'K/D',a:parseFloat(atA.kd)||0,b:parseFloat(atB.kd)||0,higher:true,fmt:v=>isNaN(v)||v===0?'-':v.toFixed(2)},
-    {label:'HLTV Ø',a:parseFloat(atA.hltv)||0,b:parseFloat(atB.hltv)||0,higher:true,fmt:v=>isNaN(v)||v===0?'-':v.toFixed(2)},
-    {label:'Saisonen',a:pA.seasons.length,b:pB.seasons.length,higher:true,fmt:v=>v}
-  ];
-  function headerHTML(p,side){
-    const uid='cmp-av-'+side+Math.random().toString(36).slice(2,5);
-    const align=side==='b'?'flex-direction:row-reverse;text-align:right':'';
-    const h='<div class="compare-header" style="'+align+'"><div class="compare-header-avatar" id="'+uid+'">'+initials(p.name)+'</div><div><div class="compare-header-name">'+esc(p.name)+'</div><div class="compare-header-teams">'+esc([...new Set(p.seasons.map(s=>s.teamName))].join(' · '))+'</div></div></div>';
-    const sp=getSteamProfile(p.name);
-    if(sp&&sp.steam)setTimeout(()=>applyAvatarToEl(uid,sp.name,sp.steam),50);
-    return h;
-  }
-  const rows=stats.map(s=>{const aW=s.higher?s.a>s.b:s.a<s.b,bW=s.higher?s.b>s.a:s.b<s.a;return '<tr class="stat-row"><td class="'+(aW?'winner':bW?'loser':'')+'" style="text-align:right">'+s.fmt(s.a)+'</td><td class="stat-label">'+s.label+'</td><td class="'+(bW?'winner':aW?'loser':'')+'">'+s.fmt(s.b)+'</td></tr>';}).join('');
-  document.getElementById('compare-result').innerHTML='<div class="compare-grid">'+headerHTML(pA,'a')+'<div style="display:flex;align-items:center;justify-content:center;font-family:Oswald,sans-serif;font-size:1.2rem;color:#555;letter-spacing:3px;">VS</div>'+headerHTML(pB,'b')+'</div><table class="compare-table" style="margin-top:1rem;background:var(--dark3);border:1px solid #2a2a2a;">'+rows+'</table>';
-}
+
+
+
 
 // ── Matches / Countdown ────────────────────────────────────
 function renderMatches(){
@@ -950,6 +927,12 @@ async function loadAndCacheAvatar(name,steamUrl,callback){
 }
 
 // ── Search ─────────────────────────────────────────────────
+
+// ── SPIELERVERGLEICH ───────────────────────────────────────
+
+
+
+
 function filterSpieler(q){
   const term=q.toLowerCase().trim();
   document.querySelectorAll('#spieler-list .spieler-card').forEach(card=>{
@@ -1101,6 +1084,9 @@ function showPage(page,e){
   if(page==='histoire'){try{renderHistoire();}catch(err){console.error('renderHistoire:',err);}}
   if(page==='spieler'){try{renderSpielerList();}catch(err){console.error('renderSpielerList:',err);}}
   document.querySelectorAll('.nav-links a').forEach(a=>{const ap=a.getAttribute('data-page');const isActive=ap===page&&(page!=='home'||a.getAttribute('data-nav-id')==='start');a.classList.toggle('nav-active',isActive);});
+  // Update URL without reload
+  const url=page==='home'?window.location.pathname:window.location.pathname+'?page='+page;
+  window.history.pushState({page},''  ,url);
 }
 function switchTeam(id){document.querySelectorAll('#teams .team-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('#teams .tab-btn').forEach(b=>b.classList.remove('active'));const p=document.getElementById('panel-'+id),t=document.getElementById('tab-'+id);if(p)p.classList.add('active');if(t)t.classList.add('active');}
 function switchResults(id){document.querySelectorAll('#ergebnisse .team-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('#ergebnisse .tab-btn').forEach(b=>b.classList.remove('active'));const p=document.getElementById('rpanel-'+id),t=document.getElementById('rtab-'+id);if(p)p.classList.add('active');if(t)t.classList.add('active');}
@@ -1199,4 +1185,13 @@ localStorage.removeItem('bobo_data_cache');
 restoreSession();
 updateAuthUI();
 checkInviteParam();
-loadFromGitHub();
+// Handle browser back/forward
+window.addEventListener('popstate', e=>{
+  const page=(e.state&&e.state.page)||'home';
+  showPage(page);
+});
+// Check URL on load (?page=histoire etc)
+const _urlPage=new URLSearchParams(window.location.search).get('page');
+loadFromGitHub().then(()=>{
+  if(_urlPage&&['histoire','spieler'].includes(_urlPage))showPage(_urlPage);
+});
