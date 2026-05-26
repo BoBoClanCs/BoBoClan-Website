@@ -1605,6 +1605,151 @@ const ps = document.getElementById('pub-spieler');
 if (ph && ph.style.display !== 'none') renderHistoire();
 if (ps && ps.style.display !== 'none') renderSpielerList();
 }
+
+// ── TEAM AREA ───────────────────────────────────────────────
+function openTeamArea() {
+if (!currentUser) { openLoginOverlay(); return; }
+const teamId = getMyTeamId();
+const teamIds = isAdmin() ? state.teams.map(t => t.id) : (teamId ? [teamId] : []);
+if (teamIds.length === 0) return;
+document.getElementById('team-area-panel').style.display = 'flex';
+renderTeamArea(teamIds[0]);
+}
+
+function closeTeamArea() {
+document.getElementById('team-area-panel').style.display = 'none';
+}
+
+function switchTeamAreaTab(tab) {
+['tactics','training'].forEach(t => {
+document.getElementById('team-tab-'+t).classList.toggle('active', t===tab);
+document.getElementById('team-section-'+t).style.display = t===tab ? 'block' : 'none';
+});
+}
+
+function renderTeamArea(teamId) {
+const team = state.teams.find(t => t.id === teamId);
+if (!team) return;
+const td = getTeamData(teamId);
+const coach = isCoachOf(teamId);
+document.getElementById('team-area-title').textContent = team.name;
+
+// Team tabs for admin
+const teamIds = isAdmin() ? state.teams.map(t => t.id) : [getMyTeamId()].filter(Boolean);
+document.getElementById('team-area-tabs').innerHTML = teamIds.length > 1
+? '<div style="display:flex;gap:0;border:1px solid #2a2a2a;width:fit-content;margin-bottom:1.5rem;">' +
+teamIds.map(id => {
+const t = state.teams.find(x => x.id === id);
+return '<button class="tab-btn' + (id===teamId?' active':'') + '" onclick="renderTeamArea(\'' + id + '\')">' + esc(t?t.name:id) + '</button>';
+}).join('') + '</div>'
+: '';
+
+// Tactics
+const tacticsHTML = (td.tactics||[]).length === 0
+? '<div class="empty">Noch keine Taktiken eingetragen</div>'
+: td.tactics.map((t,i) => '<div class="tactic-card">'
++ '<div class="tactic-head">'
++ '<div class="tactic-title">' + esc(t.title) + '</div>'
++ (t.date ? '<div class="tactic-date">' + esc(t.date) + '</div>' : '')
++ (coach ? '<button class="mini-btn danger" onclick="deleteTactic(\'' + teamId + '\',' + i + ')">&#10005;</button>' : '')
++ '</div>'
++ (t.desc ? '<div class="tactic-desc">' + esc(t.desc) + '</div>' : '')
++ (t.image ? '<img src="' + esc(t.image) + '" alt="Taktik" style="max-width:100%;margin-top:0.75rem;border:1px solid #2a2a2a;">' : '')
++ '</div>').join('');
+
+// Training
+const sorted = [...(td.training||[])].sort((a,b) => (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+const trainingHTML = sorted.length === 0
+? '<div class="empty">Noch keine Trainingstermine eingetragen</div>'
+: sorted.map((tr,i) => '<div class="training-card">'
++ '<div class="training-head">'
++ '<div class="training-datetime">'
++ '<span class="training-date">&#128197; ' + esc(tr.date) + '</span>'
++ (tr.time ? '<span class="training-time">&#128336; ' + esc(tr.time) + '</span>' : '')
++ '</div>'
++ (coach ? '<button class="mini-btn danger" onclick="deleteTraining(\'' + teamId + '\',' + i + ')">&#10005;</button>' : '')
++ '</div>'
++ (tr.notes ? '<div class="training-notes">' + esc(tr.notes) + '</div>' : '')
++ (tr.todos && tr.todos.length > 0 ? '<div class="training-todos"><div class="training-todos-label">Verbesserungspunkte:</div>' + tr.todos.map(t => '<div class="training-todo-item">&#8226; ' + esc(t) + '</div>').join('') + '</div>' : '')
++ '</div>').join('');
+
+// Forms for coach
+const tacticForm = coach ? '<div class="team-area-form"><div class="form-title">+ Neue Taktik</div>'
++ '<input type="text" id="tactic-title-' + teamId + '" placeholder="Titel" class="area-input">'
++ '<textarea id="tactic-desc-' + teamId + '" placeholder="Beschreibung..." class="area-textarea"></textarea>'
++ '<input type="text" id="tactic-image-' + teamId + '" placeholder="Bild-URL (optional)" class="area-input">'
++ '<input type="date" id="tactic-date-' + teamId + '" class="area-input">'
++ '<button class="admin-save-btn" style="margin-top:0.5rem" onclick="addTactic(\'' + teamId + '\')">Taktik speichern</button>'
++ '</div>' : '';
+
+const trainingForm = coach ? '<div class="team-area-form"><div class="form-title">+ Neuer Trainingstermin</div>'
++ '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">'
++ '<input type="date" id="training-date-' + teamId + '" class="area-input">'
++ '<input type="time" id="training-time-' + teamId + '" class="area-input">'
++ '</div>'
++ '<textarea id="training-notes-' + teamId + '" placeholder="Notizen..." class="area-textarea"></textarea>'
++ '<div id="training-todos-' + teamId + '"></div>'
++ '<button class="mini-btn" onclick="addTodosRow(\'' + teamId + '\')">+ Verbesserungspunkt</button>'
++ '<button class="admin-save-btn" style="margin-top:0.75rem" onclick="addTraining(\'' + teamId + '\')">Training speichern</button>'
++ '</div>' : '';
+
+document.getElementById('team-area-tactics').innerHTML = tacticsHTML + tacticForm;
+document.getElementById('team-area-training').innerHTML = trainingHTML + trainingForm;
+}
+
+let _todosCount = {};
+function addTodosRow(teamId) {
+if (!_todosCount[teamId]) _todosCount[teamId] = 0;
+_todosCount[teamId]++;
+const el = document.getElementById('training-todos-' + teamId);
+if (!el) return;
+const row = document.createElement('div');
+row.style.cssText = 'display:flex;gap:0.4rem;margin-bottom:0.4rem;';
+row.innerHTML = '<input type="text" placeholder="Verbesserungspunkt..." class="area-input" style="flex:1;" id="todo-' + teamId + '-' + _todosCount[teamId] + '"><button class="del-btn" onclick="this.parentElement.remove()">&#10005;</button>';
+el.appendChild(row);
+}
+
+function addTactic(teamId) {
+const title = document.getElementById('tactic-title-'+teamId)?.value.trim();
+if (!title) { alert('Titel erforderlich'); return; }
+const td = getTeamData(teamId);
+td.tactics.push({
+title,
+desc: document.getElementById('tactic-desc-'+teamId)?.value.trim()||'',
+image: document.getElementById('tactic-image-'+teamId)?.value.trim()||'',
+date: document.getElementById('tactic-date-'+teamId)?.value||''
+});
+saveAll().then(() => renderTeamArea(teamId));
+}
+
+function deleteTactic(teamId, i) {
+if (!confirm('Taktik löschen?')) return;
+getTeamData(teamId).tactics.splice(i,1);
+saveAll().then(() => renderTeamArea(teamId));
+}
+
+function addTraining(teamId) {
+const date = document.getElementById('training-date-'+teamId)?.value;
+if (!date) { alert('Datum erforderlich'); return; }
+const todos = [];
+document.querySelectorAll('#training-todos-' + teamId + ' input').forEach(el => {
+if (el.value.trim()) todos.push(el.value.trim());
+});
+getTeamData(teamId).training.push({
+date,
+time: document.getElementById('training-time-'+teamId)?.value||'',
+notes: document.getElementById('training-notes-'+teamId)?.value.trim()||'',
+todos
+});
+saveAll().then(() => renderTeamArea(teamId));
+}
+
+function deleteTraining(teamId, i) {
+if (!confirm('Training löschen?')) return;
+getTeamData(teamId).training.splice(i,1);
+saveAll().then(() => renderTeamArea(teamId));
+}
+
 async function loadFromGitHub() {
 // Always fetch fresh from GitHub
 try {
@@ -3320,6 +3465,150 @@ const ps = document.getElementById('pub-spieler');
 if (ph && ph.style.display !== 'none') renderHistoire();
 if (ps && ps.style.display !== 'none') renderSpielerList();
 }
+
+// ── TEAM AREA ───────────────────────────────────────────────
+function openTeamArea() {
+if (!currentUser) { openLoginOverlay(); return; }
+const teamId = getMyTeamId();
+const teamIds = isAdmin() ? state.teams.map(t => t.id) : (teamId ? [teamId] : []);
+if (teamIds.length === 0) return;
+document.getElementById('team-area-panel').style.display = 'flex';
+renderTeamArea(teamIds[0]);
+}
+
+function closeTeamArea() {
+document.getElementById('team-area-panel').style.display = 'none';
+}
+
+function switchTeamAreaTab(tab) {
+['tactics','training'].forEach(t => {
+document.getElementById('team-tab-'+t).classList.toggle('active', t===tab);
+document.getElementById('team-section-'+t).style.display = t===tab ? 'block' : 'none';
+});
+}
+
+function renderTeamArea(teamId) {
+const team = state.teams.find(t => t.id === teamId);
+if (!team) return;
+const td = getTeamData(teamId);
+const coach = isCoachOf(teamId);
+document.getElementById('team-area-title').textContent = team.name;
+
+// Team tabs for admin
+const teamIds = isAdmin() ? state.teams.map(t => t.id) : [getMyTeamId()].filter(Boolean);
+document.getElementById('team-area-tabs').innerHTML = teamIds.length > 1
+? '<div style="display:flex;gap:0;border:1px solid #2a2a2a;width:fit-content;margin-bottom:1.5rem;">' +
+teamIds.map(id => {
+const t = state.teams.find(x => x.id === id);
+return '<button class="tab-btn' + (id===teamId?' active':'') + '" onclick="renderTeamArea(\'' + id + '\')">' + esc(t?t.name:id) + '</button>';
+}).join('') + '</div>'
+: '';
+
+// Tactics
+const tacticsHTML = (td.tactics||[]).length === 0
+? '<div class="empty">Noch keine Taktiken eingetragen</div>'
+: td.tactics.map((t,i) => '<div class="tactic-card">'
++ '<div class="tactic-head">'
++ '<div class="tactic-title">' + esc(t.title) + '</div>'
++ (t.date ? '<div class="tactic-date">' + esc(t.date) + '</div>' : '')
++ (coach ? '<button class="mini-btn danger" onclick="deleteTactic(\'' + teamId + '\',' + i + ')">&#10005;</button>' : '')
++ '</div>'
++ (t.desc ? '<div class="tactic-desc">' + esc(t.desc) + '</div>' : '')
++ (t.image ? '<img src="' + esc(t.image) + '" alt="Taktik" style="max-width:100%;margin-top:0.75rem;border:1px solid #2a2a2a;">' : '')
++ '</div>').join('');
+
+// Training
+const sorted = [...(td.training||[])].sort((a,b) => (a.date+a.time) > (b.date+b.time) ? 1 : -1);
+const trainingHTML = sorted.length === 0
+? '<div class="empty">Noch keine Trainingstermine eingetragen</div>'
+: sorted.map((tr,i) => '<div class="training-card">'
++ '<div class="training-head">'
++ '<div class="training-datetime">'
++ '<span class="training-date">&#128197; ' + esc(tr.date) + '</span>'
++ (tr.time ? '<span class="training-time">&#128336; ' + esc(tr.time) + '</span>' : '')
++ '</div>'
++ (coach ? '<button class="mini-btn danger" onclick="deleteTraining(\'' + teamId + '\',' + i + ')">&#10005;</button>' : '')
++ '</div>'
++ (tr.notes ? '<div class="training-notes">' + esc(tr.notes) + '</div>' : '')
++ (tr.todos && tr.todos.length > 0 ? '<div class="training-todos"><div class="training-todos-label">Verbesserungspunkte:</div>' + tr.todos.map(t => '<div class="training-todo-item">&#8226; ' + esc(t) + '</div>').join('') + '</div>' : '')
++ '</div>').join('');
+
+// Forms for coach
+const tacticForm = coach ? '<div class="team-area-form"><div class="form-title">+ Neue Taktik</div>'
++ '<input type="text" id="tactic-title-' + teamId + '" placeholder="Titel" class="area-input">'
++ '<textarea id="tactic-desc-' + teamId + '" placeholder="Beschreibung..." class="area-textarea"></textarea>'
++ '<input type="text" id="tactic-image-' + teamId + '" placeholder="Bild-URL (optional)" class="area-input">'
++ '<input type="date" id="tactic-date-' + teamId + '" class="area-input">'
++ '<button class="admin-save-btn" style="margin-top:0.5rem" onclick="addTactic(\'' + teamId + '\')">Taktik speichern</button>'
++ '</div>' : '';
+
+const trainingForm = coach ? '<div class="team-area-form"><div class="form-title">+ Neuer Trainingstermin</div>'
++ '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">'
++ '<input type="date" id="training-date-' + teamId + '" class="area-input">'
++ '<input type="time" id="training-time-' + teamId + '" class="area-input">'
++ '</div>'
++ '<textarea id="training-notes-' + teamId + '" placeholder="Notizen..." class="area-textarea"></textarea>'
++ '<div id="training-todos-' + teamId + '"></div>'
++ '<button class="mini-btn" onclick="addTodosRow(\'' + teamId + '\')">+ Verbesserungspunkt</button>'
++ '<button class="admin-save-btn" style="margin-top:0.75rem" onclick="addTraining(\'' + teamId + '\')">Training speichern</button>'
++ '</div>' : '';
+
+document.getElementById('team-area-tactics').innerHTML = tacticsHTML + tacticForm;
+document.getElementById('team-area-training').innerHTML = trainingHTML + trainingForm;
+}
+
+function addTodosRow(teamId) {
+if (!_todosCount[teamId]) _todosCount[teamId] = 0;
+_todosCount[teamId]++;
+const el = document.getElementById('training-todos-' + teamId);
+if (!el) return;
+const row = document.createElement('div');
+row.style.cssText = 'display:flex;gap:0.4rem;margin-bottom:0.4rem;';
+row.innerHTML = '<input type="text" placeholder="Verbesserungspunkt..." class="area-input" style="flex:1;" id="todo-' + teamId + '-' + _todosCount[teamId] + '"><button class="del-btn" onclick="this.parentElement.remove()">&#10005;</button>';
+el.appendChild(row);
+}
+
+function addTactic(teamId) {
+const title = document.getElementById('tactic-title-'+teamId)?.value.trim();
+if (!title) { alert('Titel erforderlich'); return; }
+const td = getTeamData(teamId);
+td.tactics.push({
+title,
+desc: document.getElementById('tactic-desc-'+teamId)?.value.trim()||'',
+image: document.getElementById('tactic-image-'+teamId)?.value.trim()||'',
+date: document.getElementById('tactic-date-'+teamId)?.value||''
+});
+saveAll().then(() => renderTeamArea(teamId));
+}
+
+function deleteTactic(teamId, i) {
+if (!confirm('Taktik löschen?')) return;
+getTeamData(teamId).tactics.splice(i,1);
+saveAll().then(() => renderTeamArea(teamId));
+}
+
+function addTraining(teamId) {
+const date = document.getElementById('training-date-'+teamId)?.value;
+if (!date) { alert('Datum erforderlich'); return; }
+const todos = [];
+document.querySelectorAll('#training-todos-' + teamId + ' input').forEach(el => {
+if (el.value.trim()) todos.push(el.value.trim());
+});
+getTeamData(teamId).training.push({
+date,
+time: document.getElementById('training-time-'+teamId)?.value||'',
+notes: document.getElementById('training-notes-'+teamId)?.value.trim()||'',
+todos
+});
+saveAll().then(() => renderTeamArea(teamId));
+}
+
+function deleteTraining(teamId, i) {
+if (!confirm('Training löschen?')) return;
+getTeamData(teamId).training.splice(i,1);
+saveAll().then(() => renderTeamArea(teamId));
+}
+
 async function loadFromGitHub() {
 // Always fetch fresh from GitHub
 try {
