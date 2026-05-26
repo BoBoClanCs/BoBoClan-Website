@@ -1549,15 +1549,1754 @@ card.style.display = (!term || name.includes(term) || teams.includes(term)) ? ''
 }
 function filterHistoire(q) {
 const term = q.toLowerCase().trim();
-document.querySelectorAll('#hist-panels .season-card').forEach(card => {
-const text = card.textContent.toLowerCase();
-card.style.display = (!term || text.includes(term)) ? '' : 'none';
-});
 document.querySelectorAll('#hist-panels .hist-panel').forEach(panel => {
-const visible = [...panel.querySelectorAll('.season-card')].some(c => c.style.display !== 'none');
-const tid = panel.id.replace('hpanel-','');
-const tab = document.getElementById('htab-'+tid);
-if (tab) tab.style.display = (!term || visible) ? '' : 'none';
+const teamId = panel.id.replace('hpanel-', '');
+const team = state.histoire.find(t => t.id === teamId);
+const teamName = team ? team.name.toLowerCase() : '';
+// Team matches if query appears anywhere in the team name
+const teamMatches = !term || teamName.includes(term);
+
+// Also check each season card individually
+const cards = panel.querySelectorAll('.season-card');
+let anyCardVisible = false;
+cards.forEach(card => {
+const text = card.textContent.toLowerCase();
+const cardMatches = !term || text.includes(term) || teamMatches;
+card.style.display = cardMatches ? '' : 'none';
+if (cardMatches) anyCardVisible = true;
+});
+
+// Show panel if team name matches (show all cards) or any card matches
+const panelVisible = !term || teamMatches || anyCardVisible;
+panel.style.display = panelVisible ? '' : 'none';
+
+// Update tab visibility
+const tab = document.getElementById('htab-' + teamId);
+if (tab) tab.style.display = panelVisible ? '' : 'none';
+
+// If this panel is active but hidden, switch to first visible
+if (!panelVisible && panel.classList.contains('active')) {
+const firstVisible = document.querySelector('#hist-panels .hist-panel[style*="display: "]:not([style*="none"]), #hist-panels .hist-panel:not([style])');
+if (firstVisible) {
+const firstId = firstVisible.id.replace('hpanel-', '');
+switchHist(firstId);
+}
+}
+});
+}
+function applyData(data) {
+if (data.teams && Array.isArray(data.teams)) {
+state.teams = data.teams.map(t => Object.assign({id:'',name:'',coach:'',dachcs:'',players:[],results:[]}, t));
+}
+if (data.histoire && Array.isArray(data.histoire)) {
+state.histoire = data.histoire.map(t => Object.assign({id:'',name:'',seasons:[]}, t));
+}
+if (data.news) state.news = data.news;
+if (data.matches) state.matches = data.matches;
+if (data.spielerProfiles) state.spielerProfiles = data.spielerProfiles;
+if (data.users) state.users = data.users;
+if (data.teamData) state.teamData = data.teamData;
+}
+function afterLoad() {
+renderPublic();
+updateAuthUI();
+const ph = document.getElementById('pub-histoire');
+const ps = document.getElementById('pub-spieler');
+if (ph && ph.style.display !== 'none') renderHistoire();
+if (ps && ps.style.display !== 'none') renderSpielerList();
+}
+async function loadFromGitHub() {
+// Always fetch fresh from GitHub
+try {
+const res = await fetch(
+`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}?ref=${GH_BRANCH}&t=${Date.now()}`,
+{ headers: { Accept: 'application/vnd.github.v3+json' } }
+);
+if (res.ok) {
+const meta = await res.json();
+const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+const data = JSON.parse(decoded);
+console.log('[BoBo] Loaded from GitHub API, histoire seasons:', data.histoire?.[0]?.seasons?.length, 'profiles:', data.spielerProfiles?.length);
+localStorage.setItem('bobo_data_cache', JSON.stringify(data));
+applyData(data);
+afterLoad();
+refreshAdminIfOpen();
+return;
+}
+console.warn('[BoBo] GitHub API failed:', res.status);
+} catch(e) { console.error('[BoBo] GitHub API error:', e); }
+// Fallback: try raw URL
+try {
+const res2 = await fetch(`https://raw.githubusercontent.com/${GH_USER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}?t=${Date.now()}`);
+if (res2.ok) {
+const data = await res2.json();
+localStorage.setItem('bobo_data_cache', JSON.stringify(data));
+applyData(data);
+afterLoad();
+refreshAdminIfOpen();
+return;
+}
+} catch(e) {}
+// Last resort: use cached data if GitHub unreachable
+const cached = localStorage.getItem('bobo_data_cache');
+if (cached) {
+try { applyData(JSON.parse(cached)); afterLoad(); } catch(e) {}
+}
+}
+function switchTeam(id) {
+document.querySelectorAll('#teams .team-panel').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('#teams .tab-btn').forEach(b=>b.classList.remove('active'));
+const panel = document.getElementById('panel-'+id);
+const tab = document.getElementById('tab-'+id);
+if(panel) panel.classList.add('active');
+if(tab) tab.classList.add('active');
+}
+function switchResults(id) {
+document.querySelectorAll('#ergebnisse .team-panel').forEach(p=>p.classList.remove('active'));
+document.querySelectorAll('#ergebnisse .tab-btn').forEach(b=>b.classList.remove('active'));
+const panel = document.getElementById('rpanel-'+id);
+const tab = document.getElementById('rtab-'+id);
+if(panel) panel.classList.add('active');
+if(tab) tab.classList.add('active');
+}
+function scrollToTeam(id) {
+switchTeam(id);
+document.getElementById('teams').scrollIntoView({behavior:'smooth'});
+}
+// Clear stale cache to force fresh data from GitHub
+localStorage.removeItem('bobo_data_cache');
+restoreSession();
+updateAuthUI();
+checkInviteParam();
+loadFromGitHub()
+
+async function _doLoadSteamAvatar(uid, steamUrl, borderColor) {
+const el = document.getElementById(uid); if (!el) return;
+const clean = steamUrl.replace(/\/+$/, '');
+const parts = clean.split('/').filter(Boolean);
+const last = parts[parts.length-1], type = parts[parts.length-2];
+const xmlUrl = (type === 'profiles' && /^\d{15,}$/.test(last))
+? 'https://steamcommunity.com/profiles/' + last + '?xml=1'
+: 'https://steamcommunity.com/id/' + last + '?xml=1';
+try {
+let xml = '';
+for (const proxy of ['https://corsproxy.io/?' + encodeURIComponent(xmlUrl), 'https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl)]) {
+try {
+const r = await fetch(proxy);
+if (!r.ok) continue;
+const text = await r.text();
+xml = text.trim().startsWith('{') ? (JSON.parse(text).contents||'') : text;
+if (xml.includes('<avatarFull')) break;
+} catch(e) { continue; }
+}
+const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) || xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
+if (m && m[1] && m[1].startsWith('http')) {
+el.innerHTML=''; el.style.cssText+=';background:none;overflow:hidden;padding:0;';
+const img=document.createElement('img');
+img.src=m[1].trim();
+img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+img.onerror=()=>{el.style.background='var(--dark4)';};
+el.appendChild(img);
+}
+} catch(e) {}
+}async function _doLoadSteamAvatar(uid, steamUrl, borderColor) {
+  const el = document.getElementById(uid); if (!el) return;
+  const clean = steamUrl.replace(/\/+$/, '');
+  const parts = clean.split('/').filter(Boolean);
+  const last = parts[parts.length-1], type = parts[parts.length-2];
+  const xmlUrl = (type === 'profiles' && /^\d{15,}$/.test(last))
+    ? 'https://steamcommunity.com/profiles/' + last + '?xml=1'
+    : 'https://steamcommunity.com/id/' + last + '?xml=1';
+  try {
+    let xml = '';
+    const proxies = [
+      'https://corsproxy.io/?' + encodeURIComponent(xmlUrl),
+      'https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl),
+    ];
+    for (const proxy of proxies) {
+      try {
+        const r = await fetch(proxy);
+        if (!r.ok) continue;
+        const text = await r.text();
+        xml = text.trim().startsWith('{') ? (JSON.parse(text).contents || '') : text;
+        if (xml.includes('<avatarFull')) break;
+      } catch(e) { continue; }
+    }
+    const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) ||
+              xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
+    if (m && m[1] && m[1].startsWith('http')) {
+      el.innerHTML = ''; el.style.cssText += ';background:none;overflow:hidden;padding:0;';
+      const img = document.createElement('img');
+      img.src = m[1].trim();
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+      img.onerror = () => { el.style.background = 'var(--dark4)'; };
+      el.appendChild(img);
+    }
+  } catch(e) {}
+};
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function initials(n) { return (n||'?').split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function teamById(id) { return state.teams.find(t => t.id === id); }
+function histById(id) { return state.histoire.find(t => t.id === id); }
+function genId() { return 'team_' + Math.random().toString(36).slice(2,7); }
+
+async function saveAdminProfile() {
+if (!currentUser) return;
+const steamEl = document.getElementById('admin-steam-input');
+const discordEl = document.getElementById('admin-discord-input');
+const steam = steamEl ? steamEl.value.trim() : '';
+const discord = discordEl ? discordEl.value.trim() : '';
+if (!state.spielerProfiles) state.spielerProfiles = [];
+const existing = state.spielerProfiles.find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+if (existing) { existing.steam = steam; existing.discord = discord; }
+else { state.spielerProfiles.push({name: currentUser.name, steam, discord}); }
+localStorage.removeItem('bobo_av_' + currentUser.name.trim().toLowerCase().replace(/\s+/g,'_'));
+try {
+const c = localStorage.getItem('bobo_data_cache');
+if (c) { const d = JSON.parse(c); d.spielerProfiles = state.spielerProfiles; localStorage.setItem('bobo_data_cache', JSON.stringify(d)); }
+} catch(e) {}
+const btn = document.getElementById('admin-profile-save-btn');
+if (btn) { btn.textContent = 'Wird gespeichert...'; btn.disabled = true; }
+await saveAll();
+if (btn) { btn.textContent = '✓ Gespeichert!'; setTimeout(() => { btn.textContent = 'Speichern'; btn.disabled = false; }, 2000); }
+renderPublic();
+}
+function getToken() { return localStorage.getItem('bobo_gh_token') || ''; }
+function saveToken() {
+const t = document.getElementById('gh-token-input').value.trim();
+if (!t || t.startsWith('•')) return;
+localStorage.setItem('bobo_gh_token', t);
+document.getElementById('token-status').className = 'token-status ok';
+document.getElementById('token-status').textContent = '✓ Token gespeichert';
+}
+// ── AUTH ───────────────────────────────────────────────────
+
+async function sha256(str) {
+const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function authLogin(name, password) {
+const hash = await sha256(password);
+return (state.users||[]).find(u =>
+u.name.trim().toLowerCase() === name.trim().toLowerCase() && u.hash === hash
+) || null;
+}
+
+function setCurrentUser(user) {
+currentUser = user;
+localStorage.setItem('bobo_session', JSON.stringify(user));
+updateAuthUI();
+}
+
+function logout() {
+currentUser = null;
+localStorage.removeItem('bobo_session');
+closeAdmin();
+updateAuthUI();
+showPage('home');
+}
+
+function restoreSession() {
+try {
+const saved = localStorage.getItem('bobo_session');
+if (saved) currentUser = JSON.parse(saved);
+} catch(e) { currentUser = null; }
+}
+
+
+
+// ── INVITE SYSTEM ───────────────────────────────────────────
+function generateInviteLink() {
+  const token = getToken();
+  if (!token) { alert('Kein GitHub Token gespeichert. Bitte erst Token eintragen.'); return; }
+  const expires = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+  const payload = btoa(JSON.stringify({t: token, e: expires}));
+  const url = window.location.origin + window.location.pathname + '?invite=' + payload;
+  // Show in a copyable field
+  const el = document.getElementById('invite-link-output');
+  if (el) {
+    el.value = url;
+    el.style.display = 'block';
+    el.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.getElementById('invite-link-status').textContent = '✓ Link kopiert! Gültig für 7 Tage.';
+    document.getElementById('invite-link-status').style.display = 'block';
+  }
+}
+
+function checkInviteParam() {
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get('invite');
+  if (!invite) return;
+  try {
+    const payload = JSON.parse(atob(invite));
+    if (!payload.t || !payload.e) return;
+    if (Date.now() > payload.e) {
+      alert('Dieser Einladungslink ist abgelaufen. Bitte einen neuen anfordern.');
+      return;
+    }
+    // Store invite token temporarily for registration
+    sessionStorage.setItem('bobo_invite_token', payload.t);
+    sessionStorage.setItem('bobo_invite_expires', payload.e);
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+    // Open registration directly
+    openLoginOverlay();
+    switchLoginTab('register');
+    document.getElementById('reg-invite-notice').style.display = 'block';
+  } catch(e) {
+    console.error('Invalid invite link', e);
+  }
+}
+
+function getRegistrationToken() {
+  // Use invite token if available, otherwise admin token
+  const inviteToken = sessionStorage.getItem('bobo_invite_token');
+  const inviteExpires = sessionStorage.getItem('bobo_invite_expires');
+  if (inviteToken && inviteExpires && Date.now() < parseInt(inviteExpires)) {
+    return inviteToken;
+  }
+  return getToken();
+}
+
+// ── ROLE HELPERS ────────────────────────────────────────────
+function getRoleLabel(role) {
+  if (!role) return '';
+  if (role === 'admin') return 'Admin';
+  if (role === 'pending') return 'Ausstehend';
+  const m = role.match(/^(coach|player)_(.+)$/);
+  if (!m) return role;
+  const type = m[1] === 'coach' ? 'Coach' : 'Spieler';
+  const team = state.teams.find(t => t.id === m[2]);
+  return type + ' ' + (team ? team.name : m[2]);
+}
+function getRoleColor(role) {
+  if (role === 'admin') return 'var(--red-light)';
+  if (role === 'pending') return '#f39c12';
+  if (role && role.startsWith('coach_')) return '#3498db';
+  return '#888';
+}
+function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+function isCoachOf(teamId) { return isAdmin() || (currentUser && currentUser.role === 'coach_' + teamId); }
+function isPlayerOf(teamId) { return isAdmin() || isCoachOf(teamId) || (currentUser && currentUser.role === 'player_' + teamId); }
+function getMyTeamId() {
+  if (!currentUser) return null;
+  const r = currentUser.role;
+  if (!r || r === 'admin' || r === 'pending') return null;
+  const m = r.match(/^(?:coach|player)_(.+)$/);
+  return m ? m[1] : null;
+}
+function getTeamData(teamId) {
+  if (!state.teamData) state.teamData = {};
+  if (!state.teamData[teamId]) state.teamData[teamId] = {tactics:[], training:[]};
+  return state.teamData[teamId];
+}
+
+function updateAuthUI() {
+const btn = document.getElementById('admin-toggle-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const loginBtn = document.getElementById('login-btn');
+const userLabel = document.getElementById('user-label');
+const teamAreaBtn = document.getElementById('team-area-btn');
+if (currentUser) {
+if (btn) btn.style.display = currentUser.role === 'admin' ? 'block' : 'none';
+if (logoutBtn) logoutBtn.style.display = 'block';
+if (loginBtn) loginBtn.style.display = 'none';
+if (userLabel) {
+userLabel.textContent = currentUser.name + ' (' + getRoleLabel(currentUser.role) + ')';
+userLabel.style.display = 'block';
+}
+// Show team area button if user has a team role
+const teamId = getMyTeamId();
+const hasTeamRole = isAdmin() || teamId;
+if (teamAreaBtn) {
+teamAreaBtn.style.display = hasTeamRole ? 'block' : 'none';
+if (teamId) {
+const team = state.teams.find(t => t.id === teamId);
+teamAreaBtn.textContent = '🔒 ' + (team ? team.name : teamId);
+} else {
+teamAreaBtn.textContent = '🔒 Teams';
+}
+}
+} else {
+if (btn) btn.style.display = 'none';
+if (logoutBtn) logoutBtn.style.display = 'none';
+if (loginBtn) loginBtn.style.display = 'block';
+if (userLabel) userLabel.style.display = 'none';
+if (teamAreaBtn) teamAreaBtn.style.display = 'none';
+}
+}
+
+function openLoginOverlay() {
+document.getElementById('login-overlay').style.display = 'flex';
+setTimeout(() => document.getElementById('login-name-input').focus(), 100);
+}
+
+function closeLoginOverlay() {
+document.getElementById('login-overlay').style.display = 'none';
+document.getElementById('login-name-input').value = '';
+document.getElementById('login-pw-input').value = '';
+document.getElementById('login-err').style.display = 'none';
+}
+
+function switchLoginTab(tab) {
+['login','register'].forEach(t => {
+const tabBtn = document.getElementById('login-overlay-tab-' + t);
+const panel = document.getElementById('login-panel-' + t);
+if (tabBtn) tabBtn.classList.toggle('active', t === tab);
+if (panel) panel.style.display = t === tab ? 'block' : 'none';
+});
+// Clear errors on tab switch
+['login-err','reg-err','reg-success'].forEach(id => {
+const el = document.getElementById(id);
+if (el) el.style.display = 'none';
+});
+}
+
+async function doLogin() {
+const name = document.getElementById('login-name-input').value.trim();
+const pw = document.getElementById('login-pw-input').value;
+if (!name || !pw) return;
+const btn = document.getElementById('login-submit-btn');
+btn.textContent = '...'; btn.disabled = true;
+const user = await authLogin(name, pw);
+btn.textContent = 'Einloggen'; btn.disabled = false;
+if (user) {
+closeLoginOverlay();
+setCurrentUser({name: user.name, role: user.role});
+if (user.role === 'admin') openAdminPanel();
+else openPlayerPanel(); // works for all roles incl. 'none'
+} else {
+document.getElementById('login-err').textContent = 'Falscher Name oder Passwort.';
+document.getElementById('login-err').style.display = 'block';
+}
+}
+
+
+async function saveAllWithToken(token) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+  const apiUrl = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+  const headers = { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  try {
+    let sha = null;
+    const shaRes = await fetch(apiUrl + '?ref=' + GH_BRANCH + '&_=' + Date.now(), { headers });
+    if (shaRes.ok) { const d = await shaRes.json(); sha = d.sha || null; }
+    const putBody = { message: 'User registration', content, branch: GH_BRANCH };
+    if (sha) putBody.sha = sha;
+    const res = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+    if (res.ok) {
+      try { localStorage.setItem('bobo_data_cache', JSON.stringify(state)); } catch(e) {}
+    } else {
+      const err = await res.json();
+      alert('Registrierung fehlgeschlagen: ' + (err.message || res.status));
+    }
+  } catch(e) { alert('Netzwerkfehler: ' + e.message); }
+}
+
+async function doRegister() {
+const name = document.getElementById('reg-name-input').value.trim();
+const pw = document.getElementById('reg-pw-input').value;
+const pw2 = document.getElementById('reg-pw2-input').value;
+const errEl = document.getElementById('reg-err');
+errEl.style.display = 'none';
+if (!name || !pw) { errEl.textContent = 'Name und Passwort erforderlich.'; errEl.style.display = 'block'; return; }
+if (pw !== pw2) { errEl.textContent = 'Passwörter stimmen nicht überein.'; errEl.style.display = 'block'; return; }
+if (!state.users) state.users = [];
+if (state.users.find(u => u.name.toLowerCase() === name.toLowerCase())) {
+errEl.textContent = 'Benutzername bereits vergeben.'; errEl.style.display = 'block'; return;
+}
+const regToken = getRegistrationToken();
+if (!regToken) {
+errEl.textContent = 'Kein gültiger Einladungslink. Bitte einen Admin kontaktieren.';
+errEl.style.display = 'block'; return;
+}
+const btn = document.getElementById('reg-submit-btn');
+btn.textContent = '...'; btn.disabled = true;
+const hash = await sha256(pw);
+state.users.push({name, hash, role: 'none'});
+await saveAllWithToken(regToken);
+sessionStorage.removeItem('bobo_invite_token');
+sessionStorage.removeItem('bobo_invite_expires');
+btn.textContent = 'Registrieren'; btn.disabled = false;
+document.getElementById('reg-name-input').value = '';
+document.getElementById('reg-pw-input').value = '';
+document.getElementById('reg-pw2-input').value = '';
+document.getElementById('reg-success').style.display = 'block';
+setTimeout(() => {
+document.getElementById('reg-success').style.display = 'none';
+switchLoginTab('login');
+}, 3000);
+}
+
+function openPlayerPanel() {
+document.getElementById('player-panel').style.display = 'flex';
+const profile = (state.spielerProfiles||[]).find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+document.getElementById('player-panel-name').textContent = currentUser.name;
+const roleEl = document.getElementById('player-panel-role');
+const roleLabel = getRoleLabel(currentUser.role);
+roleEl.textContent = (roleLabel && roleLabel !== 'none' && currentUser.role !== 'none') ? roleLabel : '';
+roleEl.style.display = (currentUser.role && currentUser.role !== 'none') ? 'block' : 'none';
+document.getElementById('player-steam-input').value = profile ? profile.steam || '' : '';
+document.getElementById('player-discord-input').value = profile ? profile.discord || '' : '';
+}
+
+function closePlayerPanel() {
+document.getElementById('player-panel').style.display = 'none';
+}
+
+async function savePlayerProfile() {
+if (!currentUser) return;
+const steam = (document.getElementById('player-steam-input').value || '').trim();
+const discord = (document.getElementById('player-discord-input').value || '').trim();
+if (!state.spielerProfiles) state.spielerProfiles = [];
+const existing = state.spielerProfiles.find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+if (existing) { existing.steam = steam; existing.discord = discord; }
+else { state.spielerProfiles.push({name: currentUser.name, steam, discord}); }
+const key = 'bobo_av_' + currentUser.name.trim().toLowerCase().replace(/\s+/g,'_');
+localStorage.removeItem(key);
+try {
+const cached = localStorage.getItem('bobo_data_cache');
+if (cached) {
+const d = JSON.parse(cached);
+d.spielerProfiles = state.spielerProfiles;
+localStorage.setItem('bobo_data_cache', JSON.stringify(d));
+}
+} catch(e) {}
+const btn = document.getElementById('player-save-btn');
+btn.textContent = 'Wird gespeichert...'; btn.disabled = true;
+await saveAll();
+btn.textContent = '✓ Gespeichert!';
+setTimeout(() => {
+btn.textContent = 'Speichern';
+btn.disabled = false;
+closePlayerPanel();
+}, 1500);
+renderPublic();
+}
+
+function renderUsersAdmin() {
+const el = document.getElementById('users-admin-list');
+if (!el) return;
+if (!state.users) state.users = [];
+el.innerHTML = state.users.length === 0
+? '<div class="empty">Noch keine registrierten Benutzer</div>'
+: state.users.map((u,i) => `
+<div class="tbl-row" style="grid-template-columns:1fr 1fr 32px;margin-bottom:0.4rem;align-items:center;">
+<span style="font-family:'Oswald',sans-serif;color:var(--cream);padding:0 8px;">${esc(u.name)}</span>
+<select onchange="changeRole(${i},this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:6px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;">
+<option value="none" ${u.role==='none'?'selected':''}>Keine Rolle</option>
+${buildRoleOptions(u.role)}
+</select>
+<button class="del-btn" onclick="delUser(${i})">&#10005;</button>
+</div>`).join('');
+if (document.getElementById('users-count'))
+document.getElementById('users-count').textContent = state.users.length + ' Benutzer';
+}
+
+// approveUser removed
+function buildRoleOptions(currentRole) {
+const opts = [
+{v:'admin', l:'Admin'},
+{v:'pending', l:'Ausstehend'},
+];
+state.teams.forEach(t => {
+opts.push({v:'coach_'+t.id, l:'Coach '+t.name});
+opts.push({v:'player_'+t.id, l:'Spieler '+t.name});
+});
+return opts.map(o => `<option value="${o.v}" ${currentRole===o.v?'selected':''}>${o.l}</option>`).join('');
+}
+
+function changeRole(i, role) {
+state.users[i].role = role;
+// Update session if changing own role
+if (currentUser && state.users[i].name === currentUser.name) {
+currentUser.role = role;
+localStorage.setItem('bobo_session', JSON.stringify(currentUser));
+updateAuthUI();
+}
+}
+
+// addUser removed - users register themselves
+
+function delUser(i) {
+if (!confirm('Benutzer wirklich löschen?')) return;
+state.users.splice(i,1);
+renderUsersAdmin();
+}
+
+async function changePlayerPassword() {
+if (!currentUser) return;
+const oldPw = document.getElementById('player-old-pw')?.value;
+const newPw = document.getElementById('player-new-pw')?.value;
+if (!oldPw || !newPw) return;
+const oldHash = await sha256(oldPw);
+const user = (state.users||[]).find(u =>
+u.name.toLowerCase() === currentUser.name.toLowerCase() && u.hash === oldHash
+);
+if (!user) { alert('Altes Passwort falsch'); return; }
+user.hash = await sha256(newPw);
+await saveAll();
+alert('Passwort geändert!');
+}
+
+
+function openAdmin() {
+if (currentUser && currentUser.role === 'admin') {
+openAdminPanel();
+} else {
+openLoginOverlay();
+}
+}
+// closeLogin replaced
+// checkLogin replaced by doLogin
+function openAdminPanel() {
+const ap = document.getElementById('admin-panel');
+ap.style.display = 'flex';
+document.getElementById('admin-toggle-btn').classList.add('active');
+const tok = getToken();
+if (tok) {
+document.getElementById('gh-token-input').value = '••••••••••••••••';
+document.getElementById('token-status').className = 'token-status ok';
+document.getElementById('token-status').textContent = '✓ Token vorhanden';
+}
+rebuildAdminSidebar();
+rebuildTeamPages();
+refreshAllAdminForms();
+renderHistoireAdminPage();
+renderUsersAdmin();
+renderSpielerProfilesAdmin();
+renderMatchesAdmin();
+// Pre-fill admin profile fields
+if (currentUser) {
+const profile = (state.spielerProfiles||[]).find(p =>
+p.name.trim().toLowerCase() === currentUser.name.trim().toLowerCase()
+);
+const steamEl = document.getElementById('admin-steam-input');
+const discordEl = document.getElementById('admin-discord-input');
+if (steamEl) steamEl.value = profile ? profile.steam || '' : '';
+if (discordEl) discordEl.value = profile ? profile.discord || '' : '';
+const nameEl = document.getElementById('admin-profile-name');
+if (nameEl) nameEl.textContent = currentUser.name;
+}
+showAdminPage('page-settings');
+}
+function closeAdmin() {
+document.getElementById('admin-panel').style.display = 'none';
+document.getElementById('admin-toggle-btn').classList.remove('active');
+}
+function showAdminPage(id) {
+document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
+document.querySelectorAll('.admin-nav-item').forEach(b => b.classList.remove('active'));
+const page = document.getElementById(id);
+if (page) page.classList.add('active');
+document.querySelectorAll(`.admin-nav-item[data-page="${id}"]`).forEach(b => b.classList.add('active'));
+if (id === 'page-histoire') renderHistoireAdminPage();
+if (id === 'page-spieler-profiles') renderSpielerProfilesAdmin();
+if (id === 'page-users') renderUsersAdmin();
+if (id === 'page-matches') renderMatchesAdmin();
+if (id === 'page-news') {
+document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
+document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+}
+}
+function toggleCard(head) {
+const body = head.nextElementSibling;
+const arrow = head.querySelector('.admin-card-arrow');
+body.classList.toggle('open');
+if (arrow) arrow.classList.toggle('open');
+}
+function rebuildAdminSidebar() {
+const container = document.getElementById('sidebar-team-links');
+container.innerHTML = '<span class="admin-sidebar-label">Kader & Ergebnisse</span>' +
+state.teams.map(t =>
+`<button class="admin-nav-item" data-page="page-team-${t.id}" onclick="showAdminPage('page-team-${t.id}')">${esc(t.name)}</button>`
+).join('');
+document.getElementById('teams-count-label').textContent = state.teams.length + ' Teams';
+document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+}
+function renderTeamMgmtList() {
+document.getElementById('team-mgmt-list').innerHTML = state.teams.map((t,i) => `
+<div class="team-mgmt-item">
+<span class="team-id-badge">#${i+1}</span>
+<input type="text" value="${esc(t.name)}" placeholder="Teamname" oninput="renameTeam('${t.id}',this.value)">
+<button class="del-btn" onclick="deleteTeam('${t.id}')" title="Team löschen">&#128465;</button>
+</div>`).join('');
+}
+function addTeam() {
+const id = genId();
+state.teams.push({ id, name:'Neues Team', coach:'', dachcs:'', players:[], results:[] });
+renderTeamMgmtList();
+rebuildAdminSidebar();
+rebuildTeamPages();
+renderPublic();
+}
+function renameTeam(id, name) {
+const t = teamById(id); if (!t) return;
+t.name = name;
+rebuildAdminSidebar();
+renderPublic();
+}
+function deleteTeam(id) {
+if (!confirm('Team wirklich löschen? Kader und Ergebnisse werden gelöscht. Die Historie bleibt erhalten.')) return;
+state.teams = state.teams.filter(t => t.id !== id);
+renderTeamMgmtList();
+rebuildAdminSidebar();
+rebuildTeamPages();
+renderPublic();
+}
+function rebuildTeamPages() {
+const container = document.getElementById('team-pages-container');
+container.innerHTML = state.teams.map(t => teamPageHTML(t)).join('');
+renderTeamMgmtList();
+state.teams.forEach(t => {
+const ci = document.getElementById('coach-'+t.id);
+const di = document.getElementById('dachcs-'+t.id);
+if (ci) ci.addEventListener('input', () => { t.coach = ci.value; renderPublic(); });
+if (di) di.addEventListener('input', () => { t.dachcs = di.value; updateDachcsLinks(); });
+});
+}
+function teamPageHTML(t) {
+return `<div class="admin-page" id="page-team-${t.id}">
+<!-- Info card -->
+<div class="admin-card">
+<div class="admin-card-head" onclick="toggleCard(this)">
+<div class="admin-card-title">${esc(t.name)} – Info</div>
+<div class="admin-card-arrow open">&#9660;</div>
+</div>
+<div class="admin-card-body open">
+<div class="field-row">
+<label>Coach</label>
+<input type="text" id="coach-${t.id}" value="${esc(t.coach)}" placeholder="Name des Coaches">
+</div>
+<div class="field-row">
+<label>DachCS URL</label>
+<input type="text" id="dachcs-${t.id}" value="${esc(t.dachcs)}" placeholder="https://www.dachcs.de/teams/...">
+</div>
+</div>
+</div>
+<!-- Players card -->
+<div class="admin-card">
+<div class="admin-card-head" onclick="toggleCard(this)">
+<div class="admin-card-title">Kader</div>
+<div class="admin-card-subtitle">${t.players.length} Spieler</div>
+<div class="admin-card-arrow">&#9660;</div>
+</div>
+<div class="admin-card-body">
+<div class="tbl-editor-head tbl-row grid-player"><span>Name</span><span>Rolle</span><span>Steam-URL</span><span>Typ</span><span></span></div>
+<div id="players-${t.id}">${t.players.map((p,i) => playerRowHTML(t.id,i,p)).join('')}</div>
+<button class="tbl-add-btn" onclick="addPlayer('${t.id}')">+ Spieler hinzufügen</button>
+</div>
+</div>
+<!-- Results card -->
+<div class="admin-card">
+<div class="admin-card-head" onclick="toggleCard(this)">
+<div class="admin-card-title">Ergebnisse</div>
+<div class="admin-card-subtitle">${t.results.length} Einträge</div>
+<div class="admin-card-arrow">&#9660;</div>
+</div>
+<div class="admin-card-body">
+<div class="tbl-editor-head tbl-row grid-result"><span>Gegner</span><span>Wir</span><span>Sie</span><span>Map</span><span>Ergebnis</span><span></span></div>
+<div id="results-${t.id}">${t.results.map((r,i) => resultRowHTML(t.id,i,r)).join('')}</div>
+<button class="tbl-add-btn" onclick="addResult('${t.id}')">+ Ergebnis hinzufügen</button>
+</div>
+</div>
+</div>`;
+}
+function playerRowHTML(tid, i, p) {
+return `<div class="tbl-row grid-player">
+<input type="text" placeholder="Spielername" value="${esc(p.name)}" oninput="updatePlayer('${tid}',${i},'name',this.value)">
+<input type="text" placeholder="Rolle" value="${esc(p.role)}" oninput="updatePlayer('${tid}',${i},'role',this.value)">
+<input type="text" placeholder="https://steamcommunity.com/id/..." value="${esc(p.steam||'')}" oninput="updatePlayer('${tid}',${i},'steam',this.value)">
+<select onchange="updatePlayer('${tid}',${i},'type',this.value)">
+<option value="main"${(p.type||'main')==='main'?' selected':''}>Stammspieler</option>
+<option value="standin"${p.type==='standin'?' selected':''}>Stand-in</option>
+</select>
+<button class="del-btn" onclick="delPlayer('${tid}',${i})">&#10005;</button>
+</div>`;
+}
+function resultRowHTML(tid, i, r) {
+return `<div class="tbl-row grid-result">
+<input type="text" placeholder="Gegner" value="${esc(r.opp)}" oninput="updateResult('${tid}',${i},'opp',this.value)">
+<input type="number" placeholder="16" value="${esc(r.s1)}" oninput="updateResult('${tid}',${i},'s1',this.value)">
+<input type="number" placeholder="8"  value="${esc(r.s2)}" oninput="updateResult('${tid}',${i},'s2',this.value)">
+<input type="text" placeholder="Mirage" value="${esc(r.map)}" oninput="updateResult('${tid}',${i},'map',this.value)">
+<select onchange="updateResult('${tid}',${i},'res',this.value)">
+<option value="win"${r.res==='win'?' selected':''}>Sieg</option>
+<option value="loss"${r.res==='loss'?' selected':''}>Niederlage</option>
+<option value="draw"${(r.res||'draw')==='draw'?' selected':''}>Unentschieden</option>
+</select>
+<button class="del-btn" onclick="delResult('${tid}',${i})">&#10005;</button>
+</div>`;
+}
+function newsRowHTML(i, n) {
+return `<div class="tbl-row grid-news">
+<input type="text" placeholder="Mai 2025" value="${esc(n.date)}" oninput="updateNews(${i},'date',this.value)">
+<input type="text" placeholder="Titel" value="${esc(n.title)}" oninput="updateNews(${i},'title',this.value)">
+<textarea class="news-textarea" placeholder="Text..." oninput="updateNews(${i},'text',this.value)">${esc(n.text)}</textarea>
+<button class="del-btn" onclick="delNews(${i})">&#10005;</button>
+</div>`;
+}
+function updatePlayer(tid,i,k,v) { const t=teamById(tid); if(t){t.players[i][k]=v; renderPublic();} }
+function updateResult(tid,i,k,v) { const t=teamById(tid); if(t){t.results[i][k]=v; renderPublic();} }
+function updateNews(i,k,v) { state.news[i][k]=v; renderPublic(); }
+function addPlayer(tid) {
+const t = teamById(tid); if(!t) return;
+t.players.push({name:'',role:'',steam:'',type:'main'});
+document.getElementById('players-'+tid).innerHTML = t.players.map((p,i) => playerRowHTML(tid,i,p)).join('');
+updateCardSubtitle(tid, 'players');
+}
+function delPlayer(tid,i) {
+const t = teamById(tid); if(!t) return;
+t.players.splice(i,1);
+document.getElementById('players-'+tid).innerHTML = t.players.map((p,j) => playerRowHTML(tid,j,p)).join('');
+updateCardSubtitle(tid, 'players');
+renderPublic();
+}
+function addResult(tid) {
+const t = teamById(tid); if(!t) return;
+t.results.push({opp:'',s1:'',s2:'',map:'',res:'win'});
+document.getElementById('results-'+tid).innerHTML = t.results.map((r,i) => resultRowHTML(tid,i,r)).join('');
+updateCardSubtitle(tid, 'results');
+}
+function delResult(tid,i) {
+const t = teamById(tid); if(!t) return;
+t.results.splice(i,1);
+document.getElementById('results-'+tid).innerHTML = t.results.map((r,j) => resultRowHTML(tid,j,r)).join('');
+updateCardSubtitle(tid, 'results');
+renderPublic();
+}
+function addNews() {
+state.news.push({date:'',title:'',text:''});
+const i = state.news.length-1;
+document.getElementById('news-edit').insertAdjacentHTML('beforeend', newsRowHTML(i, state.news[i]));
+document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+}
+function delNews(i) {
+state.news.splice(i,1);
+document.getElementById('news-edit').innerHTML = state.news.map((n,j) => newsRowHTML(j,n)).join('');
+document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+renderPublic();
+}
+function updateCardSubtitle(tid, type) {
+const t = teamById(tid); if(!t) return;
+const count = type === 'players' ? t.players.length + ' Spieler' : t.results.length + ' Einträge';
+const page = document.getElementById('page-team-'+tid);
+if (!page) return;
+const cards = page.querySelectorAll('.admin-card');
+const idx = type === 'players' ? 1 : 2;
+if (cards[idx]) { const sub = cards[idx].querySelector('.admin-card-subtitle'); if(sub) sub.textContent = count; }
+}
+
+function refreshAdminIfOpen() {
+const panel = document.getElementById('admin-panel');
+if (!panel || panel.style.display === 'none') return;
+// Refresh whichever admin page is currently active
+const activePage = document.querySelector('.admin-page.active');
+if (!activePage) return;
+const id = activePage.id;
+if (id === 'page-histoire') renderHistoireAdminPage();
+if (id === 'page-news') refreshAllAdminForms();
+if (id === 'page-teams') renderTeamMgmtList();
+if (id === 'page-users') renderUsersAdmin();
+if (id === 'page-spieler-profiles') renderSpielerProfilesAdmin();
+if (id === 'page-matches') renderMatchesAdmin();
+// Also refresh sidebar team links
+rebuildAdminSidebar();
+rebuildTeamPages();
+}
+
+function refreshAllAdminForms() {
+document.getElementById('news-edit').innerHTML = state.news.map((n,i) => newsRowHTML(i,n)).join('');
+document.getElementById('news-count-lbl').textContent = state.news.length + ' Einträge';
+renderHistoireAdminPage();
+}
+function updateDachcsLinks() {
+state.teams.forEach(t => {
+const url = t.dachcs || 'https://www.dachcs.de';
+document.querySelectorAll('.dacha-link-'+t.id).forEach(el => el.href = url);
+});
+}
+function renderPublic() {
+const tabsEl = document.getElementById('teams-tabs');
+const panelsEl = document.getElementById('teams-panels');
+const rtabsEl = document.getElementById('results-tabs');
+const rpanelsEl = document.getElementById('results-panels');
+tabsEl.innerHTML = state.teams.map((t,i) =>
+`<button class="tab-btn${i===0?' active':''}" id="tab-${t.id}" onclick="switchTeam('${t.id}')">${esc(t.name)}</button>`
+).join('');
+rtabsEl.innerHTML = state.teams.map((t,i) =>
+`<button class="tab-btn${i===0?' active':''}" id="rtab-${t.id}" onclick="switchResults('${t.id}')">${esc(t.name)}</button>`
+).join('');
+panelsEl.innerHTML = state.teams.map((t,i) => `
+<div class="team-panel${i===0?' active':''}" id="panel-${t.id}">
+<div class="team-meta">
+<div>
+<div class="team-meta-name">${esc(t.name)}</div>
+<div class="team-meta-coach" id="coach-display-${t.id}">${t.coach ? 'Coach: <span>'+esc(t.coach)+'</span>' : 'Coach: <span style="color:#555">&#8211;</span>'}</div>
+</div>
+<a href="${esc(t.dachcs||'https://www.dachcs.de')}" target="_blank" rel="noopener" class="dacha-link dacha-link-${t.id}">&#x2197; DachCS</a>
+</div>
+<div class="roster-section">
+<div class="roster-label">Stammkader</div>
+<div class="team-grid">${renderRoster(t, false)}</div>
+</div>
+${renderStandins(t)}
+</div>`).join('');
+rpanelsEl.innerHTML = state.teams.map((t,i) => `
+<div class="team-panel${i===0?' active':''}" id="rpanel-${t.id}">
+<div class="results-list">${renderResultsList(t)}</div>
+</div>`).join('');
+const navTeamLinks = document.getElementById('nav-team-links');
+if (navTeamLinks) {
+navTeamLinks.innerHTML = state.teams.map((t,i) =>
+`<button class="hero-team-btn" onclick="scrollToTeam('${t.id}')">${esc(t.name)}</button>`
+).join('');
+}
+const newsEl = document.getElementById('news-display');
+newsEl.innerHTML = state.news.length === 0
+? '<div class="empty" style="grid-column:1/-1">Noch keine News eingetragen</div>'
+: state.news.map(n => `<div class="news-card"><div class="news-date">${esc(n.date)}</div><div class="news-title">${esc(n.title)}</div><div class="news-text">${esc(n.text)}</div></div>`).join('');
+updateDachcsLinks();
+renderMatches();
+}
+function renderRoster(t, standin) {
+const players = t.players.filter(p => (p.type||'main') === (standin ? 'standin' : 'main'));
+if (players.length === 0 && !standin) return '<div class="empty">Noch keine Spieler eingetragen</div>';
+return players.map(p => memberCardHTML(p, standin)).join('');
+}
+function renderStandins(t) {
+const standins = t.players.filter(p => p.type === 'standin');
+if (standins.length === 0) return '';
+return `<div class="roster-section"><div class="roster-label">Stand-ins</div><div class="team-grid">${standins.map(p => memberCardHTML(p, true)).join('')}</div></div>`;
+}
+function renderResultsList(t) {
+if (t.results.length === 0) return '<div class="empty">Noch keine Ergebnisse eingetragen</div>';
+const m = {win:'badge-win',loss:'badge-loss',draw:'badge-draw'};
+const l = {win:'Sieg',loss:'Niederlage',draw:'Unentschieden'};
+return t.results.map(r => {
+const res = r.res||'draw';
+return `<div class="result-row ${res}">
+<div><div class="r-name">${esc(t.name)}</div></div>
+<div class="score-box">
+<div class="score">${esc(r.s1)} &ndash; ${esc(r.s2)}</div>
+${r.map ? '<div class="result-meta">'+esc(r.map)+'</div>' : ''}
+<span class="badge ${m[res]||'badge-draw'}">${l[res]||res}</span>
+</div>
+<div><div class="r-name right">${esc(r.opp||'?')}</div></div>
+</div>`;
+}).join('');
+}
+
+function hltvClass(v) {
+const n = parseFloat(v);
+if (isNaN(n)) return '';
+return n >= 1.15 ? 'hltv-good' : n >= 0.95 ? 'hltv-avg' : 'hltv-bad';
+}
+
+function toggleSeason(head) {
+head.nextElementSibling.classList.toggle('open');
+head.querySelector('.season-toggle').classList.toggle('open');
+}
+
+function buildSeasonCard(s) {
+let pHTML;
+if (!s.players || s.players.length === 0) {
+pHTML = '<div class="empty" style="padding:1rem">Keine Spieler</div>';
+} else {
+let rows = '';
+s.players.forEach(p => {
+const kd = calcKD(p.kills, p.deaths);
+const kdColor = parseFloat(kd) >= 1 ? '#2ecc71' : parseFloat(kd) < 0.8 ? 'var(--red-light)' : '#f39c12';
+rows += '<tr><td>' + esc(p.name) + '</td>'
++ '<td class="num">' + esc(p.games||'-') + '</td>'
++ '<td class="num">' + esc(p.kills||'-') + '</td>'
++ '<td class="num">' + esc(p.assists||'-') + '</td>'
++ '<td class="num">' + esc(p.deaths||'-') + '</td>'
++ '<td class="num" style="color:' + kdColor + '">' + kd + '</td>'
++ '<td class="num hltv-rating ' + hltvClass(p.hltv) + '">' + esc(p.hltv||'-') + '</td>'
++ '</tr>';
+});
+pHTML = '<table class="stats-table"><thead><tr>'
++ '<th>Spieler</th><th class="num">Spiele</th><th class="num">Kills</th>'
++ '<th class="num">Assists</th><th class="num">Tode</th><th class="num">K/D</th>'
++ '<th class="num">HLTV</th></tr></thead><tbody>' + rows + '</tbody></table>';
+}
+const coachLine = s.coach
+? '<div style="font-size:0.85rem;color:#888;margin-bottom:1rem">Coach: <span style="color:var(--red-light);font-weight:600">' + esc(s.coach) + '</span></div>'
+: '';
+const ytBtn = s.youtube
+? '<a href="' + esc(s.youtube) + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;color:#ff4444;border:1px solid #ff4444;padding:4px 12px;margin-bottom:1rem;">&#9654; Playlist</a>'
+: '';
+const placementHTML = s.placement ? '<div class="season-placement">' + esc(s.placement) + '</div>' : '';
+const recordHTML = (s.wins || s.losses)
+? '<div class="season-record">W/L: <span>' + esc(s.wins||'0') + '</span>/<span>' + esc(s.losses||'0') + '</span></div>'
+: '';
+return '<div class="season-card">'
++ '<div class="season-head" onclick="toggleSeason(this)">'
++ '<div class="season-name">' + esc(s.season||'Unbekannte Saison') + '</div>'
++ placementHTML + recordHTML
++ '<div class="season-toggle">&#9660;</div>'
++ '</div>'
++ '<div class="season-body">' + ytBtn + coachLine + pHTML + '</div>'
++ '</div>';
+}
+
+
+function renderHistoire() {
+const tabsEl = document.getElementById('hist-tabs');
+const panelsEl = document.getElementById('hist-panels');
+const loadingEl = document.getElementById('hist-loading');
+if (loadingEl) loadingEl.style.display = 'none';
+tabsEl.style.display = '';
+if (!state.histoire || state.histoire.length === 0) {
+tabsEl.innerHTML = '';
+panelsEl.innerHTML = '<div class="empty">Noch keine Teams in der Historie angelegt</div>';
+return;
+}
+tabsEl.innerHTML = state.histoire.map((t,i) =>
+'<button class="hist-tab' + (i===0?' active':'') + '" id="htab-' + t.id + '" onclick="switchHist(\'' + t.id + '\')">' + esc(t.name) + '</button>'
+).join('');
+panelsEl.innerHTML = state.histoire.map((t,i) => {
+const seasons = t.seasons || [];
+const content = seasons.length === 0
+? '<div class="empty">Noch keine Saisonen eingetragen</div>'
+: [...seasons].reverse().map(s => buildSeasonCard(s)).join('');
+return '<div class="hist-panel' + (i===0?' active':'') + '" id="hpanel-' + t.id + '">' + content + '</div>';
+}).join('');
+}
+function switchHist(id) {
+document.querySelectorAll('.hist-tab').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.hist-panel').forEach(p=>p.classList.remove('active'));
+document.getElementById('htab-'+id).classList.add('active');
+document.getElementById('hpanel-'+id).classList.add('active');
+}
+function showPage(page, e) {
+if(e) e.preventDefault();
+['page-home', 'pub-histoire', 'pub-spieler'].forEach(id => {
+const el = document.getElementById(id);
+if(el) el.style.display = 'none';
+});
+const idMap = { home:'page-home', histoire:'pub-histoire', spieler:'pub-spieler' };
+const targetId = idMap[page] || 'page-home';
+const target = document.getElementById(targetId);
+if(target) target.style.display = 'block';
+window.scrollTo({top:0});
+// Render content - wrapped in try/catch so errors don't break navigation
+if(page === 'histoire') { try { renderHistoire(); } catch(err) { console.error('renderHistoire:', err); document.getElementById('hist-panels').innerHTML = '<div class="empty">Fehler beim Laden</div>'; } }
+if(page === 'spieler') { try { renderSpielerList(); } catch(err) { console.error('renderSpielerList:', err); } }
+document.querySelectorAll('.nav-links a').forEach(a => {
+const ap = a.getAttribute('data-page');
+const isActive = ap === page && (page !== 'home' || a.getAttribute('data-nav-id') === 'start');
+a.classList.toggle('nav-active', isActive);
+});
+}
+function toggleHistorie(e) { showPage('histoire', e); }
+function toggleSpieler(e) { showPage('spieler', e); }
+function renderHistoireAdminPage() {
+const el = document.getElementById('histoire-admin-content');
+const teamMgmt = `<div class="admin-card">
+<div class="admin-card-head" onclick="toggleCard(this)">
+<div class="admin-card-title">Teams in der Historie</div>
+<div class="admin-card-subtitle">${state.histoire.length} Teams</div>
+<div class="admin-card-arrow open">&#9660;</div>
+</div>
+<div class="admin-card-body open">
+<p style="font-size:0.85rem;color:#666;margin-bottom:1rem;line-height:1.6">Hier kannst du Teams für die Saisonhistorie anlegen – unabhängig von den aktuellen Teams.</p>
+<div id="hist-team-mgmt-list">${state.histoire.map((t,i) => `
+<div class="team-mgmt-item">
+<span class="team-id-badge">#${i+1}</span>
+<input type="text" value="${esc(t.name)}" placeholder="Teamname" oninput="renameHistTeam('${t.id}',this.value)">
+<button class="del-btn" onclick="deleteHistTeam('${t.id}')" title="Aus Historie löschen">&#128465;</button>
+</div>`).join('')}
+</div>
+<button class="tbl-add-btn" onclick="addHistTeam()">+ Team zur Historie hinzufügen</button>
+</div>
+</div>`;
+const seasonCards = state.histoire.map(t => `
+<div class="admin-card">
+<div class="admin-card-head" onclick="toggleCard(this)">
+<div class="admin-card-title">${esc(t.name)}</div>
+<div class="admin-card-subtitle">${(t.seasons||[]).length} Saisonen</div>
+<div class="admin-card-arrow open">&#9660;</div>
+</div>
+<div class="admin-card-body open">
+<div id="hist-admin-${t.id}">${(t.seasons||[]).map((s,i) => histSeasonHTML(t.id,i,s)).join('')}</div>
+<button class="tbl-add-btn" onclick="addSeason('${t.id}')">+ Saison hinzufügen</button>
+</div>
+</div>`).join('');
+el.innerHTML = teamMgmt + seasonCards;
+}
+function addHistTeam() {
+const id = genId();
+state.histoire.push({ id, name:'Neues Team', seasons:[] });
+renderHistoireAdminPage();
+}
+function renameHistTeam(id, name) {
+const t = histById(id); if(t) t.name = name;
+const btn = document.querySelector(`[data-histid="${id}"]`);
+if (btn) btn.textContent = name;
+}
+function deleteHistTeam(id) {
+if (!confirm('Team aus der Historie löschen? Alle Saisondaten dieses Teams gehen verloren.')) return;
+state.histoire = state.histoire.filter(t => t.id !== id);
+renderHistoireAdminPage();
+}
+function histSeasonHTML(tid, i, s) {
+const players = (s.players||[]).map((p,pi) => histPlayerHTML(tid,i,pi,p)).join('');
+const seasonLabel = s.season || 'Neue Saison';
+return `<div class="season-admin-card">
+<div class="season-admin-head" onclick="toggleSeasonAdmin(this)">
+<span style="font-family:'Oswald',sans-serif;font-size:0.85rem;color:var(--cream);min-width:120px;pointer-events:none">${esc(seasonLabel)}</span>
+<span style="flex:1;pointer-events:none"></span>
+<span style="font-size:0.7rem;color:#555;letter-spacing:1px;pointer-events:none">▲ EINKLAPPEN</span>
+<button class="del-btn" onclick="delSeason('${tid}',${i});event.stopPropagation()" style="margin-left:0.5rem">&#128465;</button>
+</div>
+<div class="season-admin-body open">
+<div style="display:grid;grid-template-columns:1fr 150px 65px 65px;gap:0.5rem;margin-bottom:1rem;">
+<input type="text" placeholder="Saison (z.B. Saison 1 – Frühjahr 2025)" value="${esc(s.season||'')}" oninput="updateSeason('${tid}',${i},'season',this.value);updateSeasonLabel(this)">
+<input type="text" placeholder="Platzierung" value="${esc(s.placement||'')}" oninput="updateSeason('${tid}',${i},'placement',this.value)">
+<input type="number" placeholder="Siege" value="${esc(s.wins||'')}" oninput="updateSeason('${tid}',${i},'wins',this.value)">
+<input type="number" placeholder="NL" value="${esc(s.losses||'')}" oninput="updateSeason('${tid}',${i},'losses',this.value)">
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;">
+<div class="field-row" style="margin-bottom:0">
+<label>Coach</label>
+<input type="text" placeholder="Name des Coaches" value="${esc(s.coach||'')}" oninput="updateSeason('${tid}',${i},'coach',this.value)">
+</div>
+<div class="field-row" style="margin-bottom:0">
+<label style="white-space:nowrap">&#9654; YouTube</label>
+<input type="text" placeholder="https://youtube.com/playlist?list=..." value="${esc(s.youtube||'')}" oninput="updateSeason('${tid}',${i},'youtube',this.value)">
+</div>
+</div>
+<div class="tbl-editor-head tbl-row grid-hist-player"><span>Name</span><span>Spiele</span><span>Kills</span><span>Assists</span><span>Tode</span><span>K/D</span><span>HLTV</span><span>Steam-URL</span><span></span></div>
+<div id="hist-players-${tid}-${i}">${players}</div>
+<button class="tbl-add-btn" onclick="addHistPlayer('${tid}',${i})">+ Spieler hinzufügen</button>
+</div>
+</div>`;
+}
+function calcKD(kills, deaths) {
+const k = parseFloat(kills), d = parseFloat(deaths);
+if (isNaN(k) || isNaN(d) || d === 0) return k > 0 ? k.toFixed(2) : '-';
+return (k / d).toFixed(2);
+}
+function histPlayerHTML(tid,si,pi,p) {
+const kd = calcKD(p.kills, p.deaths);
+return `<div class="tbl-row grid-hist-player">
+<input type="text" placeholder="Name" value="${esc(p.name||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'name',this.value)">
+<input type="number" placeholder="0" value="${esc(p.games||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'games',this.value)">
+<input type="number" placeholder="0" value="${esc(p.kills||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'kills',this.value); refreshKD('${tid}',${si},${pi})">
+<input type="number" placeholder="0" value="${esc(p.assists||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'assists',this.value)">
+<input type="number" placeholder="0" value="${esc(p.deaths||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'deaths',this.value); refreshKD('${tid}',${si},${pi})">
+<span class="kd-display" id="kd-${tid}-${si}-${pi}" style="font-family:'Oswald',sans-serif;font-size:0.9rem;color:var(--cream);display:flex;align-items:center;justify-content:center;">${kd}</span>
+<input type="text" placeholder="1.05" value="${esc(p.hltv||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'hltv',this.value)">
+<input type="text" placeholder="steamcommunity.com/id/..." value="${esc(p.steam||'')}" oninput="updateHistPlayer('${tid}',${si},${pi},'steam',this.value)">
+<button class="del-btn" onclick="delHistPlayer('${tid}',${si},${pi})">&#10005;</button>
+</div>`;
+}
+function refreshKD(tid,si,pi) {
+const t = histById(tid); if(!t||!t.seasons[si]) return;
+const p = t.seasons[si].players[pi];
+const el = document.getElementById('kd-'+tid+'-'+si+'-'+pi);
+if(el) el.textContent = calcKD(p.kills, p.deaths);
+}
+function addSeason(tid) {
+const t = histById(tid); if(!t) return;
+if(!t.seasons) t.seasons=[];
+t.seasons.push({season:'',placement:'',wins:'',losses:'',players:[]});
+renderHistoireAdminPage();
+}
+function delSeason(tid,i) {
+const t = histById(tid); if(!t) return;
+t.seasons.splice(i,1); renderHistoireAdminPage();
+}
+function updateSeason(tid,i,k,v) { const t=histById(tid); if(t&&t.seasons&&t.seasons[i]) t.seasons[i][k]=v; }
+function addHistPlayer(tid,si) {
+const t = histById(tid); if(!t) return;
+t.seasons[si].players.push({name:'',games:'',kills:'',assists:'',deaths:'',hltv:'',steam:''});
+const pi = t.seasons[si].players.length-1;
+document.getElementById('hist-players-'+tid+'-'+si).insertAdjacentHTML('beforeend', histPlayerHTML(tid,si,pi,t.seasons[si].players[pi]));
+}
+function updateHistPlayer(tid,si,pi,k,v) { const t=histById(tid); if(t&&t.seasons&&t.seasons[si]) t.seasons[si].players[pi][k]=v; }
+function delHistPlayer(tid,si,pi) {
+const t = histById(tid); if(!t) return;
+t.seasons[si].players.splice(pi,1);
+document.getElementById('hist-players-'+tid+'-'+si).innerHTML = t.seasons[si].players.map((p,i) => histPlayerHTML(tid,si,i,p)).join('');
+}
+function toggleSeasonAdmin(head) {
+const body = head.nextElementSibling;
+const lbl = head.querySelector('span:last-of-type');
+const isOpen = body.classList.contains('open');
+body.classList.toggle('open');
+if (lbl) lbl.textContent = isOpen ? '▼ AUFKLAPPEN' : '▲ EINKLAPPEN';
+}
+function updateSeasonLabel(input) {
+const head = input.closest('.season-admin-body').previousElementSibling;
+if (head) {
+const span = head.querySelector('span');
+if (span) span.textContent = input.value || 'Neue Saison';
+}
+}
+async function saveAll() {
+const token = getToken();
+if (!token) { setStatus('⚠ Kein Token gespeichert!', true); return; }
+const btn = document.getElementById('save-btn');
+const btnText = document.getElementById('save-btn-text');
+if (btn) btn.disabled = true;
+if (btnText) btnText.textContent = 'Wird gespeichert...';
+setStatus('','');
+const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+const apiUrl = `https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+const headers = { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+try {
+let sha = null;
+const shaRes = await fetch(apiUrl + '?ref=' + GH_BRANCH + '&_=' + Date.now(), { headers });
+if (shaRes.ok) {
+const d = await shaRes.json();
+sha = d.sha || null;
+} else if (shaRes.status !== 404) {
+const err = await shaRes.json();
+const shaMsg = 'SHA-Fehler: ' + (err.message || shaRes.status);
+setStatus(shaMsg, true);
+alert(shaMsg);
+if (btn) btn.disabled = false;
+if (btnText) btnText.textContent = '💾 Speichern & Veröffentlichen';
+return;
+}
+// 404 = file doesn't exist yet → sha stays null → GitHub creates it
+const putBody = { message: 'Update clan data via admin panel', content, branch: GH_BRANCH };
+if (sha) putBody.sha = sha;
+const res = await fetch(apiUrl, { method: 'PUT', headers, body: JSON.stringify(putBody) });
+if (res.ok) {
+const savedData = JSON.parse(decodeURIComponent(escape(atob(content))));
+console.log('[BoBo] Saved to GitHub - histoire seasons:', savedData.histoire?.[0]?.seasons?.length, 'profiles:', savedData.spielerProfiles?.length);
+setStatus('✓ Gespeichert!', false);
+try { localStorage.setItem('bobo_data_cache', JSON.stringify(state)); } catch(e) {}
+} else {
+const err = await res.json();
+const putMsg = 'PUT-Fehler ' + res.status + ': ' + (err.message || JSON.stringify(err));
+setStatus(putMsg, true);
+alert(putMsg);
+}
+} catch(e) {
+const msg = 'Netzwerkfehler: ' + e.message;
+setStatus(msg, true);
+alert('Speichern fehlgeschlagen: ' + msg);
+}
+if (btn) btn.disabled = false;
+if (btnText) btnText.textContent = '💾 Speichern & Veröffentlichen';
+}
+function setStatus(msg, isErr) {
+const el = document.getElementById('save-status');
+if (!el) return; // admin panel might be closed
+el.textContent = msg;
+el.className = 'save-status' + (isErr ? ' err' : (msg ? ' ok' : ''));
+}
+
+
+// ── SPIELER PROFILES ADMIN ─────────────────────────────────
+function renderSpielerProfilesAdmin() {
+const el = document.getElementById('spieler-profiles-admin');
+if (!el) return;
+if (!state.spielerProfiles) state.spielerProfiles = [];
+el.innerHTML = state.spielerProfiles.map((p,i) => `
+<div class="tbl-row" style="grid-template-columns:1fr 2fr 32px;margin-bottom:0.4rem">
+<input type="text" placeholder="Spielername (exakt wie in Historie)" value="${esc(p.name||'')}" oninput="updateSpielerProfile(${i},'name',this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;width:100%;">
+<input type="text" placeholder="https://steamcommunity.com/id/..." value="${esc(p.steam||'')}" oninput="updateSpielerProfile(${i},'steam',this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;width:100%;">
+<button class="del-btn" onclick="delSpielerProfile(${i})">&#10005;</button>
+</div>`).join('');
+document.getElementById('spieler-profiles-count').textContent = state.spielerProfiles.length + ' Einträge';
+}
+function addSpielerProfile() {
+if (!state.spielerProfiles) state.spielerProfiles = [];
+state.spielerProfiles.push({name:'', steam:''});
+renderSpielerProfilesAdmin();
+}
+function updateSpielerProfile(i, k, v) {
+if (state.spielerProfiles[i]) {
+state.spielerProfiles[i][k] = v;
+// Clear cached avatar when steam URL changes
+if (k === 'steam') {
+const name = state.spielerProfiles[i].name;
+if (name) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+localStorage.removeItem(key);
+}
+}
+}
+}
+function delSpielerProfile(i) {
+const name = state.spielerProfiles[i]?.name;
+if (name) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+localStorage.removeItem(key);
+}
+state.spielerProfiles.splice(i,1);
+renderSpielerProfilesAdmin();
+}
+
+// ── STEAM AVATAR CACHE ─────────────────────────────────────
+function getSteamAvatarUrl(steamUrl) {
+if (!steamUrl) return null;
+const clean = steamUrl.replace(/\/+$/, '');
+const parts = clean.split('/').filter(Boolean);
+const last = parts[parts.length-1], type = parts[parts.length-2];
+return (type === 'profiles' && /^\d{15,}$/.test(last))
+? 'https://steamcommunity.com/profiles/' + last + '?xml=1'
+: 'https://steamcommunity.com/id/' + last + '?xml=1';
+}
+function getCachedAvatar(name) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+return localStorage.getItem(key);
+}
+function setCachedAvatar(name, url) {
+const key = 'bobo_av_' + name.trim().toLowerCase().replace(/\s+/g,'_');
+try { localStorage.setItem(key, url); } catch(e) {}
+}
+async function loadAndCacheAvatar(name, steamUrl, callback) {
+// Return cached immediately
+const cached = getCachedAvatar(name);
+if (cached) { callback(cached); return; }
+// Fetch from Steam via allorigins
+const xmlUrl = getSteamAvatarUrl(steamUrl);
+if (!xmlUrl) return;
+try {
+const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(xmlUrl));
+const data = await r.json();
+const xml = data.contents || '';
+const m = xml.match(/<avatarFull[^>]*><!\[CDATA\[([^\]]+)\]\]><\/avatarFull>/) ||
+xml.match(/<avatarFull[^>]*>([^<]+)<\/avatarFull>/);
+if (m && m[1] && m[1].startsWith('http')) {
+setCachedAvatar(name, m[1].trim());
+callback(m[1].trim());
+}
+} catch(e) {}
+}
+function setAvatarImg(el, url) {
+if (!el) return;
+el.innerHTML = '';
+el.style.cssText += ';background:none;overflow:hidden;padding:0;';
+const img = document.createElement('img');
+img.src = url;
+img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
+img.onerror = () => { el.innerHTML = el.getAttribute('data-initials')||'?'; el.style.background='var(--dark4)'; };
+el.appendChild(img);
+}
+function applyAvatarToEl(elId, name, steamUrl) {
+const el = document.getElementById(elId);
+if (!el) return;
+el.setAttribute('data-initials', el.textContent);
+loadAndCacheAvatar(name, steamUrl, url => setAvatarImg(document.getElementById(elId), url));
+}
+function getSteamProfile(name) {
+return state.spielerProfiles.find(p => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+}
+
+function getSpielerList() {
+const players = {};
+// Index spielerProfiles for fast lookup
+const profileIndex = {};
+(state.spielerProfiles||[]).forEach(p => { profileIndex[p.name.trim().toLowerCase()] = p; });
+state.histoire.forEach(team => {
+(team.seasons || []).forEach(season => {
+(season.players || []).forEach(p => {
+if (!p.name || !p.name.trim()) return;
+const key = p.name.trim().toLowerCase();
+if (!players[key]) {
+players[key] = { name: p.name.trim(), steam: p.steam || '', seasons: [] };
+}
+if (p.steam && p.steam.trim()) players[key].steam = p.steam.trim();
+players[key].seasons.push({
+teamId: team.id, teamName: team.name,
+season: season.season, coach: season.coach || '',
+games: p.games || '', kills: p.kills || '',
+assists: p.assists || '', deaths: p.deaths || '',
+hltv: p.hltv || ''
+});
+if (p.steam && p.steam.trim()) players[key].steam = p.steam.trim();
+});
+});
+});
+state.teams.forEach(team => {
+(team.players || []).forEach(p => {
+if (!p.name || !p.steam) return;
+const key = p.name.trim().toLowerCase();
+if (players[key] && !players[key].steam) {
+players[key].steam = p.steam;
+}
+});
+});
+return Object.values(players).sort((a,b) => a.name.localeCompare(b.name));
+}
+function calcAllTime(seasons) {
+let kills=0, assists=0, deaths=0, games=0, hltvVals=[], hltvCount=0;
+seasons.forEach(s => {
+kills   += parseInt(s.kills)   || 0;
+assists += parseInt(s.assists) || 0;
+deaths  += parseInt(s.deaths)  || 0;
+games   += parseInt(s.games)   || 0;
+const h = parseFloat(s.hltv);
+if (!isNaN(h)) { hltvVals.push(h); hltvCount++; }
+});
+const kd = deaths > 0 ? (kills/deaths).toFixed(2) : kills > 0 ? kills.toFixed(2) : '-';
+const hltv = hltvCount > 0 ? (hltvVals.reduce((a,b)=>a+b,0)/hltvCount).toFixed(2) : '-';
+return { kills, assists, deaths, games, kd, hltv };
+}
+function renderSpielerList() {
+const players = getSpielerList();
+const listEl = document.getElementById('spieler-list');
+const detailEl = document.getElementById('spieler-detail');
+const topEl = document.getElementById('spieler-top-stats');
+detailEl.style.display = 'none';
+listEl.style.display = '';
+if (players.length === 0) {
+listEl.innerHTML = '<div class="empty">Noch keine Spieler in der Historie eingetragen</div>';
+topEl.style.display = 'none';
+const swEl2 = document.getElementById('spieler-search-wrap'); if(swEl2) swEl2.style.display='none';
+return;
+}
+const withStats = players.map(p => ({ ...p, at: calcAllTime(p.seasons) }));
+const topGames  = withStats.reduce((a,b) => (parseInt(b.at.games)||0) > (parseInt(a.at.games)||0) ? b : a);
+const topKills  = withStats.reduce((a,b) => (b.at.kills||0) > (a.at.kills||0) ? b : a);
+const topAssists= withStats.reduce((a,b) => (b.at.assists||0) > (a.at.assists||0) ? b : a);
+const topDeaths = withStats.reduce((a,b) => (b.at.deaths||0) > (a.at.deaths||0) ? b : a);
+const topCards = [
+{ label:'Meiste Spiele',   player:topGames,   val:topGames.at.games||0   },
+{ label:'Meiste Kills',    player:topKills,   val:topKills.at.kills||0   },
+{ label:'Meiste Assists',  player:topAssists, val:topAssists.at.assists||0},
+{ label:'Meiste Tode',     player:topDeaths,  val:topDeaths.at.deaths||0 },
+];
+topEl.style.display = 'block';
+const swEl = document.getElementById('spieler-search-wrap');
+if(swEl) swEl.style.display = 'block';
+topEl.innerHTML = '<div class="top-stats-grid">' + topCards.map(({label, player, val}) => {
+const uid = 'tsp-' + label.replace(/\s+/g,'') + '-' + Math.random().toString(36).slice(2,6);
+const card = `<div class="top-stat-card" onclick="showSpielerDetail('${esc(player.name.replace(/'/g,"\'"))}')">
+<div class="top-stat-label">${esc(label)}</div>
+<div class="top-stat-avatar" id="${uid}">${initials(player.name)}</div>
+<div class="top-stat-name">${esc(player.name)}</div>
+<div class="top-stat-value">${val}</div>
+</div>`;
+const spt = getSteamProfile(player.name);
+if (spt && spt.steam) setTimeout(() => applyAvatarToEl(uid, spt.name, spt.steam), 30);
+return card;
+}).join('') + '</div>';
+listEl.innerHTML = '<div class="spieler-grid">' + players.map(p => {
+const at = calcAllTime(p.seasons);
+const uid = 'sp-av-' + p.name.replace(/\s+/g,'').toLowerCase().slice(0,12) + Math.random().toString(36).slice(2,5);
+const teamNames = [...new Set(p.seasons.map(s => s.teamName))].join(' · ');
+const card = `<div class="spieler-card" onclick="showSpielerDetail('${esc(p.name.replace(/'/g,"\'"))}')">
+<div class="spieler-avatar" id="${uid}">${initials(p.name)}</div>
+<div class="spieler-name">${esc(p.name)}</div>
+<div class="spieler-teams">${esc(teamNames)}</div>
+</div>`;
+const sp2 = getSteamProfile(p.name);
+if (sp2 && sp2.steam) setTimeout(() => applyAvatarToEl(uid, sp2.name, sp2.steam), 50);
+return card;
+}).join('') + '</div>';
+}
+function showSpielerDetail(name) {
+const players = getSpielerList();
+const p = players.find(pl => pl.name === name);
+if (!p) return;
+document.getElementById('spieler-list').style.display = 'none';
+const detailEl = document.getElementById('spieler-detail');
+detailEl.style.display = 'block';
+const allTime = calcAllTime(p.seasons);
+const uid = 'detail-av-' + Math.random().toString(36).slice(2,7);
+const teamNames = [...new Set(p.seasons.map(s => s.teamName))].join(' · ');
+const kdColor = (v) => {
+const n = parseFloat(v);
+if(isNaN(n)) return 'var(--cream)';
+return n>=1.2?'#2ecc71':n>=0.9?'#f39c12':'var(--red-light)';
+};
+const hltvColor = (v) => {
+const n = parseFloat(v);
+if(isNaN(n)) return 'var(--cream)';
+return n>=1.15?'#2ecc71':n>=0.95?'#f39c12':'var(--red-light)';
+};
+let html = `
+<div class="spieler-detail-header">
+<div class="spieler-detail-avatar" id="${uid}">${initials(p.name)}</div>
+<div>
+<div class="spieler-detail-name">${esc(p.name)}</div>
+<div class="spieler-detail-teams">${esc(teamNames)}</div>
+</div>
+</div>
+<h3 style="font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#9733; All Time Stats</h3>
+<div class="alltime-box">
+${allTime.games ? `<div class="alltime-stat"><div class="alltime-stat-val">${allTime.games}</div><div class="alltime-stat-lbl">Spiele</div></div>` : ''}
+<div class="alltime-stat"><div class="alltime-stat-val">${allTime.kills}</div><div class="alltime-stat-lbl">Kills</div></div>
+<div class="alltime-stat"><div class="alltime-stat-val">${allTime.assists}</div><div class="alltime-stat-lbl">Assists</div></div>
+<div class="alltime-stat"><div class="alltime-stat-val">${allTime.deaths}</div><div class="alltime-stat-lbl">Tode</div></div>
+<div class="alltime-stat"><div class="alltime-stat-val" style="color:${kdColor(allTime.kd)}">${allTime.kd}</div><div class="alltime-stat-lbl">K/D</div></div>
+<div class="alltime-stat"><div class="alltime-stat-val" style="color:${hltvColor(allTime.hltv)}">${allTime.hltv}</div><div class="alltime-stat-lbl">HLTV &#216;</div></div>
+</div>
+<h3 style="font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;color:#888;margin-bottom:1rem;">&#128218; Saisonhistorie</h3>
+<div class="season-history-list">
+${p.seasons.map(s => {
+const kd = calcKD(s.kills, s.deaths);
+return `<div class="season-history-item">
+<div class="season-history-head">
+<span class="season-history-team">${esc(s.teamName)}</span>
+<span class="season-history-name">${esc(s.season||'Unbekannte Saison')}</span>
+${s.coach ? `<span style="font-size:0.8rem;color:#666">Coach: <span style="color:var(--red-light)">${esc(s.coach)}</span></span>` : ''}
+</div>
+<div class="season-history-stats">
+${s.games ? `<div class="season-stat"><div class="season-stat-val">${esc(s.games)}</div><div class="season-stat-lbl">Spiele</div></div>` : ''}
+<div class="season-stat"><div class="season-stat-val">${esc(s.kills||'-')}</div><div class="season-stat-lbl">Kills</div></div>
+<div class="season-stat"><div class="season-stat-val">${esc(s.assists||'-')}</div><div class="season-stat-lbl">Assists</div></div>
+<div class="season-stat"><div class="season-stat-val">${esc(s.deaths||'-')}</div><div class="season-stat-lbl">Tode</div></div>
+<div class="season-stat"><div class="season-stat-val" style="color:${kdColor(kd)}">${kd}</div><div class="season-stat-lbl">K/D</div></div>
+${s.hltv ? `<div class="season-stat"><div class="season-stat-val" style="color:${hltvColor(s.hltv)}">${esc(s.hltv)}</div><div class="season-stat-lbl">HLTV</div></div>` : ''}
+</div>
+</div>`;
+}).join('')}
+</div>`;
+document.getElementById('spieler-detail-content').innerHTML = html;
+const spd = getSteamProfile(p.name);
+if (spd && spd.steam) setTimeout(() => applyAvatarToEl(uid, spd.name, spd.steam), 50);
+}
+function closeSpielerDetail() {
+document.getElementById('spieler-detail').style.display = 'none';
+document.getElementById('spieler-list').style.display = '';
+}
+function memberCardHTML(p, isStandin) {
+const uid = 'av' + Math.random().toString(36).slice(2,9);
+const borderColor = isStandin ? '#3a3a3a' : 'var(--red)';
+const players = getSpielerList();
+const hasProfile = players.some(pl => pl.name.toLowerCase() === (p.name||'').toLowerCase());
+const clickAttr = hasProfile ? `onclick="openSpielerFromCard('${esc((p.name||'').replace(/'/g,"\'"))}'); event.stopPropagation();" style="cursor:pointer"` : '';
+const card = `<div class="member-card ${isStandin?'standin':''}" ${clickAttr}>
+<div class="member-avatar" id="${uid}" style="border-color:${borderColor}">${initials(p.name)}</div>
+<div class="member-name">${esc(p.name||'?')}</div>
+${p.role ? '<div class="member-role">'+esc(p.role)+'</div>' : ''}
+${hasProfile ? '<div style="font-size:0.7rem;color:var(--red-light);margin-top:4px;letter-spacing:1px">PROFIL ›</div>' : ''}
+</div>`;
+const sp = getSteamProfile(p.name||'');
+if (sp && sp.steam) setTimeout(() => applyAvatarToEl(uid, sp.name, sp.steam), 50);
+return card;
+}
+function openSpielerFromCard(name) {
+showPage('spieler');
+setTimeout(() => showSpielerDetail(name), 50);
+}
+function matchRowHTML(i, m) {
+const teamOptions = state.teams.map(t =>
+`<option value="${esc(t.id)}" ${m.teamId===t.id?'selected':''}>${esc(t.name)}</option>`
+).join('');
+return `<div class="tbl-row" style="grid-template-columns:1fr 1fr 180px 1fr 32px" id="match-row-${i}">
+<select onchange="updateMatch(${i},'teamId',this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;width:100%;">
+<option value="">Team wählen</option>${teamOptions}
+</select>
+<input type="text" placeholder="Gegner" value="${esc(m.opponent||'')}" oninput="updateMatch(${i},'opponent',this.value)">
+<input type="datetime-local" value="${esc(m.date||'')}" oninput="updateMatch(${i},'date',this.value)" style="background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:7px 10px;font-family:'Rajdhani',sans-serif;font-size:0.9rem;outline:none;width:100%;">
+<input type="text" placeholder="https://twitch.tv/..." value="${esc(m.twitch||'')}" oninput="updateMatch(${i},'twitch',this.value)">
+<button class="del-btn" onclick="delMatch(${i})">&#10005;</button>
+</div>`;
+}
+function addMatch() {
+if (!state.matches) state.matches = [];
+state.matches.push({teamId:'', opponent:'', date:'', twitch:''});
+const i = state.matches.length - 1;
+document.getElementById('matches-edit').insertAdjacentHTML('beforeend', matchRowHTML(i, state.matches[i]));
+document.getElementById('matches-count-lbl').textContent = state.matches.length + ' Einträge';
+}
+function updateMatch(i,k,v) {
+if (!state.matches) state.matches = [];
+if (state.matches[i]) { state.matches[i][k] = v; renderMatches(); }
+}
+function delMatch(i) {
+state.matches.splice(i,1);
+document.getElementById('matches-edit').innerHTML = (state.matches||[]).map((m,j) => matchRowHTML(j,m)).join('');
+document.getElementById('matches-count-lbl').textContent = state.matches.length + ' Einträge';
+renderMatches();
+}
+function renderMatchesAdmin() {
+if (!state.matches) state.matches = [];
+document.getElementById('matches-edit').innerHTML = state.matches.map((m,i) => matchRowHTML(i,m)).join('');
+document.getElementById('matches-count-lbl').textContent = state.matches.length + ' Einträge';
+}
+function renderMatches() {
+const now = Date.now();
+const upcoming = (state.matches||[])
+.filter(m => m.date && new Date(m.date).getTime() > now - 3600000) 
+.sort((a,b) => new Date(a.date) - new Date(b.date));
+const sec = document.getElementById('section-matches');
+const el = document.getElementById('matches-display');
+if (!sec || !el) return;
+if (upcoming.length === 0) { sec.style.display = 'none'; return; }
+sec.style.display = 'block';
+el.innerHTML = '<div class="matches-grid">' + upcoming.map(m => {
+const matchTime = new Date(m.date).getTime();
+const diff = matchTime - now;
+const teamName = (state.teams.find(t => t.id === m.teamId)||{name:m.teamId||'BoBo Clan'}).name;
+const uid = 'cd-' + Math.random().toString(36).slice(2,7);
+let countdownHTML;
+if (diff <= 0) {
+countdownHTML = `<div class="match-live">&#9679; LIVE</div>`;
+} else {
+const d = Math.floor(diff/86400000);
+const h = Math.floor((diff%86400000)/3600000);
+const min = Math.floor((diff%3600000)/60000);
+const s = Math.floor((diff%60000)/1000);
+const parts = d > 0 ? `${d}T ${h}h ${min}m` : h > 0 ? `${h}h ${min}m ${s}s` : `${min}m ${s}s`;
+countdownHTML = `<div class="match-countdown" id="${uid}">${parts}</div>`;
+}
+const dateStr = new Date(m.date).toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const twitchBtn = m.twitch ? `<a href="${esc(m.twitch)}" target="_blank" rel="noopener" class="match-twitch-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M11.6 6H13v4h-1.4V6zm3.8 0H17v4h-1.6V6zM2.1 0L0 5.5V21h6v3h3.4l3-3H17l7-7V0H2.1zm19.5 13-3.4 3.4h-5l-3 3v-3H4.5V2.3h17.1V13z"/></svg> Stream ansehen</a>` : '';
+return `<div class="match-card">
+<div class="match-team">${esc(teamName)}</div>
+<div class="match-center">
+<div class="match-vs">VS</div>
+${countdownHTML}
+<div class="match-date">${dateStr}</div>
+${twitchBtn}
+</div>
+<div class="match-opponent">${esc(m.opponent||'?')}</div>
+</div>`;
+}).join('') + '</div>';
+startCountdowns();
+}
+function startCountdowns() {
+if (countdownInterval) clearInterval(countdownInterval);
+countdownInterval = setInterval(() => {
+const now = Date.now();
+(state.matches||[]).forEach(m => {
+if (!m.date) return;
+const diff = new Date(m.date).getTime() - now;
+document.querySelectorAll('.match-countdown').forEach(el => {
+if (diff <= 0) { el.outerHTML = '<div class="match-live">&#9679; LIVE</div>'; return; }
+const d = Math.floor(diff/86400000);
+const h = Math.floor((diff%86400000)/3600000);
+const min = Math.floor((diff%3600000)/60000);
+const s = Math.floor((diff%60000)/1000);
+el.textContent = d > 0 ? `${d}T ${h}h ${min}m` : h > 0 ? `${h}h ${min}m ${s}s` : `${min}m ${s}s`;
+});
+});
+}, 1000);
+}
+function switchSpielerTab(tab) {
+document.getElementById('spieler-tab-list').style.display = tab === 'list' ? '' : 'none';
+document.getElementById('spieler-tab-compare').style.display = tab === 'compare' ? '' : 'none';
+document.getElementById('stab-list').classList.toggle('active', tab === 'list');
+document.getElementById('stab-compare').classList.toggle('active', tab === 'compare');
+if (tab === 'compare') populateCompareSelects();
+}
+function populateCompareSelects() {
+const players = getSpielerList();
+const opts = '<option value="">Spieler wählen...</option>' +
+players.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+document.getElementById('compare-select-a').innerHTML = opts;
+document.getElementById('compare-select-b').innerHTML = opts;
+document.getElementById('compare-result').innerHTML = '<div class="empty">Wähle zwei Spieler zum Vergleichen</div>';
+}
+function renderCompare() {
+const nameA = document.getElementById('compare-select-a').value;
+const nameB = document.getElementById('compare-select-b').value;
+if (!nameA || !nameB || nameA === nameB) {
+document.getElementById('compare-result').innerHTML = nameA === nameB && nameA
+? '<div class="empty">Bitte zwei verschiedene Spieler wählen</div>'
+: '<div class="empty">Wähle zwei Spieler zum Vergleichen</div>';
+return;
+}
+const players = getSpielerList();
+const pA = players.find(p => p.name === nameA);
+const pB = players.find(p => p.name === nameB);
+if (!pA || !pB) return;
+const atA = calcAllTime(pA.seasons);
+const atB = calcAllTime(pB.seasons);
+const stats = [
+{ label:'Spiele',   a: parseInt(atA.games)||0,    b: parseInt(atB.games)||0,    higher:true,  fmt:v=>v },
+{ label:'Kills',    a: atA.kills||0,               b: atB.kills||0,               higher:true,  fmt:v=>v },
+{ label:'Assists',  a: atA.assists||0,             b: atB.assists||0,             higher:true,  fmt:v=>v },
+{ label:'Tode',     a: atA.deaths||0,              b: atB.deaths||0,              higher:false, fmt:v=>v },
+{ label:'K/D',      a: parseFloat(atA.kd)||0,      b: parseFloat(atB.kd)||0,      higher:true,  fmt:v=>isNaN(v)||v===0?'-':v.toFixed(2) },
+{ label:'HLTV Ø',  a: parseFloat(atA.hltv)||0,    b: parseFloat(atB.hltv)||0,    higher:true,  fmt:v=>isNaN(v)||v===0?'-':v.toFixed(2) },
+{ label:'Saisonen', a: pA.seasons.length,          b: pB.seasons.length,          higher:true,  fmt:v=>v },
+];
+function headerHTML(p, side) {
+const uid = 'cmp-av-' + side + Math.random().toString(36).slice(2,5);
+const align = side === 'b' ? 'flex-direction:row-reverse;text-align:right' : '';
+const h = `<div class="compare-header" style="${align}">
+<div class="compare-header-avatar" id="${uid}">${initials(p.name)}</div>
+<div>
+<div class="compare-header-name">${esc(p.name)}</div>
+<div class="compare-header-teams">${esc([...new Set(p.seasons.map(s=>s.teamName))].join(' · '))}</div>
+</div>
+</div>`;
+return h;
+}
+const rows = stats.map(s => {
+const aWins = s.higher ? s.a > s.b : s.a < s.b;
+const bWins = s.higher ? s.b > s.a : s.b < s.a;
+const aClass = aWins ? 'winner' : bWins ? 'loser' : '';
+const bClass = bWins ? 'winner' : aWins ? 'loser' : '';
+return `<tr class="stat-row">
+<td class="${aClass}" style="text-align:right">${s.fmt(s.a)}</td>
+<td class="stat-label">${s.label}</td>
+<td class="${bClass}">${s.fmt(s.b)}</td>
+</tr>`;
+}).join('');
+document.getElementById('compare-result').innerHTML = `
+<div class="compare-grid">
+${headerHTML(pA,'a')}
+<div style="display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:1.2rem;color:#555;letter-spacing:3px;">VS</div>
+${headerHTML(pB,'b')}
+</div>
+<table class="compare-table" style="margin-top:1rem;background:var(--dark3);border:1px solid #2a2a2a;">
+${rows}
+</table>`;
+}
+function filterSpieler(q) {
+const term = q.toLowerCase().trim();
+document.querySelectorAll('#spieler-list .spieler-card').forEach(card => {
+const name = card.querySelector('.spieler-name')?.textContent.toLowerCase() || '';
+const teams = card.querySelector('.spieler-teams')?.textContent.toLowerCase() || '';
+card.style.display = (!term || name.includes(term) || teams.includes(term)) ? '' : 'none';
+});
+}
+function filterHistoire(q) {
+const term = q.toLowerCase().trim();
+document.querySelectorAll('#hist-panels .hist-panel').forEach(panel => {
+const teamId = panel.id.replace('hpanel-', '');
+const team = state.histoire.find(t => t.id === teamId);
+const teamName = team ? team.name.toLowerCase() : '';
+// Team matches if query appears anywhere in the team name
+const teamMatches = !term || teamName.includes(term);
+
+// Also check each season card individually
+const cards = panel.querySelectorAll('.season-card');
+let anyCardVisible = false;
+cards.forEach(card => {
+const text = card.textContent.toLowerCase();
+const cardMatches = !term || text.includes(term) || teamMatches;
+card.style.display = cardMatches ? '' : 'none';
+if (cardMatches) anyCardVisible = true;
+});
+
+// Show panel if team name matches (show all cards) or any card matches
+const panelVisible = !term || teamMatches || anyCardVisible;
+panel.style.display = panelVisible ? '' : 'none';
+
+// Update tab visibility
+const tab = document.getElementById('htab-' + teamId);
+if (tab) tab.style.display = panelVisible ? '' : 'none';
+
+// If this panel is active but hidden, switch to first visible
+if (!panelVisible && panel.classList.contains('active')) {
+const firstVisible = document.querySelector('#hist-panels .hist-panel[style*="display: "]:not([style*="none"]), #hist-panels .hist-panel:not([style])');
+if (firstVisible) {
+const firstId = firstVisible.id.replace('hpanel-', '');
+switchHist(firstId);
+}
+}
 });
 }
 function applyData(data) {
