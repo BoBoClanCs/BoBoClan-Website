@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BoBo Clan – Counter-Strike 2</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1779744751">
+<link rel="stylesheet" href="style.css?v=1779754619">
 </head>
 <body>
 
@@ -111,7 +111,22 @@
             <button id="admin-profile-save-btn" class="admin-save-btn" onclick="saveAdminProfile()" style="margin-top:0.5rem;">Profil speichern</button>
           </div>
         </div>
-        <div class="token-box">
+        
+        <!-- Invite Link -->
+        <div class="admin-card" style="margin-bottom:1.5rem;">
+          <div class="admin-card-head" onclick="toggleCard(this)">
+            <div class="admin-card-title">&#128279; Einladungslink</div>
+            <div class="admin-card-arrow open">&#9660;</div>
+          </div>
+          <div class="admin-card-body open">
+            <p style="font-size:0.85rem;color:#666;margin-bottom:1rem;line-height:1.6">Generiere einen Link f&uuml;r neue Mitglieder. Der Link ist 7 Tage g&uuml;ltig und erm&ouml;glicht die Registrierung ohne GitHub-Token.</p>
+            <button class="admin-save-btn" onclick="generateInviteLink()" style="margin-bottom:0.75rem;">&#128279; Einladungslink generieren &amp; kopieren</button>
+            <input type="text" id="invite-link-output" readonly style="display:none;width:100%;background:var(--dark4);border:1px solid #2a2a2a;color:#888;padding:8px 12px;font-family:'Rajdhani',sans-serif;font-size:0.85rem;outline:none;margin-top:0.5rem;">
+            <div id="invite-link-status" style="display:none;font-size:0.8rem;color:#2ecc71;margin-top:0.5rem;"></div>
+          </div>
+        </div>
+
+<div class="token-box">
           <p>&#128274; <strong style="color:var(--cream)">GitHub Token</strong> – wird nur lokal gespeichert.<br>
           Erstellen: <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> &rarr; Tokens (classic) &rarr; repo</p>
           <div class="token-row">
@@ -403,6 +418,6 @@
   </div>
 </div>
 
-<script src="app.js?v=1779744751"></script>
+<script src="app.js?v=1779754619"></script>
 </body>
 </html>
