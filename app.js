@@ -360,7 +360,16 @@ ${buildRoleOptions(u.role)}
 }
 function changeRole(i,role){
   state.users[i].role=role;
-  if(currentUser&&state.users[i].name===currentUser.name){currentUser.role=role;localStorage.setItem('bobo_session',JSON.stringify(currentUser));updateAuthUI();}
+  // Update own session immediately if it's the current user
+  if(currentUser&&state.users[i].name===currentUser.name){
+    currentUser.role=role;
+    localStorage.setItem('bobo_session',JSON.stringify(currentUser));
+    updateAuthUI();
+    if(role!=='admin'){
+      const ap=document.getElementById('admin-panel');
+      if(ap&&ap.style.display!=='none')closeAdmin();
+    }
+  }
 }
 function delUser(i){if(!confirm('Benutzer löschen?'))return;state.users.splice(i,1);renderUsersAdmin();}
 async function changePlayerPassword(){
@@ -1222,6 +1231,25 @@ function applyData(data){
 }
 function afterLoad(){
   renderPublic();
+  // Verify session role against current data.json (catches role changes by admin)
+  if(currentUser){
+    const dbUser=(state.users||[]).find(u=>u.name.toLowerCase()===currentUser.name.toLowerCase());
+    if(dbUser && dbUser.role !== currentUser.role){
+      // Role changed - update session
+      currentUser.role = dbUser.role;
+      localStorage.setItem('bobo_session', JSON.stringify(currentUser));
+      // If they lost admin - close admin panel
+      if(dbUser.role !== 'admin'){
+        const ap = document.getElementById('admin-panel');
+        if(ap && ap.style.display !== 'none') closeAdmin();
+      }
+    }
+    // If user was deleted - log out
+    if(!dbUser){
+      logout();
+      return;
+    }
+  }
   updateAuthUI();
   const ph=document.getElementById('pub-histoire');
   const ps=document.getElementById('pub-spieler');
