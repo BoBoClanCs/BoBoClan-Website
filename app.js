@@ -894,12 +894,11 @@ function showSpielerDetail(name){
 }
 function closeSpielerDetail(){document.getElementById('spieler-detail').style.display='none';document.getElementById('spieler-list').style.display='';}
 function openSpielerFromCard(name){
-  const sec=document.getElementById('pub-spieler');
-  const link=document.getElementById('nav-spieler-link');
-  if(sec){sec.style.display='block';sec.setAttribute('data-open','1');}
-  if(link)link.style.borderBottom='2px solid var(--red)';
-  renderSpielerList();showSpielerDetail(name);
-  setTimeout(()=>{if(sec)sec.scrollIntoView({behavior:'smooth'});},50);
+  showPage('spieler');
+  setTimeout(()=>{
+    showSpielerDetail(name);
+    window.scrollTo({top:0,behavior:'smooth'});
+  },50);
 }
 
 
