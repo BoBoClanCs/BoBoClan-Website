@@ -373,13 +373,14 @@ function buildDOM(){
     <div style="display:flex;gap:0;border:1px solid #2a2a2a;width:fit-content;margin-bottom:2rem;">
       <button class="tab-btn active" id="team-tab-tactics" onclick="switchTeamAreaTab('tactics')">&#127918; Taktiken</button>
       <button class="tab-btn" id="team-tab-training" onclick="switchTeamAreaTab('training')">&#128336; Training</button>
+      <button class="tab-btn" id="team-tab-positions" onclick="switchTeamAreaTab('positions')">&#128205; Positionen</button>
     </div>
     <!-- Tactics -->
     <div id="team-section-tactics">
       <div id="team-area-tactics"></div>
     </div>
     <!-- Training -->
-    <div id="team-section-training" style="display:none;">
+    <div id="team-section-positions" style="display:none;"></div>\n    <div id="team-section-training" style="display:none;">
       <div id="team-area-training"></div>
     </div>
   </div>
@@ -1982,7 +1983,7 @@ function applyData(data){
   if(data.matches)state.matches=data.matches;
   if(data.spielerProfiles)state.spielerProfiles=data.spielerProfiles;
   if(data.users)state.users=data.users;
-  if(data.teamData)state.teamData=data.teamData;
+  if(data.teamData){state.teamData=data.teamData;Object.keys(state.teamData).forEach(id=>{if(!state.teamData[id].positions)state.teamData[id].positions={};});}
   if(data._t)state._t=data._t;
   if(data.discordLink)state.discordLink=data.discordLink;
 }
