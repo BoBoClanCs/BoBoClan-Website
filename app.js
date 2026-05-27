@@ -252,7 +252,7 @@ function buildDOM(){
 <!-- NAECHSTE MATCHES -->
 <section id="section-matches" style="background:var(--dark3);padding:60px 2rem;display:none;">
   <div class="container">
-    <h2 class="section-title">N&auml;chste <span>Matches</span></h2>
+    <h2 class="section-title">N&Auml;CHSTES <span>MATCH</span></h2>
     <div class="section-line"></div>
     <div id="matches-display"></div>
   </div>
