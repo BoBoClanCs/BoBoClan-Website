@@ -1355,7 +1355,7 @@ function openSpielerFromCard(name){
 function renderHomeMatches(){
   const now=Date.now();
   const upcoming=(state.matches||[])
-    .filter(m=>m.date&&new Date(m.date).getTime()>now)
+    .filter(m=>m.date&&new Date(m.date).getTime()>now-3*60*60*1000)
     .sort((a,b)=>new Date(a.date)-new Date(b.date))
     .slice(0,5);
   const el=document.getElementById('matches-home-display');
@@ -1573,6 +1573,7 @@ function renderMatches(){
     const teamName=(state.teams.find(t=>t.id===m.teamId)||{name:m.teamId||'BoBo Clan'}).name;
     const uid='cd-'+Math.random().toString(36).slice(2,7);
     let countdownHTML;
+    if(diff<=-3*60*60*1000){return '';} // remove after 3h
     if(diff<=0){countdownHTML='<div class="match-live">&#9679; LIVE</div>';}
     else{const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),min=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);countdownHTML='<div class="match-countdown" id="'+uid+'">'+(d>0?d+'T '+h+'h '+min+'m':h>0?h+'h '+min+'m '+s+'s':min+'m '+s+'s')+'</div>';}
     const dateStr=new Date(m.date).toLocaleString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
