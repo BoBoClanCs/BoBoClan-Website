@@ -125,7 +125,14 @@
               ]
             }
           },
-          "matchMvpVotes": {},
+          "matchMvpVotes": {
+            "Nullkisir": {
+              "count": 1,
+              "voters": [
+                "Nullkisir"
+              ]
+            }
+          },
           "votingClosed": false
         }
       ]
