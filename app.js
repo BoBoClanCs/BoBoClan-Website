@@ -1392,22 +1392,28 @@ function getMatchVotingOpen(result){
   return false; // no match entry = voting closed
 }
 
-function castVote(teamId,resultIdx,type,player){
+function castVote(teamId,resultIdx,type,player,mapName){
   if(!currentUser){openLoginOverlay();return;}
   const team=teamById(teamId);
   if(!team)return;
   const result=team.results[resultIdx];
   if(!result)return;
   if(!getMatchVotingOpen(result)){alert('Abstimmung ist geschlossen.');return;}
-  const votes=type==='map'?result.mapMvpVotes:result.matchMvpVotes;
-  // Remove previous vote by this user
+  let votes;
+  if(type==='map'){
+    if(!result.mapMvpVotes)result.mapMvpVotes={};
+    if(!result.mapMvpVotes[mapName])result.mapMvpVotes[mapName]={};
+    votes=result.mapMvpVotes[mapName];
+  } else {
+    votes=result.matchMvpVotes;
+  }
+  // Remove previous vote by this user from this category
   Object.keys(votes).forEach(p=>{
     if(votes[p]&&votes[p].voters){
       votes[p].voters=votes[p].voters.filter(v=>v!==currentUser.name);
       votes[p].count=votes[p].voters.length;
     }
   });
-  // Add new vote
   if(!votes[player])votes[player]={count:0,voters:[]};
   if(!votes[player].voters.includes(currentUser.name)){
     votes[player].voters.push(currentUser.name);
@@ -1419,18 +1425,22 @@ function castVote(teamId,resultIdx,type,player){
 }
 
 function tallyMvps(result){
-  const mapMvp=getMvpFromVotes(result.mapMvpVotes);
+  // Tally per-map MVPs
+  const mapVotes=result.mapMvpVotes||{};
+  Object.entries(mapVotes).forEach(([mapName,votes])=>{
+    const mvp=getMvpFromVotes(votes);
+    if(!mvp)return;
+    let p=(state.spielerProfiles||[]).find(x=>x.name===mvp);
+    if(!p){p={name:mvp,steam:'',discord:'',bio:'',faceit:''};state.spielerProfiles.push(p);}
+    p.mapMvps=(p.mapMvps||0)+1;
+  });
+  // Tally match MVP
   const matchMvp=getMvpFromVotes(result.matchMvpVotes);
-  const addMvp=(name,type)=>{
-    if(!name)return;
-    let p=(state.spielerProfiles||[]).find(x=>x.name===name);
-    if(!p){p={name,steam:'',discord:'',bio:'',faceit:''};state.spielerProfiles.push(p);}
-    if(type==='map')p.mapMvps=(p.mapMvps||0)+1;
-    else p.matchMvps=(p.matchMvps||0)+1;
-  };
-  addMvp(mapMvp,'map');
-  addMvp(matchMvp,'match');
-  // Clear votes after tallying
+  if(matchMvp){
+    let p=(state.spielerProfiles||[]).find(x=>x.name===matchMvp);
+    if(!p){p={name:matchMvp,steam:'',discord:'',bio:'',faceit:''};state.spielerProfiles.push(p);}
+    p.matchMvps=(p.matchMvps||0)+1;
+  }
   result.mapMvpVotes={};
   result.matchMvpVotes={};
 }
@@ -1463,38 +1473,55 @@ function renderMvpModal(teamId,resultIdx){
   const r=team.results[resultIdx];
   const players=team.players.filter(p=>p.type!=='standin').map(p=>p.name);
   const open=getMatchVotingOpen(r);
-  const mapMvp=getMvpFromVotes(r.mapMvpVotes);
-  const matchMvp=getMvpFromVotes(r.matchMvpVotes);
-  const _fv=(votes)=>{if(!currentUser)return null;const e=Object.entries(votes||{}).find(([p,v])=>v.voters&&v.voters.includes(currentUser.name));return e?e[0]:null;};
-  const userMapVote=_fv(r.mapMvpVotes);
-  const userMatchVote=_fv(r.matchMvpVotes);
+  const maps=(r.maps||[]).filter(m=>m.map);
+
+  const voteButtons=(votes,userVote,onVote)=>
+    players.map(p=>{
+      const count=(votes[p]&&votes[p].count)||0;
+      const voted=userVote===p;
+      return '<button onclick="'+onVote(p)+'" style="font-family:Rajdhani,sans-serif;font-size:0.9rem;padding:6px 14px;cursor:pointer;margin:2px;border:1px solid '+(voted?'var(--red)':'#333')+';background:'+(voted?'var(--red)':'var(--dark4)')+';color:var(--cream);">'
+        +esc(p)+(count?' <span style="opacity:0.6;font-size:0.8rem;">('+count+')</span>':'')
+        +'</button>';
+    }).join('');
+
+  const getUserVote=(votes)=>{
+    if(!currentUser)return null;
+    const e=Object.entries(votes||{}).find(([p,v])=>v.voters&&v.voters.includes(currentUser.name));
+    return e?e[0]:null;
+  };
+
+  // Per-map MVP sections
+  const mapSections=maps.map(m=>{
+    const mapVotes=(r.mapMvpVotes||{})[m.map]||{};
+    const userVote=getUserVote(mapVotes);
+    const mvp=getMvpFromVotes(mapVotes);
+    return '<div style="margin-bottom:1.5rem;">'
+      +'<div style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;margin-bottom:0.5rem;text-transform:uppercase;">Map MVP – '+esc(m.map)+(mvp?' <span style="color:var(--cream)">→ '+esc(mvp)+'</span>':'')+'</div>'
+      +(open?'<div>'+voteButtons(mapVotes,userVote,(p)=>"castVote('"+teamId+"',"+resultIdx+",'map','"+p+"','"+m.map+"')")+'</div>'
+        :'<div style="color:#888;font-size:0.85rem;">'+(mvp?'MVP: <b style="color:var(--cream)">'+esc(mvp)+'</b>':'Keine Stimmen')+'</div>')
+      +'</div>';
+  }).join('');
+
+  // Match MVP section
+  const matchVotes=r.matchMvpVotes||{};
+  const userMatchVote=getUserVote(matchVotes);
+  const matchMvp=getMvpFromVotes(matchVotes);
+  const matchSection='<div style="margin-bottom:1.5rem;border-top:1px solid #2a2a2a;padding-top:1rem;">'
+    +'<div style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;margin-bottom:0.5rem;text-transform:uppercase;">Match MVP'+(matchMvp?' <span style="color:var(--cream)">→ '+esc(matchMvp)+'</span>':'')+'</div>'
+    +(open?'<div>'+voteButtons(matchVotes,userMatchVote,(p)=>"castVote('"+teamId+"',"+resultIdx+",'match','"+p+"','')")+'</div>'
+      :'<div style="color:#888;font-size:0.85rem;">'+(matchMvp?'MVP: <b style="color:var(--cream)">'+esc(matchMvp)+'</b>':'Keine Stimmen')+'</div>')
+    +'</div>';
 
   let el=document.getElementById('mvp-modal');
   if(!el){el=document.createElement('div');el.id='mvp-modal';document.body.appendChild(el);}
   el.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;';
-
-  const voteRow=(type,votes,userVote)=>'<div style="margin-bottom:1.5rem;">'
-    +'<div style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;color:#666;margin-bottom:0.75rem;text-transform:uppercase;">'+(type==='map'?'Map MVP':'Match MVP')+(mapMvp&&type==='map'?' – aktuell: <span style="color:var(--cream)">'+esc(mapMvp)+'</span>':matchMvp&&type==='match'?' – aktuell: <span style="color:var(--cream)">'+esc(matchMvp)+'</span>':'')+'</div>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">'
-    +players.map(p=>{
-      const count=(votes[p]&&votes[p].count)||0;
-      const voted=userVote===p;
-      return '<button onclick="castVote(\''+teamId+'\','+resultIdx+',\''+type+'\',\''+esc(p)+'\')" '
-        +'style="font-family:Rajdhani,sans-serif;font-size:0.9rem;padding:6px 14px;cursor:pointer;border:1px solid '+(voted?'var(--red)':'#333')+';background:'+(voted?'var(--red)':'var(--dark4)')+';color:var(--cream);">'
-        +esc(p)+(count?' <span style="opacity:0.6;font-size:0.8rem;">('+count+')</span>':'')
-        +'</button>';
-    }).join('')
-    +'</div></div>';
-
-  el.innerHTML='<div style="background:var(--dark2);border:1px solid var(--red);padding:2rem;max-width:500px;width:90%;position:relative;">'
-    +'<div style="font-family:Oswald,sans-serif;font-size:1.1rem;letter-spacing:3px;color:var(--cream);margin-bottom:1.5rem;">&#127942; MVP ABSTIMMUNG<br><span style="font-size:0.8rem;color:#666;">'+esc(team.name)+' vs '+esc(r.opp)+(r.map?' – '+esc(r.map):'')+'</span></div>'
-    +(open?voteRow('map',r.mapMvpVotes||{},userMapVote)+voteRow('match',r.matchMvpVotes||{},userMatchVote)
-      :'<div style="color:#666;font-size:0.9rem;margin-bottom:1.5rem;">Abstimmung geschlossen.<br>'
-        +(mapMvp?'Map MVP: <span style="color:var(--cream)">'+esc(mapMvp)+'</span><br>':'')
-        +(matchMvp?'Match MVP: <span style="color:var(--cream)">'+esc(matchMvp)+'</span>':'')
-        +'</div>')
-    +(isAdmin()&&open?'<button onclick="closeVoting(\''+teamId+'\','+resultIdx+')" style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;background:none;border:1px solid #444;color:#666;padding:6px 14px;cursor:pointer;margin-bottom:1rem;display:block;">Abstimmung beenden</button>':'')
-    +(currentUser?'':'<div style="color:#666;font-size:0.85rem;margin-bottom:1rem;">Einloggen um abzustimmen.</div>')
+  el.innerHTML='<div style="background:var(--dark2);border:1px solid var(--red);padding:2rem;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;position:relative;">'
+    +'<div style="font-family:Oswald,sans-serif;font-size:1.1rem;letter-spacing:3px;color:var(--cream);margin-bottom:1.5rem;">&#127942; MVP ABSTIMMUNG<br><span style="font-size:0.8rem;color:#666;">'+esc(team.name)+' vs '+esc(r.opp)+'</span>'
+    +(open?'<span style="font-size:0.7rem;color:var(--red-light);display:block;margin-top:4px;">Abstimmung läuft</span>':'<span style="font-size:0.7rem;color:#555;display:block;margin-top:4px;">Abstimmung geschlossen</span>')+'</div>'
+    +(maps.length>0?mapSections:'<div style="color:#666;font-size:0.85rem;margin-bottom:1rem;">Keine Maps eingetragen.</div>')
+    +matchSection
+    +(isAdmin()&&open?'<button onclick="closeVoting(\''+teamId+'\','+resultIdx+')" style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;background:none;border:1px solid #444;color:#666;padding:6px 14px;cursor:pointer;margin-top:0.5rem;display:block;">Abstimmung beenden</button>':'')
+    +(!currentUser?'<div style="color:#666;font-size:0.85rem;margin-top:1rem;">Einloggen um abzustimmen.</div>':'')
     +'<button onclick="document.getElementById(\'mvp-modal\').style.display=\'none\'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#666;font-size:1.2rem;cursor:pointer;">&#10005;</button>'
     +'</div>';
 }
@@ -1550,7 +1577,10 @@ function renderHomeResults(){
       +'<div class="home-result-score">'+(r.maps&&r.maps.length>0?r.maps.filter(m=>m.map).map(m=>'<span style="font-size:0.85rem;display:block;white-space:nowrap;">'+esc(m.map)+' <b>'+(m.s1&&m.s2?esc(m.s1)+'–'+esc(m.s2):'?–?')+'</b></span>').join(''):esc(r.s1||'?')+' – '+esc(r.s2||'?'))+'</div>'
       +'<div></div>'
       +'<span class="badge '+resMap[res]+'">'+lblMap[res]+'</span>'
-      +'<div class="home-result-mvp">'+(mapMvp?'🏆 Map: <b>'+esc(mapMvp)+'</b> ':'')+(matchMvp?'🥇 Match: <b>'+esc(matchMvp)+'</b>':'')+'</div>'
+      +'<div class="home-result-mvp">'
+      +((r.maps||[]).filter(m=>m.map).map(m=>{const mv=getMvpFromVotes((r.mapMvpVotes||{})[m.map]);return mv?'&#127942; '+esc(m.map)+': <b>'+esc(mv)+'</b> ':''}).join(''))
+      +(matchMvp?'&#127941; Match: <b>'+esc(matchMvp)+'</b>':'')
+      +'</div>'
       +'<button class="mvp-vote-btn'+(open?' mvp-open':'')+'" onclick="renderMvpModal(\''+r.teamId+'\','+origIdx+')">'+(open?'🏆 Abstimmen':'🏆 MVPs')+'</button>'
       +'</div>';
 
