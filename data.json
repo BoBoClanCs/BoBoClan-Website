@@ -116,12 +116,22 @@
           "s1": "13",
           "s2": "8",
           "map": "Mirage",
-          "res": "win"
+          "res": "win",
+          "mapMvpVotes": {},
+          "matchMvpVotes": {},
+          "votingClosed": false
         }
       ]
     }
   ],
-  "matches": [],
+  "matches": [
+    {
+      "teamId": "boot",
+      "opponent": "test",
+      "date": "2026-05-27T01:40",
+      "twitch": ""
+    }
+  ],
   "histoire": [
     {
       "id": "boot",
