@@ -1778,6 +1778,98 @@ function switchTeamAreaTab(tab){
   if(tab==='training')renderTraining(currentTeamAreaId);
   if(tab==='positions')renderPositions(currentTeamAreaId);
 }
+function renderPositions(teamId){
+  const el=document.getElementById('team-section-positions');
+  if(!el)return;
+  if(!state.teamData[teamId])state.teamData[teamId]={tactics:[],training:[],positions:{}};
+  if(!state.teamData[teamId].positions)state.teamData[teamId].positions={};
+  const pos=state.teamData[teamId].positions;
+  const team=teamById(teamId);
+  const players=(team?team.players:[]).filter(p=>p.name).map(p=>p.name);
+  const canEdit=isAdmin()||isCoachOf(teamId);
+  const maps=Object.keys(pos);
+
+  let html='<div style="padding:1.5rem;">';
+  html+='<div style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:3px;color:#555;text-transform:uppercase;margin-bottom:1rem;">Karten-Positionen</div>';
+
+  if(canEdit){
+    html+='<div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;">'
+      +'<input type="text" id="new-pos-map" placeholder="Mapname z.B. Mirage" style="flex:1;background:var(--dark4);border:1px solid #2a2a2a;color:var(--cream);padding:8px 12px;font-family:Rajdhani,sans-serif;font-size:0.9rem;outline:none;">'
+      +'<button onclick="addPositionMap(\''+teamId+'\')" style="font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;background:var(--red);color:#fff;border:none;padding:8px 16px;cursor:pointer;">+ MAP</button>'
+      +'</div>';
+  }
+
+  if(maps.length===0){
+    html+='<div class="empty">Noch keine Maps eingetragen</div>';
+  } else {
+    maps.forEach(function(mapName){
+      const slots=pos[mapName]||[];
+      while(slots.length<5)slots.push({pos:'',player:''});
+      html+='<div style="background:var(--dark3);border:1px solid #2a2a2a;margin-bottom:1rem;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-bottom:1px solid #2a2a2a;">'
+          +'<span style="font-family:Oswald,sans-serif;font-size:0.9rem;letter-spacing:2px;color:var(--cream);">'+esc(mapName)+'</span>'
+          +(canEdit?'<button onclick="delPositionMap(\''+teamId+'\',\''+mapName+'\')" style="background:none;border:none;color:#555;cursor:pointer;font-size:0.8rem;">&#10005; Löschen</button>':'')
+        +'</div>'
+        +'<div style="padding:0.75rem 1rem;">'
+        +'<div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:0.5rem;margin-bottom:0.4rem;">'
+        +'<span style="font-family:Oswald,sans-serif;font-size:0.65rem;letter-spacing:1px;color:#444;">#</span>'
+        +'<span style="font-family:Oswald,sans-serif;font-size:0.65rem;letter-spacing:1px;color:#444;">POSITION</span>'
+        +'<span style="font-family:Oswald,sans-serif;font-size:0.65rem;letter-spacing:1px;color:#444;">SPIELER</span>'
+        +'</div>';
+
+      for(var i=0;i<5;i++){
+        const slot=slots[i]||{pos:'',player:''};
+        html+='<div style="display:grid;grid-template-columns:30px 1fr 1fr;gap:0.5rem;margin-bottom:0.4rem;align-items:center;">'
+          +'<span style="font-family:Oswald,sans-serif;font-size:0.7rem;color:#444;text-align:center;">'+(i+1)+'</span>';
+        if(canEdit){
+          html+='<input type="text" value="'+esc(slot.pos||'')+'" placeholder="z.B. A-Ramp" '
+            +'oninput="updatePosition(\''+teamId+'\',\''+mapName+'\','+i+',\'pos\',this.value)" '
+            +'style="background:var(--dark4);border:1px solid #1a1a1a;color:var(--cream);padding:6px 10px;font-family:Rajdhani,sans-serif;font-size:0.85rem;outline:none;">'
+          +'<select onchange="updatePosition(\''+teamId+'\',\''+mapName+'\','+i+',\'player\',this.value)" '
+            +'style="background:var(--dark4);border:1px solid #1a1a1a;color:var(--cream);padding:6px 10px;font-family:Rajdhani,sans-serif;font-size:0.85rem;outline:none;">'
+            +'<option value="">– Spieler –</option>'
+            +players.map(function(p){return '<option value="'+esc(p)+'"'+(slot.player===p?' selected':'')+'>'+esc(p)+'</option>';}).join('')
+            +'</select>';
+        } else {
+          html+='<span style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:#aaa;">'+esc(slot.pos||'–')+'</span>'
+            +'<span style="font-family:Rajdhani,sans-serif;font-size:0.9rem;color:var(--cream);">'+esc(slot.player||'–')+'</span>';
+        }
+        html+='</div>';
+      }
+      html+='</div></div>';
+    });
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function addPositionMap(teamId){
+  const input=document.getElementById('new-pos-map');
+  const mapName=(input?input.value:'').trim();
+  if(!mapName)return;
+  if(!state.teamData[teamId])state.teamData[teamId]={tactics:[],training:[],positions:{}};
+  if(!state.teamData[teamId].positions)state.teamData[teamId].positions={};
+  if(state.teamData[teamId].positions[mapName]){alert('Map bereits vorhanden');return;}
+  state.teamData[teamId].positions[mapName]=[{pos:'',player:''},{pos:'',player:''},{pos:'',player:''},{pos:'',player:''},{pos:'',player:''}];
+  if(input)input.value='';
+  renderPositions(teamId);
+}
+
+function delPositionMap(teamId,mapName){
+  if(!state.teamData[teamId]||!state.teamData[teamId].positions)return;
+  delete state.teamData[teamId].positions[mapName];
+  renderPositions(teamId);
+}
+
+function updatePosition(teamId,mapName,slotIdx,field,val){
+  if(!state.teamData[teamId]||!state.teamData[teamId].positions)return;
+  if(!state.teamData[teamId].positions[mapName])return;
+  if(!state.teamData[teamId].positions[mapName][slotIdx])
+    state.teamData[teamId].positions[mapName][slotIdx]={pos:'',player:''};
+  state.teamData[teamId].positions[mapName][slotIdx][field]=val;
+}
+
+
 function renderTeamArea(teamId){
 const team=state.teams.find(t=>t.id===teamId);if(!team)return;
 const td=getTeamData(teamId);
