@@ -1518,14 +1518,18 @@ function renderHomeResults(){
     const team=state.teams.find(t=>t.id===r.teamId)||{results:[]};
     const origIdx=team.results.findIndex(x=>x.opp===r.opp&&x.map===r.map&&x.s1===r.s1);
     return '<div class="home-result-row '+res+'">'
-      +'<div class="home-result-team">'+esc(r.teamName)+'</div>'
+      +'<div class="home-result-matchup">'
+        +'<span class="home-result-team">'+esc(r.teamName)+'</span>'
+        +'<span class="home-result-vs">vs</span>'
+        +'<span class="home-result-opp">'+esc(r.opp||'?')+'</span>'
+      +'</div>'
       +'<div class="home-result-score">'+esc(r.s1||'?')+' – '+esc(r.s2||'?')+'</div>'
-      +'<div class="home-result-opp">vs '+esc(r.opp||'?')+'</div>'
-      +(r.map?'<div class="home-result-map">'+esc(r.map)+'</div>':'<div></div>')
+      +(r.map?'<div class="home-result-map"><span class="map-label">'+esc(r.map)+'</span></div>':'<div></div>')
       +'<span class="badge '+resMap[res]+'">'+lblMap[res]+'</span>'
       +'<div class="home-result-mvp">'+(mapMvp?'🏆 Map: <b>'+esc(mapMvp)+'</b> ':'')+(matchMvp?'🥇 Match: <b>'+esc(matchMvp)+'</b>':'')+'</div>'
       +'<button class="mvp-vote-btn'+(open?' mvp-open':'')+'" onclick="renderMvpModal(\''+r.teamId+'\','+origIdx+')">'+(open?'🏆 Abstimmen':'🏆 MVPs')+'</button>'
       +'</div>';
+
   }).join('')+'</div>';
 
 }
