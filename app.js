@@ -1874,7 +1874,7 @@ let tbState = {
   side: 'ct',
   color: '#ff4444',
   drawing: false,
-  elements: [],  // {type, ...data}
+  elements: [],
   history: [],
   future: [],
   selected: null,
@@ -1882,6 +1882,11 @@ let tbState = {
   lastPoint: null,
   strokePoints: [],
   canvasScale: 1,
+  zoom: 1,
+  panX: 0,
+  panY: 0,
+  isPanning: false,
+  panStart: null,
 };
 
 function openTacticBoard(teamId, tacticIdx) {
@@ -1894,12 +1899,15 @@ function openTacticBoard(teamId, tacticIdx) {
   tbState.history = [];
   tbState.future = [];
   tbState.selected = null;
+  tbState.zoom = 1;
+  tbState.panX = 0;
+  tbState.panY = 0;
 
   let modal = document.getElementById('tactic-board-modal');
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'tactic-board-modal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:#0a0a0a;display:flex;flex-direction:column;';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:#0a0a0a;display:flex;flex-direction:column;touch-action:none;';
     document.body.appendChild(modal);
   }
   modal.style.display = 'flex';
@@ -1954,6 +1962,7 @@ function renderTacticBoard() {
   const tools = [
     {id:'select', icon:'↖', label:'Auswahl'},
     {id:'move', icon:'✥', label:'Verschieben'},
+    {id:'pan', icon:'✋', label:'Verschieben (Pan)'},
     {id:'ct', icon:'CT', label:'CT Spieler'},
     {id:'t', icon:'T', label:'T Spieler'},
     {id:'arrow', icon:'→', label:'Pfeil'},
@@ -1980,6 +1989,7 @@ function renderTacticBoard() {
       <div style="display:flex;gap:4px;">
         <button onclick="tbUndo()" title="Rückgängig (Strg+Z)" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">↩ Undo</button>
         <button onclick="tbRedo()" title="Wiederholen (Strg+Y)" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">↪ Redo</button>
+        <button onclick="tbResetView()" title="Zoom zurücksetzen" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">⊡ Reset</button>
         <button onclick="tbClearAll()" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">🗑 Alles</button>
       </div>
       <div style="display:flex;gap:4px;margin-left:auto;">
@@ -2024,6 +2034,13 @@ function tbSetTool(tool) {
   }
 }
 
+function tbResetView() {
+  tbState.zoom = 1;
+  tbState.panX = 0;
+  tbState.panY = 0;
+  tbDrawCanvas();
+}
+
 function tbClearAll() {
   if (!confirm('Alle Elemente löschen?')) return;
   tbSnapshot();
@@ -2055,6 +2072,21 @@ function tbInitCanvas() {
   canvas.addEventListener('mouseup', tbMouseUp);
   canvas.addEventListener('mouseleave', tbMouseUp);
   canvas.addEventListener('dblclick', tbDblClick);
+  // Prevent zoom on canvas
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) / tbState.canvasScale;
+    const mouseY = (e.clientY - rect.top) / tbState.canvasScale;
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.max(0.5, Math.min(4, tbState.zoom * delta));
+    // Zoom towards mouse position
+    tbState.panX = mouseX - (mouseX - tbState.panX) * (newZoom / tbState.zoom);
+    tbState.panY = mouseY - (mouseY - tbState.panY) * (newZoom / tbState.zoom);
+    tbState.zoom = newZoom;
+    tbDrawCanvas();
+  }, {passive: false});
+  canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
 
   tbDrawCanvas();
 }
@@ -2062,13 +2094,22 @@ function tbInitCanvas() {
 function tbGetPos(e) {
   const canvas = document.getElementById('tb-canvas');
   const rect = canvas.getBoundingClientRect();
+  const cx = (e.clientX - rect.left) / tbState.canvasScale;
+  const cy = (e.clientY - rect.top) / tbState.canvasScale;
   return {
-    x: (e.clientX - rect.left) / tbState.canvasScale,
-    y: (e.clientY - rect.top) / tbState.canvasScale
+    x: (cx - tbState.panX) / tbState.zoom,
+    y: (cy - tbState.panY) / tbState.zoom
   };
 }
 
 function tbMouseDown(e) {
+  // Middle mouse button or space = pan
+  if (e.button === 1 || tbState.tool === 'pan') {
+    tbState.isPanning = true;
+    tbState.panStart = { x: e.clientX - tbState.panX * tbState.canvasScale, y: e.clientY - tbState.panY * tbState.canvasScale };
+    e.preventDefault();
+    return;
+  }
   const pos = tbGetPos(e);
   const tool = tbState.tool;
 
@@ -2119,6 +2160,12 @@ function tbMouseDown(e) {
 }
 
 function tbMouseMove(e) {
+  if (tbState.isPanning) {
+    tbState.panX = (e.clientX - tbState.panStart.x) / tbState.canvasScale;
+    tbState.panY = (e.clientY - tbState.panStart.y) / tbState.canvasScale;
+    tbDrawCanvas();
+    return;
+  }
   if (!tbState.drawing) return;
   const pos = tbGetPos(e);
   const tool = tbState.tool;
@@ -2158,6 +2205,11 @@ function tbMouseMove(e) {
 }
 
 function tbMouseUp(e) {
+  if (tbState.isPanning) {
+    tbState.isPanning = false;
+    tbState.panStart = null;
+    return;
+  }
   if (!tbState.drawing) return;
   const pos = tbGetPos(e);
   const tool = tbState.tool;
@@ -2256,6 +2308,22 @@ function tbDrawArrow(ctx, from, to, color, lw) {
   ctx.fill();
 }
 
+// Cache for map images
+const tbMapImageCache = {};
+
+function tbGetMapImage(mapName, callback) {
+  if (tbMapImageCache[mapName] && tbMapImageCache[mapName].complete && tbMapImageCache[mapName].naturalWidth > 0) {
+    callback(tbMapImageCache[mapName]);
+    return;
+  }
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  tbMapImageCache[mapName] = img;
+  img.onload = () => callback(img);
+  img.onerror = () => callback(null);
+  img.src = MAP_RADARS[mapName] || '';
+}
+
 function tbDrawCanvas() {
   const canvas = document.getElementById('tb-canvas');
   if (!canvas) return;
@@ -2263,36 +2331,28 @@ function tbDrawCanvas() {
   const s = tbState.canvasScale;
   const W = canvas.width, H = canvas.height;
 
-  ctx.clearRect(0, 0, W, H);
-  ctx.save();
-  ctx.scale(s, s);
+  const doDraw = (img) => {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.scale(s, s);
+    ctx.translate(tbState.panX, tbState.panY);
+    ctx.scale(tbState.zoom, tbState.zoom);
+    if (img) {
+      ctx.drawImage(img, 0, 0, 1024, 1024);
+    } else {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, 1024, 1024);
+      ctx.fillStyle = '#333';
+      ctx.font = 'bold 60px Oswald, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(tbState.map, 512, 512);
+    }
+    tbDrawElements(ctx);
+    ctx.restore();
+  };
 
-  // Draw map background
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = MAP_RADARS[tbState.map] || '';
-  img.onload = () => {
-    ctx.drawImage(img, 0, 0, 1024, 1024);
-    tbDrawElements(ctx);
-    ctx.restore();
-  };
-  img.onerror = () => {
-    // Fallback: dark background with map name
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillRect(0, 0, 1024, 1024);
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 60px Oswald, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(tbState.map, 512, 512);
-    tbDrawElements(ctx);
-    ctx.restore();
-  };
-  // Try immediate draw if cached
-  if (img.complete && img.naturalWidth > 0) {
-    ctx.drawImage(img, 0, 0, 1024, 1024);
-    tbDrawElements(ctx);
-    ctx.restore();
-  }
+  tbGetMapImage(tbState.map, doDraw);
 }
 
 function tbDrawElements(ctx) {
