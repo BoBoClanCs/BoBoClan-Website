@@ -1871,6 +1871,7 @@ function updatePosition(teamId,mapName,slotIdx,field,val){
 
 
 function renderTeamArea(teamId){
+currentTeamAreaId=teamId;
 const team=state.teams.find(t=>t.id===teamId);if(!team)return;
 const td=getTeamData(teamId);
 const coach=isCoachOf(teamId);
