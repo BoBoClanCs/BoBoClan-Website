@@ -142,6 +142,21 @@
           "s1": "13",
           "s2": "8",
           "map": "Mirage"
+        },
+        {
+          "opp": "bgt",
+          "maps": [
+            {
+              "map": "jkl",
+              "s1": "6",
+              "s2": "3",
+              "res": "win"
+            }
+          ],
+          "res": "win",
+          "mapMvpVotes": {},
+          "matchMvpVotes": {},
+          "votingClosed": false
         }
       ]
     }
