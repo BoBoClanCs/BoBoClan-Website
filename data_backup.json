@@ -150,13 +150,7 @@
     {
       "teamId": "boot",
       "opponent": "test",
-      "date": "2026-05-27T01:40",
-      "twitch": ""
-    },
-    {
-      "teamId": "boot",
-      "opponent": "test2",
-      "date": "2026-05-27T02:35",
+      "date": "2026-05-27T02:46",
       "twitch": ""
     }
   ],
