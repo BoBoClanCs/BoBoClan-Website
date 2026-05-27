@@ -1543,7 +1543,7 @@ function renderHomeResults(){
         +'<span class="home-result-vs">vs</span>'
         +'<span class="home-result-opp">'+esc(r.opp||'?')+'</span>'
       +'</div>'
-      +'<div class="home-result-score">'+(r.maps&&r.maps.length>0?r.maps.map(m=>'<span style="font-size:0.85rem;display:block;white-space:nowrap;">'+esc(m.map||'?')+' <b>'+esc(m.s1||'?')+'–'+esc(m.s2||'?')+'</b></span>').join(''):esc(r.s1||'?')+' – '+esc(r.s2||'?'))+'</div>'
+      +'<div class="home-result-score">'+(r.maps&&r.maps.length>0?r.maps.filter(m=>m.map).map(m=>'<span style="font-size:0.85rem;display:block;white-space:nowrap;">'+esc(m.map)+' <b>'+(m.s1&&m.s2?esc(m.s1)+'–'+esc(m.s2):'?–?')+'</b></span>').join(''):esc(r.s1||'?')+' – '+esc(r.s2||'?'))+'</div>'
       +'<div></div>'
       +'<span class="badge '+resMap[res]+'">'+lblMap[res]+'</span>'
       +'<div class="home-result-mvp">'+(mapMvp?'🏆 Map: <b>'+esc(mapMvp)+'</b> ':'')+(matchMvp?'🥇 Match: <b>'+esc(matchMvp)+'</b>':'')+'</div>'
