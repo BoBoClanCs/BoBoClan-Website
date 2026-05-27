@@ -2017,7 +2017,8 @@ function renderTacticBoard() {
       </div>
     </div>
     <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0a0a0a;position:relative;" id="tb-canvas-container">
-      <canvas id="tb-canvas" style="cursor:crosshair;touch-action:none;"></canvas>
+      <canvas id="tb-canvas" style="cursor:crosshair;touch-action:none;position:absolute;"></canvas>
+      <canvas id="tb-overlay" style="cursor:crosshair;touch-action:none;position:absolute;pointer-events:none;"></canvas>
     </div>
   `;
 
@@ -2031,6 +2032,37 @@ function renderTacticBoard() {
     if (e.ctrlKey && e.key === 'y') { tbRedo(); e.preventDefault(); }
     if (e.key === 'Delete' && tbState.selected !== null) { tbDeleteSelected(); }
   };
+}
+
+function tbClearOverlay() {
+  const overlay = document.getElementById('tb-overlay');
+  if (!overlay) return;
+  overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+}
+
+function tbDrawOverlay(pos) {
+  const overlay = document.getElementById('tb-overlay');
+  if (!overlay) return;
+  const ctx = overlay.getContext('2d');
+  const s = tbState.canvasScale;
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  ctx.save();
+  ctx.scale(s, s);
+  ctx.translate(tbState.panX, tbState.panY);
+  ctx.scale(tbState.zoom, tbState.zoom);
+
+  if (tbState.tool === 'freehand' && tbState.strokePoints.length > 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = tbState.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    tbState.strokePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  } else if (tbState.tool === 'arrow' && tbState.lastPoint && pos) {
+    tbDrawArrow(ctx, tbState.lastPoint, pos, tbState.color, 3);
+  }
+  ctx.restore();
 }
 
 function tbChangeMap(map) {
@@ -2086,6 +2118,8 @@ function tbInitCanvas() {
   canvas.width = size;
   canvas.height = size;
   tbState.canvasScale = size / 1024;
+  const overlay = document.getElementById('tb-overlay');
+  if (overlay) { overlay.width = size; overlay.height = size; }
 
   canvas.addEventListener('mousedown', tbMouseDown);
   canvas.addEventListener('mousemove', tbMouseMove);
@@ -2197,10 +2231,10 @@ function tbMouseMove(e) {
     tbDrawCanvas();
   } else if (tool === 'freehand') {
     tbState.strokePoints.push(pos);
-    requestAnimationFrame(tbDrawCanvas);
+    tbDrawOverlay(pos);
   } else if (tool === 'arrow') {
     tbState._arrowPreviewEnd = pos;
-    requestAnimationFrame(tbDrawCanvas);
+    tbDrawOverlay(pos);
   }
 }
 
@@ -2231,6 +2265,7 @@ function tbMouseUp(e) {
   tbState.strokePoints = [];
   tbState._arrowPreviewEnd = null;
   tbState.dragOffset = null;
+  tbClearOverlay();
   tbDrawCanvas();
 }
 
