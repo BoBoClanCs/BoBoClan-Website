@@ -296,30 +296,7 @@ function buildDOM(){
   </div>
 </section>
 
-<footer>
-  <img src="logo.webp" onerror="this.style.display='none'" alt="BoBo Clan">
-  <div class="footer-social">
-    <a href="https://www.youtube.com/@BoBoClan-BoBo" target="_blank" rel="noopener" class="yt">
-      <svg viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
-      YouTube
-    </a>
-    <a href="https://www.twitch.tv/diebobos" target="_blank" rel="noopener" class="tw">
-      <svg viewBox="0 0 24 24"><path d="M11.6 6H13v4h-1.4V6zm3.8 0H17v4h-1.6V6zM2.1 0L0 5.5V21h6v3h3.4l3-3H17l7-7V0H2.1zm19.5 13-3.4 3.4h-5l-3 3v-3H4.5V2.3h17.1V13z"/></svg>
-      Twitch
-    </a>
-  </div>
-  <div class="foot-links">
-    <a href="#" onclick="showPage('home',event)">Start</a>
-    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('teams').scrollIntoView({behavior:'smooth'}),50)">Teams</a>
-    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('ergebnisse').scrollIntoView({behavior:'smooth'}),50)">Ergebnisse</a>
-    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('news').scrollIntoView({behavior:'smooth'}),50)">News</a>
-    <a href="#" onclick="showPage('histoire',event)">Historie</a>
-    <a href="#" onclick="showPage('spieler',event)">Spieler</a>
-    <a href="#" onclick="showPage('home',event);setTimeout(()=>document.getElementById('kontakt').scrollIntoView({behavior:'smooth'}),50)">Kontakt</a>
-    <a href="https://www.dachcs.de" target="_blank" rel="noopener">DachCS &#x2197;</a>
-  </div>
-  <p>&copy; 2025 BoBo Clan &middot; Counter-Strike 2</p>
-</footer>
+
 
 </div><!-- /page-home -->
 <!-- SPIELER PAGE -->
