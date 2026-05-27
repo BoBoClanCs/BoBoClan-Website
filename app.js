@@ -919,7 +919,7 @@ function teamPageHTML(t){
 </div></div>
 <div class="admin-card"><div class="admin-card-head" onclick="toggleCard(this)"><div class="admin-card-title">Ergebnisse</div><div class="admin-card-subtitle">${t.results.length} Einträge</div><div class="admin-card-arrow">&#9660;</div></div>
 <div class="admin-card-body">
-<div class="tbl-editor-head tbl-row grid-result"><span>Gegner</span><span>Wir</span><span>Sie</span><span>Map</span><span>Ergebnis</span><span></span></div>
+
 <div id="results-${t.id}">${t.results.map((r,i)=>resultRowHTML(t.id,i,r)).join('')}</div>
 <button class="tbl-add-btn" onclick="addResult('${t.id}')">+ Ergebnis</button>
 </div></div>
@@ -935,17 +935,34 @@ function playerRowHTML(tid,i,p){return `<div class="tbl-row grid-player">
 </select>
 <button class="del-btn" onclick="delPlayer('${tid}',${i})">&#10005;</button>
 </div>`;}
-function resultRowHTML(tid,i,r){return `<div class="tbl-row grid-result">
+function resultRowHTML(tid,i,r){
+  const maps=r.maps||[];
+  const mapsHTML=maps.map((m,mi)=>`<div class="tbl-row grid-map-row">
+<input type="text" placeholder="Mirage" value="${esc(m.map)}" oninput="updateMap('${tid}',${i},${mi},'map',this.value)" style="flex:1">
+<input type="number" placeholder="13" value="${esc(m.s1)}" oninput="updateMap('${tid}',${i},${mi},'s1',this.value)" style="width:60px">
+<input type="number" placeholder="8" value="${esc(m.s2)}" oninput="updateMap('${tid}',${i},${mi},'s2',this.value)" style="width:60px">
+<select onchange="updateMap('${tid}',${i},${mi},'res',this.value)">
+<option value="win" ${m.res==='win'?'selected':''}>Sieg</option>
+<option value="loss" ${m.res==='loss'?'selected':''}>Niederlage</option>
+<option value="draw" ${m.res==='draw'?'selected':''}>Unentschieden</option>
+</select>
+<button class="del-btn" onclick="delMap('${tid}',${i},${mi})">&#10005;</button>
+</div>`).join('');
+  return `<div class="result-entry" style="background:var(--dark4);border:1px solid #2a2a2a;padding:0.75rem;margin-bottom:0.5rem;">
+<div class="tbl-row" style="grid-template-columns:1fr auto auto;margin-bottom:0.5rem;">
 <input type="text" placeholder="Gegner" value="${esc(r.opp)}" oninput="updateResult('${tid}',${i},'opp',this.value)">
-<input type="number" placeholder="16" value="${esc(r.s1)}" oninput="updateResult('${tid}',${i},'s1',this.value)">
-<input type="number" placeholder="8" value="${esc(r.s2)}" oninput="updateResult('${tid}',${i},'s2',this.value)">
-<input type="text" placeholder="Mirage" value="${esc(r.map)}" oninput="updateResult('${tid}',${i},'map',this.value)">
-<select onchange="updateResult('${tid}',${i},'res',this.value)">
-<option value="win" ${r.res==='win'?'selected':''}>Sieg</option>
-<option value="loss" ${r.res==='loss'?'selected':''}>Niederlage</option>
-<option value="draw" ${(r.res||'draw')==='draw'?'selected':''}>Unentschieden</option>
+<select onchange="updateResult('${tid}',${i},'res',this.value)" style="width:140px;">
+<option value="win" ${r.res==='win'?'selected':''}>Gesamt: Sieg</option>
+<option value="loss" ${r.res==='loss'?'selected':''}>Gesamt: Niederlage</option>
+<option value="draw" ${(r.res||'draw')==='draw'?'selected':''}>Gesamt: Unentschieden</option>
 </select>
 <button class="del-btn" onclick="delResult('${tid}',${i})">&#10005;</button>
+</div>
+<div style="font-family:Oswald,sans-serif;font-size:0.65rem;letter-spacing:2px;color:#444;text-transform:uppercase;margin-bottom:0.4rem;display:grid;grid-template-columns:1fr 60px 60px 120px 32px;gap:0.4rem;padding:0 2px;">
+<span>Map</span><span>Wir</span><span>Sie</span><span>Ergebnis</span><span></span>
+</div>
+${mapsHTML}
+<button class="tbl-add-btn" onclick="addMap('${tid}',${i})" style="margin-top:0.25rem;padding:4px;">+ Map</button>
 </div>`;}
 function newsRowHTML(i,n){return `<div class="tbl-row grid-news">
 <input type="text" placeholder="Mai 2025" value="${esc(n.date)}" oninput="updateNews(${i},'date',this.value)">
@@ -955,10 +972,13 @@ function newsRowHTML(i,n){return `<div class="tbl-row grid-news">
 </div>`;}
 function updatePlayer(tid,i,k,v){const t=teamById(tid);if(t){t.players[i][k]=v;renderPublic();}}
 function updateResult(tid,i,k,v){const t=teamById(tid);if(t){t.results[i][k]=v;renderPublic();}}
+function updateMap(tid,ri,mi,field,val){const t=teamById(tid);if(t&&t.results[ri]&&t.results[ri].maps&&t.results[ri].maps[mi])t.results[ri].maps[mi][field]=val;}
+function addMap(tid,ri){const t=teamById(tid);if(!t||!t.results[ri])return;if(!t.results[ri].maps)t.results[ri].maps=[];t.results[ri].maps.push({map:'',s1:'',s2:'',res:'win'});rebuildTeamPages();}
+function delMap(tid,ri,mi){const t=teamById(tid);if(!t||!t.results[ri])return;t.results[ri].maps.splice(mi,1);rebuildTeamPages();}
 function updateNews(i,k,v){state.news[i][k]=v;renderPublic();}
 function addPlayer(tid){const t=teamById(tid);if(!t)return;t.players.push({name:'',role:'',steam:'',type:'main'});document.getElementById('players-'+tid).innerHTML=t.players.map((p,i)=>playerRowHTML(tid,i,p)).join('');}
 function delPlayer(tid,i){const t=teamById(tid);if(!t)return;t.players.splice(i,1);document.getElementById('players-'+tid).innerHTML=t.players.map((p,j)=>playerRowHTML(tid,j,p)).join('');renderPublic();}
-function addResult(tid){const t=teamById(tid);if(!t)return;t.results.push({opp:'',s1:'',s2:'',map:'',res:'win'});document.getElementById('results-'+tid).innerHTML=t.results.map((r,i)=>resultRowHTML(tid,i,r)).join('');}
+function addResult(tid){const t=teamById(tid);if(!t)return;t.results.push({opp:'',maps:[{map:'',s1:'',s2:'',res:'win'}],res:'win',mapMvpVotes:{},matchMvpVotes:{},votingClosed:false});document.getElementById('results-'+tid).innerHTML=t.results.map((r,i)=>resultRowHTML(tid,i,r)).join('');}
 function delResult(tid,i){const t=teamById(tid);if(!t)return;t.results.splice(i,1);document.getElementById('results-'+tid).innerHTML=t.results.map((r,j)=>resultRowHTML(tid,j,r)).join('');renderPublic();}
 function addNews(){state.news.push({date:'',title:'',text:''});const i=state.news.length-1;document.getElementById('news-edit').insertAdjacentHTML('beforeend',newsRowHTML(i,state.news[i]));}
 function delNews(i){state.news.splice(i,1);document.getElementById('news-edit').innerHTML=state.news.map((n,j)=>newsRowHTML(j,n)).join('');renderPublic();}
@@ -1523,8 +1543,8 @@ function renderHomeResults(){
         +'<span class="home-result-vs">vs</span>'
         +'<span class="home-result-opp">'+esc(r.opp||'?')+'</span>'
       +'</div>'
-      +'<div class="home-result-score">'+esc(r.s1||'?')+' – '+esc(r.s2||'?')+'</div>'
-      +(r.map?'<div class="home-result-map"><span class="map-label">'+esc(r.map)+'</span></div>':'<div></div>')
+      +'<div class="home-result-score">'+(r.maps&&r.maps.length>0?r.maps.map(m=>'<span style="font-size:0.85rem;display:block;white-space:nowrap;">'+esc(m.map||'?')+' <b>'+esc(m.s1||'?')+'–'+esc(m.s2||'?')+'</b></span>').join(''):esc(r.s1||'?')+' – '+esc(r.s2||'?'))+'</div>'
+      +'<div></div>'
       +'<span class="badge '+resMap[res]+'">'+lblMap[res]+'</span>'
       +'<div class="home-result-mvp">'+(mapMvp?'🏆 Map: <b>'+esc(mapMvp)+'</b> ':'')+(matchMvp?'🥇 Match: <b>'+esc(matchMvp)+'</b>':'')+'</div>'
       +'<button class="mvp-vote-btn'+(open?' mvp-open':'')+'" onclick="renderMvpModal(\''+r.teamId+'\','+origIdx+')">'+(open?'🏆 Abstimmen':'🏆 MVPs')+'</button>'
@@ -1899,7 +1919,17 @@ async function saveAllWithToken(token){
 
 // ── Load from GitHub ───────────────────────────────────────
 function applyData(data){
-  if(data.teams&&Array.isArray(data.teams))state.teams=data.teams.map(t=>({...Object.assign({id:'',name:'',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]},t),results:(t.results||[]).map(r=>Object.assign({opp:'',s1:'',s2:'',map:'',res:'win',mapMvpVotes:{},matchMvpVotes:{},votingClosed:false},r))}));
+  if(data.teams&&Array.isArray(data.teams))state.teams=data.teams.map(t=>({...Object.assign({id:'',name:'',coach:'',dachcs:'',tournament:'',tournamentUrl:'',players:[],results:[]},t),results:(t.results||[]).map(r=>{
+    // Migrate old format to new
+    const base=Object.assign({opp:'',maps:[],res:'win',mapMvpVotes:{},matchMvpVotes:{},votingClosed:false},r);
+    if(!base.maps||base.maps.length===0){
+      // migrate old single map
+      if(r.s1||r.s2||r.map){
+        base.maps=[{map:r.map||'',s1:r.s1||'',s2:r.s2||'',res:r.res||'win'}];
+      }
+    }
+    return base;
+  })}));
   if(data.histoire&&Array.isArray(data.histoire))state.histoire=data.histoire.map(t=>Object.assign({id:'',name:'',seasons:[]},t));
   if(data.news)state.news=data.news;
   if(data.matches)state.matches=data.matches;
