@@ -177,7 +177,7 @@
           "res": "win",
           "mapMvpVotes": {},
           "matchMvpVotes": {},
-          "votingClosed": false
+          "votingClosed": true
         }
       ]
     }
