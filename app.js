@@ -1728,6 +1728,10 @@ function filterHistoire(q){
     tbState.strokePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
     ctx.stroke();
   }
+  // Draw arrow preview
+  if (tbState.drawing && tbState.tool === 'arrow' && tbState.lastPoint && tbState._arrowPreviewEnd) {
+    tbDrawArrow(ctx, tbState.lastPoint, tbState._arrowPreviewEnd, tbState.color, 3);
+  }
 }
 
 // ── Team Area ──────────────────────────────────────────────
@@ -1913,6 +1917,10 @@ function openTacticBoard(teamId, tacticIdx) {
   tbState.zoom = 1;
   tbState.panX = 0;
   tbState.panY = 0;
+  tbPreloadAllMaps();
+  // Set current image if already cached
+  const cached = tbMapImageCache[tbState.map];
+  tbCurrentMapImage = (cached && cached.complete && cached.naturalWidth > 0) ? cached : null;
 
   let modal = document.getElementById('tactic-board-modal');
   if (!modal) {
@@ -2189,19 +2197,10 @@ function tbMouseMove(e) {
     tbDrawCanvas();
   } else if (tool === 'freehand') {
     tbState.strokePoints.push(pos);
-    tbDrawCanvas();
+    requestAnimationFrame(tbDrawCanvas);
   } else if (tool === 'arrow') {
-    tbDrawCanvas();
-    // Draw arrow preview with zoom/pan
-    const canvas = document.getElementById('tb-canvas');
-    const ctx = canvas.getContext('2d');
-    const s = tbState.canvasScale;
-    ctx.save();
-    ctx.scale(s, s);
-    ctx.translate(tbState.panX, tbState.panY);
-    ctx.scale(tbState.zoom, tbState.zoom);
-    tbDrawArrow(ctx, tbState.lastPoint, pos, tbState.color, 3);
-    ctx.restore();
+    tbState._arrowPreviewEnd = pos;
+    requestAnimationFrame(tbDrawCanvas);
   }
 }
 
@@ -2230,6 +2229,7 @@ function tbMouseUp(e) {
 
   tbState.drawing = false;
   tbState.strokePoints = [];
+  tbState._arrowPreviewEnd = null;
   tbState.dragOffset = null;
   tbDrawCanvas();
 }
@@ -2314,23 +2314,50 @@ const tbMapImageCache = {};
 let tbCurrentMapImage = null;
 
 function tbLoadMapImage(mapName) {
-  if (tbMapImageCache[mapName]) {
-    tbCurrentMapImage = tbMapImageCache[mapName];
+  const cached = tbMapImageCache[mapName];
+  if (cached && cached.complete && cached.naturalWidth > 0) {
+    tbCurrentMapImage = cached;
     tbDrawCanvas();
+    return;
+  }
+  if (cached) {
+    // Already loading - wait for it
+    tbCurrentMapImage = null;
     return;
   }
   const img = new Image();
   img.crossOrigin = 'anonymous';
   tbMapImageCache[mapName] = img;
   img.onload = () => {
-    tbCurrentMapImage = img;
-    tbDrawCanvas();
+    if (tbState.map === mapName) {
+      tbCurrentMapImage = img;
+      tbDrawCanvas();
+    }
   };
   img.onerror = () => {
-    tbCurrentMapImage = null;
-    tbDrawCanvas();
+    if (tbState.map === mapName) {
+      tbCurrentMapImage = null;
+      tbDrawCanvas();
+    }
   };
   img.src = MAP_RADARS[mapName] || '';
+}
+
+function tbPreloadAllMaps() {
+  Object.keys(MAP_RADARS).forEach(mapName => {
+    if (!tbMapImageCache[mapName]) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      tbMapImageCache[mapName] = img;
+      img.onload = () => {
+        if (tbState.map === mapName) {
+          tbCurrentMapImage = img;
+          tbDrawCanvas();
+        }
+      };
+      img.src = MAP_RADARS[mapName] || '';
+    }
+  });
 }
 
 function tbDrawCanvas() {
