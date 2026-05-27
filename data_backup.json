@@ -92,8 +92,26 @@
   ],
   "teamData": {
     "boot": {
-      "tactics": [],
-      "training": []
+      "tactics": [
+        {
+          "title": "test",
+          "desc": "baller",
+          "image": "",
+          "date": "",
+          "map": "Mirage",
+          "board": []
+        },
+        {
+          "title": "test",
+          "desc": "baller",
+          "image": "",
+          "date": "",
+          "map": "Mirage",
+          "board": []
+        }
+      ],
+      "training": [],
+      "positions": {}
     }
   },
   "teams": [
