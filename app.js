@@ -1357,7 +1357,6 @@ function renderHomeMatches(){
   const upcoming=(state.matches||[])
     .filter(m=>m.date&&parseLocalDate(m.date).getTime()>now-3*60*60*1000)
     .sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date))
-    .slice(0,1);
   const el=document.getElementById('matches-home-display');
   if(!el)return;
   if(upcoming.length===0){el.innerHTML='<div class="empty">Keine anstehenden Matches</div>';return;}
@@ -1573,7 +1572,7 @@ function parseLocalDate(str){
 }
 function renderMatches(){
   const now=Date.now();
-  const upcoming=(state.matches||[]).filter(m=>m.date&&parseLocalDate(m.date).getTime()>now).sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date));
+  const upcoming=(state.matches||[]).filter(m=>m.date&&parseLocalDate(m.date).getTime()>now).sort((a,b)=>parseLocalDate(a.date)-parseLocalDate(b.date)).slice(0,1);
   const sec=document.getElementById('section-matches');
   const el=document.getElementById('matches-display');
   if(!sec||!el)return;
