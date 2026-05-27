@@ -67,3 +67,11 @@
 .grid-map-row{display:grid;grid-template-columns:1fr 60px 60px 120px 32px;gap:0.4rem;margin-bottom:0.3rem;align-items:center;}
 .result-entry{transition:border-color 0.2s;}
 .result-entry:hover{border-color:#3a3a3a !important;}
+
+/* Section separation */
+.section{padding:80px 0;}
+.section-dark{padding:80px 0;background:var(--dark2);}
+section+section{border-top:1px solid #1a1a1a;}
+#teams{background:var(--dark);}
+#news{background:var(--dark2);}
+#kontakt{background:var(--dark);}
