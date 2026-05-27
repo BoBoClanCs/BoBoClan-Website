@@ -1717,6 +1717,17 @@ function filterHistoire(q){
     const tab=document.getElementById('htab-'+teamId);
     if(tab)tab.classList.toggle('hist-hidden',!panelVisible);
   });
+
+  // Draw current freehand stroke if drawing
+  if (tbState.drawing && tbState.tool === 'freehand' && tbState.strokePoints.length > 1) {
+    ctx.beginPath();
+    ctx.strokeStyle = tbState.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    tbState.strokePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+  }
 }
 
 // ── Team Area ──────────────────────────────────────────────
@@ -2177,28 +2188,16 @@ function tbMouseMove(e) {
   } else if (tool === 'freehand') {
     tbState.strokePoints.push(pos);
     tbDrawCanvas();
-    // Draw current stroke preview
-    const canvas = document.getElementById('tb-canvas');
-    const ctx = canvas.getContext('2d');
-    const s = tbState.canvasScale;
-    ctx.save();
-    ctx.scale(s, s);
-    ctx.strokeStyle = tbState.color;
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    tbState.strokePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-    ctx.stroke();
-    ctx.restore();
   } else if (tool === 'arrow') {
     tbDrawCanvas();
-    // Draw arrow preview
+    // Draw arrow preview with zoom/pan
     const canvas = document.getElementById('tb-canvas');
     const ctx = canvas.getContext('2d');
     const s = tbState.canvasScale;
     ctx.save();
     ctx.scale(s, s);
+    ctx.translate(tbState.panX, tbState.panY);
+    ctx.scale(tbState.zoom, tbState.zoom);
     tbDrawArrow(ctx, tbState.lastPoint, pos, tbState.color, 3);
     ctx.restore();
   }
