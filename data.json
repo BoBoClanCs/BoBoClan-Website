@@ -157,6 +157,21 @@
           "mapMvpVotes": {},
           "matchMvpVotes": {},
           "votingClosed": false
+        },
+        {
+          "opp": "rt",
+          "maps": [
+            {
+              "map": "jk",
+              "s1": "5",
+              "s2": "4",
+              "res": "win"
+            }
+          ],
+          "res": "win",
+          "mapMvpVotes": {},
+          "matchMvpVotes": {},
+          "votingClosed": false
         }
       ]
     }
