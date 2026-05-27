@@ -1847,6 +1847,549 @@ function updatePosition(teamId,mapName,slotIdx,field,val){
 }
 
 
+// ── TACTIC BOARD ──────────────────────────────────────────────
+const CS2_MAPS = {
+  active: ['Mirage','Inferno','Nuke','Anubis','Ancient','Dust2','Overpass'],
+  inactive: ['Cache','Train','Vertigo']
+};
+
+// Map image URLs (using community radar images)
+const MAP_RADARS = {
+  'Mirage':   'https://radar.csgostats.gg/de_mirage.png',
+  'Inferno':  'https://radar.csgostats.gg/de_inferno.png',
+  'Nuke':     'https://radar.csgostats.gg/de_nuke.png',
+  'Anubis':   'https://radar.csgostats.gg/de_anubis.png',
+  'Ancient':  'https://radar.csgostats.gg/de_ancient.png',
+  'Dust2':    'https://radar.csgostats.gg/de_dust2.png',
+  'Overpass': 'https://radar.csgostats.gg/de_overpass.png',
+  'Cache':    'https://radar.csgostats.gg/de_cache.png',
+  'Train':    'https://radar.csgostats.gg/de_train.png',
+  'Vertigo':  'https://radar.csgostats.gg/de_vertigo.png',
+};
+
+let tbState = {
+  teamId: null,
+  tacticIdx: null,
+  map: null,
+  tool: 'select',
+  side: 'ct',
+  color: '#ff4444',
+  drawing: false,
+  elements: [],  // {type, ...data}
+  history: [],
+  future: [],
+  selected: null,
+  dragOffset: null,
+  lastPoint: null,
+  strokePoints: [],
+  canvasScale: 1,
+};
+
+function openTacticBoard(teamId, tacticIdx) {
+  tbState.teamId = teamId;
+  tbState.tacticIdx = tacticIdx;
+  const td = getTeamData(teamId);
+  const tactic = td.tactics[tacticIdx];
+  tbState.elements = tactic.board ? JSON.parse(JSON.stringify(tactic.board)) : [];
+  tbState.map = tactic.map || CS2_MAPS.active[0];
+  tbState.history = [];
+  tbState.future = [];
+  tbState.selected = null;
+
+  let modal = document.getElementById('tactic-board-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'tactic-board-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:10001;background:#0a0a0a;display:flex;flex-direction:column;';
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+  renderTacticBoard();
+}
+
+function closeTacticBoard() {
+  const modal = document.getElementById('tactic-board-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function tbSave() {
+  const td = getTeamData(tbState.teamId);
+  td.tactics[tbState.tacticIdx].board = JSON.parse(JSON.stringify(tbState.elements));
+  td.tactics[tbState.tacticIdx].map = tbState.map;
+  saveAll().then(() => {
+    const btn = document.getElementById('tb-save-btn');
+    if (btn) { btn.textContent = '✓ Gespeichert'; setTimeout(() => { btn.textContent = '💾 Speichern'; }, 2000); }
+  });
+}
+
+function tbUndo() {
+  if (tbState.history.length === 0) return;
+  tbState.future.push(JSON.parse(JSON.stringify(tbState.elements)));
+  tbState.elements = tbState.history.pop();
+  tbState.selected = null;
+  tbDrawCanvas();
+}
+
+function tbRedo() {
+  if (tbState.future.length === 0) return;
+  tbState.history.push(JSON.parse(JSON.stringify(tbState.elements)));
+  tbState.elements = tbState.future.pop();
+  tbState.selected = null;
+  tbDrawCanvas();
+}
+
+function tbSnapshot() {
+  tbState.history.push(JSON.parse(JSON.stringify(tbState.elements)));
+  tbState.future = [];
+}
+
+function renderTacticBoard() {
+  const modal = document.getElementById('tactic-board-modal');
+  if (!modal) return;
+
+  const allMaps = [...CS2_MAPS.active.map(m => ({m, active: true})), ...CS2_MAPS.inactive.map(m => ({m, active: false}))];
+  const mapOptions = allMaps.map(({m, active}) =>
+    `<option value="${m}" ${m === tbState.map ? 'selected' : ''} style="color:${active?'#E8D5B0':'#666'}">${m}${active ? '' : ' (inaktiv)'}</option>`
+  ).join('');
+
+  const tools = [
+    {id:'select', icon:'↖', label:'Auswahl'},
+    {id:'move', icon:'✥', label:'Verschieben'},
+    {id:'ct', icon:'CT', label:'CT Spieler'},
+    {id:'t', icon:'T', label:'T Spieler'},
+    {id:'arrow', icon:'→', label:'Pfeil'},
+    {id:'freehand', icon:'✏', label:'Freihand'},
+    {id:'smoke', icon:'●', label:'Smoke', color:'#aaaaaa'},
+    {id:'flash', icon:'●', label:'Flash', color:'#ffff44'},
+    {id:'molotov', icon:'●', label:'Molotov', color:'#ff6600'},
+    {id:'he', icon:'●', label:'HE', color:'#44ff44'},
+    {id:'text', icon:'T', label:'Text'},
+    {id:'eraser', icon:'⌫', label:'Radiergummi'},
+  ];
+
+  modal.innerHTML = `
+    <div style="background:#111;border-bottom:1px solid #222;padding:0.5rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+      <span style="font-family:Oswald,sans-serif;font-size:0.9rem;letter-spacing:2px;color:#C0392B;">TAKTIK BOARD</span>
+      <select id="tb-map-select" onchange="tbChangeMap(this.value)" style="background:#1a1a1a;border:1px solid #333;color:#E8D5B0;padding:4px 8px;font-family:Rajdhani,sans-serif;font-size:0.85rem;">${mapOptions}</select>
+      <div style="display:flex;gap:2px;background:#1a1a1a;border:1px solid #222;padding:2px;">
+        ${tools.map(t => `<button id="tb-tool-${t.id}" onclick="tbSetTool('${t.id}')" title="${t.label}" style="background:${tbState.tool===t.id?'#8B1A1A':'none'};border:none;color:${t.color||'#E8D5B0'};padding:5px 8px;cursor:pointer;font-size:0.8rem;font-family:monospace;min-width:28px;">${t.icon}</button>`).join('')}
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;">
+        <span style="font-family:Oswald,sans-serif;font-size:0.7rem;color:#555;">FARBE</span>
+        <input type="color" id="tb-color" value="${tbState.color}" onchange="tbState.color=this.value" style="width:28px;height:28px;border:none;background:none;cursor:pointer;padding:0;">
+      </div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="tbUndo()" title="Rückgängig (Strg+Z)" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">↩ Undo</button>
+        <button onclick="tbRedo()" title="Wiederholen (Strg+Y)" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">↪ Redo</button>
+        <button onclick="tbClearAll()" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 10px;cursor:pointer;font-size:0.8rem;">🗑 Alles</button>
+      </div>
+      <div style="display:flex;gap:4px;margin-left:auto;">
+        <button id="tb-save-btn" onclick="tbSave()" style="background:#8B1A1A;border:none;color:#fff;padding:5px 16px;cursor:pointer;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;">💾 Speichern</button>
+        <button onclick="closeTacticBoard()" style="background:#1a1a1a;border:1px solid #333;color:#888;padding:5px 16px;cursor:pointer;font-family:Oswald,sans-serif;font-size:0.75rem;letter-spacing:2px;">✕ Schließen</button>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0a0a0a;position:relative;" id="tb-canvas-container">
+      <canvas id="tb-canvas" style="cursor:crosshair;touch-action:none;"></canvas>
+    </div>
+  `;
+
+  tbInitCanvas();
+
+  // Keyboard shortcuts
+  modal.tabIndex = 0;
+  modal.focus();
+  modal.onkeydown = (e) => {
+    if (e.ctrlKey && e.key === 'z') { tbUndo(); e.preventDefault(); }
+    if (e.ctrlKey && e.key === 'y') { tbRedo(); e.preventDefault(); }
+    if (e.key === 'Delete' && tbState.selected !== null) { tbDeleteSelected(); }
+  };
+}
+
+function tbChangeMap(map) {
+  tbState.map = map;
+  tbDrawCanvas();
+}
+
+function tbSetTool(tool) {
+  tbState.tool = tool;
+  tbState.selected = null;
+  // Update button styles
+  document.querySelectorAll('[id^="tb-tool-"]').forEach(btn => {
+    btn.style.background = btn.id === 'tb-tool-' + tool ? '#8B1A1A' : 'none';
+  });
+  const canvas = document.getElementById('tb-canvas');
+  if (canvas) {
+    canvas.style.cursor = tool === 'eraser' ? 'cell' :
+      tool === 'select' ? 'default' :
+      tool === 'move' ? 'grab' : 'crosshair';
+  }
+}
+
+function tbClearAll() {
+  if (!confirm('Alle Elemente löschen?')) return;
+  tbSnapshot();
+  tbState.elements = [];
+  tbState.selected = null;
+  tbDrawCanvas();
+}
+
+function tbDeleteSelected() {
+  if (tbState.selected === null) return;
+  tbSnapshot();
+  tbState.elements.splice(tbState.selected, 1);
+  tbState.selected = null;
+  tbDrawCanvas();
+}
+
+function tbInitCanvas() {
+  const container = document.getElementById('tb-canvas-container');
+  const canvas = document.getElementById('tb-canvas');
+  if (!container || !canvas) return;
+
+  const size = Math.min(container.clientWidth - 20, container.clientHeight - 20, 700);
+  canvas.width = size;
+  canvas.height = size;
+  tbState.canvasScale = size / 1024;
+
+  canvas.addEventListener('mousedown', tbMouseDown);
+  canvas.addEventListener('mousemove', tbMouseMove);
+  canvas.addEventListener('mouseup', tbMouseUp);
+  canvas.addEventListener('mouseleave', tbMouseUp);
+  canvas.addEventListener('dblclick', tbDblClick);
+
+  tbDrawCanvas();
+}
+
+function tbGetPos(e) {
+  const canvas = document.getElementById('tb-canvas');
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) / tbState.canvasScale,
+    y: (e.clientY - rect.top) / tbState.canvasScale
+  };
+}
+
+function tbMouseDown(e) {
+  const pos = tbGetPos(e);
+  const tool = tbState.tool;
+
+  if (tool === 'select') {
+    tbState.selected = null;
+    for (let i = tbState.elements.length - 1; i >= 0; i--) {
+      if (tbHitTest(tbState.elements[i], pos)) {
+        tbState.selected = i;
+        tbState.dragOffset = { x: pos.x - tbState.elements[i].x, y: pos.y - tbState.elements[i].y };
+        tbState.drawing = true;
+        break;
+      }
+    }
+    tbDrawCanvas();
+    return;
+  }
+
+  if (tool === 'eraser') {
+    for (let i = tbState.elements.length - 1; i >= 0; i--) {
+      if (tbHitTest(tbState.elements[i], pos)) {
+        tbSnapshot();
+        tbState.elements.splice(i, 1);
+        tbDrawCanvas();
+        return;
+      }
+    }
+    return;
+  }
+
+  tbState.drawing = true;
+  tbState.lastPoint = pos;
+
+  if (tool === 'freehand') {
+    tbState.strokePoints = [pos];
+  } else if (tool === 'arrow') {
+    tbState.lastPoint = pos;
+  } else if (tool === 'ct' || tool === 't') {
+    tbSnapshot();
+    tbState.elements.push({ type: tool, x: pos.x, y: pos.y, label: '' });
+    tbState.drawing = false;
+    tbDrawCanvas();
+  } else if (tool === 'smoke' || tool === 'flash' || tool === 'molotov' || tool === 'he') {
+    tbSnapshot();
+    tbState.elements.push({ type: tool, x: pos.x, y: pos.y });
+    tbState.drawing = false;
+    tbDrawCanvas();
+  }
+}
+
+function tbMouseMove(e) {
+  if (!tbState.drawing) return;
+  const pos = tbGetPos(e);
+  const tool = tbState.tool;
+
+  if (tool === 'select' && tbState.selected !== null) {
+    tbState.elements[tbState.selected].x = pos.x - tbState.dragOffset.x;
+    tbState.elements[tbState.selected].y = pos.y - tbState.dragOffset.y;
+    tbDrawCanvas();
+  } else if (tool === 'freehand') {
+    tbState.strokePoints.push(pos);
+    tbDrawCanvas();
+    // Draw current stroke preview
+    const canvas = document.getElementById('tb-canvas');
+    const ctx = canvas.getContext('2d');
+    const s = tbState.canvasScale;
+    ctx.save();
+    ctx.scale(s, s);
+    ctx.strokeStyle = tbState.color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    tbState.strokePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.stroke();
+    ctx.restore();
+  } else if (tool === 'arrow') {
+    tbDrawCanvas();
+    // Draw arrow preview
+    const canvas = document.getElementById('tb-canvas');
+    const ctx = canvas.getContext('2d');
+    const s = tbState.canvasScale;
+    ctx.save();
+    ctx.scale(s, s);
+    tbDrawArrow(ctx, tbState.lastPoint, pos, tbState.color, 3);
+    ctx.restore();
+  }
+}
+
+function tbMouseUp(e) {
+  if (!tbState.drawing) return;
+  const pos = tbGetPos(e);
+  const tool = tbState.tool;
+
+  if (tool === 'freehand' && tbState.strokePoints.length > 1) {
+    tbSnapshot();
+    tbState.elements.push({ type: 'freehand', points: [...tbState.strokePoints], color: tbState.color });
+  } else if (tool === 'arrow') {
+    const dx = pos.x - tbState.lastPoint.x, dy = pos.y - tbState.lastPoint.y;
+    if (Math.sqrt(dx*dx+dy*dy) > 10) {
+      tbSnapshot();
+      tbState.elements.push({ type: 'arrow', x1: tbState.lastPoint.x, y1: tbState.lastPoint.y, x2: pos.x, y2: pos.y, color: tbState.color });
+    }
+  } else if (tool === 'select' && tbState.selected !== null) {
+    tbSnapshot();
+  }
+
+  tbState.drawing = false;
+  tbState.strokePoints = [];
+  tbState.dragOffset = null;
+  tbDrawCanvas();
+}
+
+function tbDblClick(e) {
+  const pos = tbGetPos(e);
+  // Double click on CT/T to edit label, on text to edit
+  for (let i = tbState.elements.length - 1; i >= 0; i--) {
+    const el = tbState.elements[i];
+    if (tbHitTest(el, pos)) {
+      if (el.type === 'ct' || el.type === 't' || el.type === 'text') {
+        const val = prompt('Label:', el.label || el.text || '');
+        if (val !== null) {
+          tbSnapshot();
+          if (el.type === 'text') el.text = val;
+          else el.label = val;
+          tbDrawCanvas();
+        }
+      }
+      return;
+    }
+  }
+  // Double click on empty = add text
+  if (tbState.tool === 'text') {
+    const val = prompt('Text:', '');
+    if (val) {
+      tbSnapshot();
+      tbState.elements.push({ type: 'text', x: pos.x, y: pos.y, text: val, color: tbState.color });
+      tbDrawCanvas();
+    }
+  }
+}
+
+function tbHitTest(el, pos) {
+  const r = 20;
+  if (el.type === 'ct' || el.type === 't' || el.type === 'smoke' || el.type === 'flash' || el.type === 'molotov' || el.type === 'he' || el.type === 'text') {
+    return Math.abs(pos.x - el.x) < r && Math.abs(pos.y - el.y) < r;
+  }
+  if (el.type === 'arrow') {
+    // Hit test on line
+    const dx = el.x2 - el.x1, dy = el.y2 - el.y1;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    if (len < 1) return false;
+    const t = ((pos.x-el.x1)*dx + (pos.y-el.y1)*dy) / (len*len);
+    const tc = Math.max(0, Math.min(1, t));
+    const px = el.x1 + tc*dx, py = el.y1 + tc*dy;
+    return Math.sqrt((pos.x-px)**2 + (pos.y-py)**2) < 10;
+  }
+  if (el.type === 'freehand') {
+    return el.points.some(p => Math.abs(pos.x-p.x) < 12 && Math.abs(pos.y-p.y) < 12);
+  }
+  return false;
+}
+
+function tbDrawArrow(ctx, from, to, color, lw) {
+  const dx = to.x - from.x, dy = to.y - from.y;
+  const angle = Math.atan2(dy, dx);
+  const len = Math.sqrt(dx*dx+dy*dy);
+  if (len < 5) return;
+  const headLen = Math.min(20, len * 0.35);
+
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = lw;
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(to.x, to.y);
+  ctx.lineTo(to.x - headLen * Math.cos(angle - 0.4), to.y - headLen * Math.sin(angle - 0.4));
+  ctx.lineTo(to.x - headLen * Math.cos(angle + 0.4), to.y - headLen * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function tbDrawCanvas() {
+  const canvas = document.getElementById('tb-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const s = tbState.canvasScale;
+  const W = canvas.width, H = canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.scale(s, s);
+
+  // Draw map background
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = MAP_RADARS[tbState.map] || '';
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 1024, 1024);
+    tbDrawElements(ctx);
+    ctx.restore();
+  };
+  img.onerror = () => {
+    // Fallback: dark background with map name
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, 1024, 1024);
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 60px Oswald, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(tbState.map, 512, 512);
+    tbDrawElements(ctx);
+    ctx.restore();
+  };
+  // Try immediate draw if cached
+  if (img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, 0, 0, 1024, 1024);
+    tbDrawElements(ctx);
+    ctx.restore();
+  }
+}
+
+function tbDrawElements(ctx) {
+  tbState.elements.forEach((el, idx) => {
+    const selected = tbState.selected === idx;
+
+    if (el.type === 'ct' || el.type === 't') {
+      const isCT = el.type === 'ct';
+      ctx.beginPath();
+      ctx.arc(el.x, el.y, 18, 0, Math.PI * 2);
+      ctx.fillStyle = isCT ? '#4A90D9' : '#E8A020';
+      ctx.fill();
+      if (selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Oswald, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(isCT ? 'CT' : 'T', el.x, el.y);
+      if (el.label) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '11px Rajdhani, sans-serif';
+        ctx.fillText(el.label, el.x, el.y + 28);
+      }
+    } else if (el.type === 'smoke') {
+      ctx.beginPath();
+      ctx.arc(el.x, el.y, 16, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(180,180,180,0.7)';
+      ctx.fill();
+      ctx.strokeStyle = '#aaa';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      if (selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('S', el.x, el.y);
+    } else if (el.type === 'flash') {
+      ctx.beginPath();
+      ctx.arc(el.x, el.y, 14, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,100,0.85)';
+      ctx.fill();
+      if (selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+      ctx.fillStyle = '#333';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('F', el.x, el.y);
+    } else if (el.type === 'molotov') {
+      ctx.beginPath();
+      ctx.arc(el.x, el.y, 14, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,100,0,0.85)';
+      ctx.fill();
+      if (selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('M', el.x, el.y);
+    } else if (el.type === 'he') {
+      ctx.beginPath();
+      ctx.arc(el.x, el.y, 14, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(50,200,50,0.85)';
+      ctx.fill();
+      if (selected) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); }
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('HE', el.x, el.y);
+    } else if (el.type === 'arrow') {
+      tbDrawArrow(ctx, {x:el.x1,y:el.y1}, {x:el.x2,y:el.y2}, el.color || '#ff4444', selected ? 4 : 3);
+    } else if (el.type === 'freehand') {
+      ctx.beginPath();
+      ctx.strokeStyle = el.color || '#ff4444';
+      ctx.lineWidth = selected ? 4 : 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      el.points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+    } else if (el.type === 'text') {
+      ctx.fillStyle = el.color || '#fff';
+      ctx.font = 'bold 16px Rajdhani, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      if (selected) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 0.5;
+        ctx.strokeText(el.text, el.x, el.y);
+      }
+      ctx.fillText(el.text, el.x, el.y);
+    }
+  });
+}
+
+
 function renderTeamArea(teamId){
 currentTeamAreaId=teamId;
 const team=state.teams.find(t=>t.id===teamId);if(!team)return;
@@ -1876,8 +2419,10 @@ tacticsEl.innerHTML='';
 if((td.tactics||[]).length===0){tacticsEl.innerHTML='<div class="empty">Noch keine Taktiken</div>';}
 else{td.tactics.forEach((t,i)=>{
   const d=document.createElement('div');d.className='tactic-card';
-  let h='<div class="tactic-head"><div class="tactic-title">'+esc(t.title)+'</div>';
+    const mapLabel=t.map||'';
+  let h='<div class="tactic-head"><div style="display:flex;align-items:center;gap:0.5rem;"><div class="tactic-title">'+esc(t.title)+'</div>'+(mapLabel?'<span style="font-family:Oswald,sans-serif;font-size:0.7rem;letter-spacing:1px;color:#555;border:1px solid #2a2a2a;padding:2px 6px;">'+esc(mapLabel)+'</span>':'')+'</div>';
   if(t.date)h+='<div class="tactic-date">'+esc(t.date)+'</div>';
+  h+='<button onclick="openTacticBoard(\''+teamId+'\',' +i+')" style="font-family:Oswald,sans-serif;font-size:0.7rem;letter-spacing:1px;background:var(--dark4);border:1px solid #2a2a2a;color:#888;padding:3px 8px;cursor:pointer;margin-top:4px;">&#127795; Board öffnen</button>';
   if(coach)h+='<button class="mini-btn danger">&#10005;</button>';
   h+='</div>';
   if(t.desc)h+='<div class="tactic-desc">'+esc(t.desc)+'</div>';
@@ -1931,7 +2476,7 @@ function addTodosRow(teamId){
 function addTactic(teamId){
   const title=document.getElementById('tactic-title-'+teamId)?.value.trim();
   if(!title){alert('Titel erforderlich');return;}
-  getTeamData(teamId).tactics.push({title,desc:document.getElementById('tactic-desc-'+teamId)?.value.trim()||'',image:document.getElementById('tactic-image-'+teamId)?.value.trim()||'',date:document.getElementById('tactic-date-'+teamId)?.value||''});
+  getTeamData(teamId).tactics.push({title,desc:document.getElementById('tactic-desc-'+teamId)?.value.trim()||'',image:document.getElementById('tactic-image-'+teamId)?.value.trim()||'',date:document.getElementById('tactic-date-'+teamId)?.value||'',map:CS2_MAPS.active[0],board:[]});
   saveAll().then(()=>renderTeamArea(teamId));
 }
 function deleteTactic(teamId,i){if(!confirm('Taktik löschen?'))return;getTeamData(teamId).tactics.splice(i,1);saveAll().then(()=>renderTeamArea(teamId));}
