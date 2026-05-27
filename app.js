@@ -973,8 +973,13 @@ function newsRowHTML(i,n){return `<div class="tbl-row grid-news">
 function updatePlayer(tid,i,k,v){const t=teamById(tid);if(t){t.players[i][k]=v;renderPublic();}}
 function updateResult(tid,i,k,v){const t=teamById(tid);if(t){t.results[i][k]=v;renderPublic();}}
 function updateMap(tid,ri,mi,field,val){const t=teamById(tid);if(t&&t.results[ri]&&t.results[ri].maps&&t.results[ri].maps[mi])t.results[ri].maps[mi][field]=val;}
-function addMap(tid,ri){const t=teamById(tid);if(!t||!t.results[ri])return;if(!t.results[ri].maps)t.results[ri].maps=[];t.results[ri].maps.push({map:'',s1:'',s2:'',res:'win'});rebuildTeamPages();}
-function delMap(tid,ri,mi){const t=teamById(tid);if(!t||!t.results[ri])return;t.results[ri].maps.splice(mi,1);rebuildTeamPages();}
+function refreshResultEntry(tid,ri){
+  const t=teamById(tid);if(!t)return;
+  const el=document.getElementById('results-'+tid);
+  if(el)el.innerHTML=t.results.map((r,i)=>resultRowHTML(tid,i,r)).join('');
+}
+function addMap(tid,ri){const t=teamById(tid);if(!t||!t.results[ri])return;if(!t.results[ri].maps)t.results[ri].maps=[];t.results[ri].maps.push({map:'',s1:'',s2:'',res:'win'});refreshResultEntry(tid,ri);}
+function delMap(tid,ri,mi){const t=teamById(tid);if(!t||!t.results[ri])return;t.results[ri].maps.splice(mi,1);refreshResultEntry(tid,ri);}
 function updateNews(i,k,v){state.news[i][k]=v;renderPublic();}
 function addPlayer(tid){const t=teamById(tid);if(!t)return;t.players.push({name:'',role:'',steam:'',type:'main'});document.getElementById('players-'+tid).innerHTML=t.players.map((p,i)=>playerRowHTML(tid,i,p)).join('');}
 function delPlayer(tid,i){const t=teamById(tid);if(!t)return;t.players.splice(i,1);document.getElementById('players-'+tid).innerHTML=t.players.map((p,j)=>playerRowHTML(tid,j,p)).join('');renderPublic();}
