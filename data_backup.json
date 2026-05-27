@@ -17,7 +17,9 @@
       "steam": "https://steamcommunity.com/id/Nullkisir/",
       "discord": "nullkisir",
       "bio": "",
-      "faceit": "Nullkisir"
+      "faceit": "Nullkisir",
+      "mapMvps": 1,
+      "matchMvps": 1
     },
     {
       "name": "Killinix",
@@ -117,23 +119,9 @@
           "s2": "8",
           "map": "Mirage",
           "res": "win",
-          "mapMvpVotes": {
-            "Nullkisir": {
-              "count": 1,
-              "voters": [
-                "Nullkisir"
-              ]
-            }
-          },
-          "matchMvpVotes": {
-            "Nullkisir": {
-              "count": 1,
-              "voters": [
-                "Nullkisir"
-              ]
-            }
-          },
-          "votingClosed": false
+          "mapMvpVotes": {},
+          "matchMvpVotes": {},
+          "votingClosed": true
         }
       ]
     }
