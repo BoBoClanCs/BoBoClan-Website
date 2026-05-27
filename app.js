@@ -1865,16 +1865,16 @@ const CS2_MAPS = {
 
 // Map image URLs (using community radar images)
 const MAP_RADARS = {
-  'Mirage':   'map_mirage.png',
-  'Inferno':  'map_inferno.png',
-  'Nuke':     'map_nuke.png',
-  'Anubis':   'map_anubis.png',
-  'Ancient':  'map_ancient.png',
-  'Dust2':    'map_dust2.png',
-  'Overpass': 'map_overpass.png',
-  'Cache':    'map_cache.png',
-  'Train':    'map_train.png',
-  'Vertigo':  'map_vertigo.png',
+  'Mirage':   'maps/map_mirage.png',
+  'Inferno':  'maps/map_inferno.png',
+  'Nuke':     'maps/map_nuke.png',
+  'Anubis':   'maps/map_anubis.png',
+  'Ancient':  'maps/map_ancient.png',
+  'Dust2':    'maps/map_dust2.png',
+  'Overpass': 'maps/map_overpass.png',
+  'Cache':    'maps/map_cache.png',
+  'Train':    'maps/map_train.png',
+  'Vertigo':  'maps/map_vertigo.png',
 };
 
 let tbState = {
