@@ -117,7 +117,14 @@
           "s2": "8",
           "map": "Mirage",
           "res": "win",
-          "mapMvpVotes": {},
+          "mapMvpVotes": {
+            "Nullkisir": {
+              "count": 1,
+              "voters": [
+                "Nullkisir"
+              ]
+            }
+          },
           "matchMvpVotes": {},
           "votingClosed": false
         }
