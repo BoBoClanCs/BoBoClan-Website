@@ -380,7 +380,8 @@ function buildDOM(){
       <div id="team-area-tactics"></div>
     </div>
     <!-- Training -->
-    <div id="team-section-positions" style="display:none;"></div>\n    <div id="team-section-training" style="display:none;">
+    <div id="team-section-positions" style="display:none;"></div>
+    <div id="team-section-training" style="display:none;">
       <div id="team-area-training"></div>
     </div>
   </div>
@@ -1767,10 +1768,15 @@ function openTeamArea(){
 }
 function closeTeamArea(){document.getElementById('team-area-panel').style.display='none';}
 function switchTeamAreaTab(tab){
-  ['tactics','training'].forEach(t=>{
-    document.getElementById('team-tab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('team-section-'+t).style.display=t===tab?'block':'none';
+  ['tactics','training','positions'].forEach(t=>{
+    const btn=document.getElementById('team-tab-'+t);
+    const sec=document.getElementById('team-section-'+t);
+    if(btn)btn.classList.toggle('active',t===tab);
+    if(sec)sec.style.display=t===tab?'block':'none';
   });
+  if(tab==='tactics')renderTactics(currentTeamAreaId);
+  if(tab==='training')renderTraining(currentTeamAreaId);
+  if(tab==='positions')renderPositions(currentTeamAreaId);
 }
 function renderTeamArea(teamId){
 const team=state.teams.find(t=>t.id===teamId);if(!team)return;
