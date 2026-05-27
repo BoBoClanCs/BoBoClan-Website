@@ -1751,9 +1751,8 @@ function switchTeamAreaTab(tab){
     if(btn)btn.classList.toggle('active',t===tab);
     if(sec)sec.style.display=t===tab?'block':'none';
   });
-  if(tab==='tactics')renderTactics(currentTeamAreaId);
-  if(tab==='training')renderTraining(currentTeamAreaId);
   if(tab==='positions')renderPositions(currentTeamAreaId);
+  else renderTeamArea(currentTeamAreaId);
 }
 function renderPositions(teamId){
   const el=document.getElementById('team-section-positions');
@@ -1855,16 +1854,16 @@ const CS2_MAPS = {
 
 // Map image URLs (using community radar images)
 const MAP_RADARS = {
-  'Mirage':   'https://radar.csgostats.gg/de_mirage.png',
-  'Inferno':  'https://radar.csgostats.gg/de_inferno.png',
-  'Nuke':     'https://radar.csgostats.gg/de_nuke.png',
-  'Anubis':   'https://radar.csgostats.gg/de_anubis.png',
-  'Ancient':  'https://radar.csgostats.gg/de_ancient.png',
-  'Dust2':    'https://radar.csgostats.gg/de_dust2.png',
-  'Overpass': 'https://radar.csgostats.gg/de_overpass.png',
-  'Cache':    'https://radar.csgostats.gg/de_cache.png',
-  'Train':    'https://radar.csgostats.gg/de_train.png',
-  'Vertigo':  'https://radar.csgostats.gg/de_vertigo.png',
+  'Mirage':   'map_mirage.png',
+  'Inferno':  'map_inferno.png',
+  'Nuke':     'map_nuke.png',
+  'Anubis':   'map_anubis.png',
+  'Ancient':  'map_ancient.png',
+  'Dust2':    'map_dust2.png',
+  'Overpass': 'map_overpass.png',
+  'Cache':    'map_cache.png',
+  'Train':    'map_train.png',
+  'Vertigo':  'map_vertigo.png',
 };
 
 let tbState = {
