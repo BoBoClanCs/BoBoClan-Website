@@ -2027,7 +2027,8 @@ function renderTacticBoard() {
 
 function tbChangeMap(map) {
   tbState.map = map;
-  tbDrawCanvas();
+  tbCurrentMapImage = tbMapImageCache[map] || null;
+  tbLoadMapImage(map);
 }
 
 function tbSetTool(tool) {
@@ -2099,7 +2100,8 @@ function tbInitCanvas() {
   }, {passive: false});
   canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
 
-  tbDrawCanvas();
+  tbCurrentMapImage = tbMapImageCache[tbState.map] || null;
+  tbLoadMapImage(tbState.map);
 }
 
 function tbGetPos(e) {
@@ -2309,17 +2311,25 @@ function tbDrawArrow(ctx, from, to, color, lw) {
 
 // Cache for map images
 const tbMapImageCache = {};
+let tbCurrentMapImage = null;
 
-function tbGetMapImage(mapName, callback) {
-  if (tbMapImageCache[mapName] && tbMapImageCache[mapName].complete && tbMapImageCache[mapName].naturalWidth > 0) {
-    callback(tbMapImageCache[mapName]);
+function tbLoadMapImage(mapName) {
+  if (tbMapImageCache[mapName]) {
+    tbCurrentMapImage = tbMapImageCache[mapName];
+    tbDrawCanvas();
     return;
   }
   const img = new Image();
   img.crossOrigin = 'anonymous';
   tbMapImageCache[mapName] = img;
-  img.onload = () => callback(img);
-  img.onerror = () => callback(null);
+  img.onload = () => {
+    tbCurrentMapImage = img;
+    tbDrawCanvas();
+  };
+  img.onerror = () => {
+    tbCurrentMapImage = null;
+    tbDrawCanvas();
+  };
   img.src = MAP_RADARS[mapName] || '';
 }
 
@@ -2330,28 +2340,26 @@ function tbDrawCanvas() {
   const s = tbState.canvasScale;
   const W = canvas.width, H = canvas.height;
 
-  const doDraw = (img) => {
-    ctx.clearRect(0, 0, W, H);
-    ctx.save();
-    ctx.scale(s, s);
-    ctx.translate(tbState.panX, tbState.panY);
-    ctx.scale(tbState.zoom, tbState.zoom);
-    if (img) {
-      ctx.drawImage(img, 0, 0, 1024, 1024);
-    } else {
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(0, 0, 1024, 1024);
-      ctx.fillStyle = '#333';
-      ctx.font = 'bold 60px Oswald, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(tbState.map, 512, 512);
-    }
-    tbDrawElements(ctx);
-    ctx.restore();
-  };
+  ctx.clearRect(0, 0, W, H);
+  ctx.save();
+  ctx.scale(s, s);
+  ctx.translate(tbState.panX, tbState.panY);
+  ctx.scale(tbState.zoom, tbState.zoom);
 
-  tbGetMapImage(tbState.map, doDraw);
+  const img = tbCurrentMapImage;
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.drawImage(img, 0, 0, 1024, 1024);
+  } else {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, 1024, 1024);
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 60px Oswald, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tbState.map, 512, 512);
+  }
+  tbDrawElements(ctx);
+  ctx.restore();
 }
 
 function tbDrawElements(ctx) {
