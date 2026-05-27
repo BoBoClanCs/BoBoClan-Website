@@ -115,13 +115,33 @@
       "results": [
         {
           "opp": "test",
-          "s1": "13",
-          "s2": "8",
-          "map": "Mirage",
-          "res": "win",
+          "maps": [
+            {
+              "map": "Mirage",
+              "s1": "13",
+              "s2": "8",
+              "res": "win"
+            },
+            {
+              "map": "Infe",
+              "s1": "4",
+              "s2": "5",
+              "res": "loss"
+            },
+            {
+              "map": "fred",
+              "s1": "4",
+              "s2": "5",
+              "res": "loss"
+            }
+          ],
+          "res": "loss",
           "mapMvpVotes": {},
           "matchMvpVotes": {},
-          "votingClosed": true
+          "votingClosed": true,
+          "s1": "13",
+          "s2": "8",
+          "map": "Mirage"
         }
       ]
     }
