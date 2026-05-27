@@ -149,14 +149,8 @@
   "matches": [
     {
       "teamId": "boot",
-      "opponent": "test2",
-      "date": "2026-05-27T05:40",
-      "twitch": ""
-    },
-    {
-      "teamId": "",
-      "opponent": "",
-      "date": "2026-05-27T08:55",
+      "opponent": "bgt",
+      "date": "2026-05-27T03:16",
       "twitch": ""
     }
   ],
