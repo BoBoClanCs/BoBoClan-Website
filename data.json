@@ -118,6 +118,11 @@
           }
         ]
       }
+    },
+    "team_8oibw": {
+      "tactics": [],
+      "training": [],
+      "positions": {}
     }
   },
   "teams": [
@@ -160,14 +165,6 @@
           "type": "main"
         }
       ],
-      "results": []
-    },
-    {
-      "id": "team_8oibw",
-      "name": "Neues Team",
-      "coach": "",
-      "dachcs": "",
-      "players": [],
       "results": []
     }
   ],
