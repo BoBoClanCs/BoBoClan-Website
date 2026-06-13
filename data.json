@@ -92,18 +92,32 @@
   ],
   "teamData": {
     "boot": {
-      "tactics": [
-        {
-          "title": "test",
-          "desc": "baller",
-          "image": "",
-          "date": "",
-          "map": "Inferno",
-          "board": []
-        }
-      ],
+      "tactics": [],
       "training": [],
-      "positions": {}
+      "positions": {
+        "Inferno": [
+          {
+            "pos": "",
+            "player": ""
+          },
+          {
+            "pos": "",
+            "player": ""
+          },
+          {
+            "pos": "",
+            "player": ""
+          },
+          {
+            "pos": "",
+            "player": ""
+          },
+          {
+            "pos": "",
+            "player": ""
+          }
+        ]
+      }
     }
   },
   "teams": [
