@@ -116,8 +116,32 @@
       "tournamentUrl": "",
       "players": [
         {
+          "name": "Camo",
+          "role": "",
+          "steam": "",
+          "type": "main"
+        },
+        {
+          "name": "Teddy",
+          "role": "",
+          "steam": "",
+          "type": "main"
+        },
+        {
+          "name": "Potato",
+          "role": "",
+          "steam": "",
+          "type": "main"
+        },
+        {
+          "name": "Namenloser Held",
+          "role": "",
+          "steam": "",
+          "type": "main"
+        },
+        {
           "name": "Nullkisir",
-          "role": "t",
+          "role": "",
           "steam": "",
           "type": "main"
         }
