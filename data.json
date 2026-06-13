@@ -160,90 +160,10 @@
           "type": "main"
         }
       ],
-      "results": [
-        {
-          "opp": "test",
-          "maps": [
-            {
-              "map": "Mirage",
-              "s1": "13",
-              "s2": "8",
-              "res": "win"
-            },
-            {
-              "map": "Infe",
-              "s1": "4",
-              "s2": "5",
-              "res": "loss"
-            },
-            {
-              "map": "fred",
-              "s1": "4",
-              "s2": "5",
-              "res": "loss"
-            }
-          ],
-          "res": "loss",
-          "mapMvpVotes": {},
-          "matchMvpVotes": {},
-          "votingClosed": true,
-          "s1": "13",
-          "s2": "8",
-          "map": "Mirage"
-        },
-        {
-          "opp": "bgt",
-          "maps": [
-            {
-              "map": "jkl",
-              "s1": "6",
-              "s2": "3",
-              "res": "win"
-            }
-          ],
-          "res": "win",
-          "mapMvpVotes": {},
-          "matchMvpVotes": {},
-          "votingClosed": false
-        },
-        {
-          "opp": "rt",
-          "maps": [
-            {
-              "map": "jk",
-              "s1": "5",
-              "s2": "4",
-              "res": "win"
-            },
-            {
-              "map": "kj",
-              "s1": "6",
-              "s2": "4",
-              "res": "win"
-            }
-          ],
-          "res": "win",
-          "mapMvpVotes": {},
-          "matchMvpVotes": {},
-          "votingClosed": true
-        }
-      ]
+      "results": []
     }
   ],
-  "matches": [
-    {
-      "teamId": "boot",
-      "opponent": "bgt",
-      "date": "2026-05-27T03:16",
-      "twitch": ""
-    },
-    {
-      "teamId": "boot",
-      "opponent": "rt",
-      "date": "2026-05-27T02:14",
-      "twitch": ""
-    }
-  ],
+  "matches": [],
   "histoire": [
     {
       "id": "boot",
